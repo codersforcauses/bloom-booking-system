@@ -4,6 +4,13 @@ Django + Nextjs Template: Standardised CFC Tech Stack
 
 ---
 
+# Get Started
+
+Choose your preferred way to set up:
+
+- With Dev container: [Quick Start (Dev Container)](#quick-start-dev-container---recommended)
+- Without Dev container: [Local Development Setup](#local-development-setup)
+
 ## Quick Start (Dev Container) - Recommended
 
 The easiest way to get started is using the VS Code Dev Container:
@@ -17,7 +24,6 @@ The easiest way to get started is using the VS Code Dev Container:
 2. **Open in Dev Container**:
 
    - Clone this repository
-     - Using **HTTPS** and **personal access token**
    - Open the project in VS Code
    - When prompted, click "Reopen in Container" or use `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
 
@@ -40,12 +46,12 @@ The easiest way to get started is using the VS Code Dev Container:
 
 ## Local Development Setup
 
-**Note**: Only follow these steps if you're NOT using the dev container.
+**Note**: Only follow these steps if you're **NOT using the dev container**. You will use Docker for the database and have all dependencies locally.
 
 ### Prerequisites
 
-- **Node.js 18+** and **npm** - [Download here](https://nodejs.org/)
-- **Python 3.12+** - [Download here](https://python.org/)
+- **Node.js 20.x.x** and **npm** - [Download here](https://nodejs.org/)
+- **Python 3.12.x** - [Download here](https://python.org/)
 - **Poetry** (Python package manager) - [Installation guide](https://python-poetry.org/docs/#installation)
 - **Docker Desktop** - [Download here](https://www.docker.com/products/docker-desktop/)
 
@@ -72,6 +78,8 @@ pip install poetry
 
 #### 3. Start the Database
 
+**Make sure Docker is running**
+
 ```bash
 cd server && docker compose up -d
 ```
@@ -81,7 +89,7 @@ cd server && docker compose up -d
 Before proceeding, create your environment files by copying the examples:
 
 ```bash
-cp ./client/.env.example ./client/.env && cp ./server/.env.example ./server/.env
+cp ./client/.env.example ./client/.env && cp ./server/.env.example ./server/.env # From root directory
 ```
 
 **Backend (`.env` in `server/`)**
@@ -108,15 +116,16 @@ FRONTEND_URL=http://localhost:3000
 **Frontend (`.env` in `client/`)**
 
 ```env
-NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api
 ```
 
 #### 5. Set Up the Backend (Django)
 
 ```bash
 cd server
+poetry env use <your-python3.12-path> # specify python version
 poetry install
-poetry shell
+poetry shell # if this fails, run: `poetry env activate` to check the virtual environment <path>. Then run `source <path>`
 python manage.py migrate
 python manage.py createsuperuser  # optional
 python manage.py runserver
@@ -138,9 +147,9 @@ npm run dev
 
 ---
 
-## Development Commands
+# Development Commands
 
-### Backend (Django)
+## Backend (Django)
 
 ```bash
 cd server
@@ -164,7 +173,20 @@ python manage.py test
 ./nuke.sh
 ```
 
-### Frontend (Next.js)
+### Create and run migrations
+
+If the models are updated, be sure to create a migration:
+
+```bash
+python manage.py makemigrations # create migration
+python manage.py migrate # apply migrations
+```
+
+### Nuke the DB
+
+If you run into migration conflicts that you can't be bothered to fix, run `nuke.sh` to clear your database. Then, run migrations again.
+
+## Frontend (Next.js)
 
 ```bash
 cd client
@@ -191,33 +213,25 @@ npm run typecheck
 npm run format
 ```
 
+If you are **using the Dev Container and you update dependencies** (for example, you change requirements in pyproject.toml, package.json, or the Dockerfile), you should follow these steps:
+
+1. Rebuild the Dev Container (using “Dev Containers: Rebuild and Reopen in Container” in VS Code)
+2. After the container rebuilds and you are inside it, run `npm install` in the `client\` directory to install any new or updated Node.js dependencies.
+
 ---
 
-## Server
+# Other
 
-### Create and run migrations
-
-If the models are updated, be sure to create a migration:
-
-```bash
-python manage.py makemigrations # create migration
-python manage.py migrate # apply migrations
-```
-
-### Nuke the DB
-
-If you run into migration conflicts that you can't be bothered to fix, run `nuke.sh` to clear your database. Then, run migrations again.
-
-## Other
-
-### Update Dependencies
+## Update Dependencies
 
 You can run `npm install` and `poetry install` in the respective `client` and `server` folders to install the newest dependencies.
 
-### Editing Docker stuff
+## Editing Docker stuff
 
-If you modify anything in the `docker` folder, you need to add the `--build` flag or Docker won't give you the latest changes.
+- If you modify anything in the `docker` folder, you need to add the `--build` flag or Docker won't give you the latest changes. e.g. `docker compose up -d --build`
+- `docker ps` to check the status
+- `docker compose down` to stop the container
 
-### Changing env vars
+## Changing env vars
 
 Edit the `.env` file in the respective directory (client or server).
