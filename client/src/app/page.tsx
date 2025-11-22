@@ -22,7 +22,7 @@ export default function Home() {
   return (
     <main
       className={cn(
-        "flex min-h-screen flex-col items-center gap-4 p-24 font-sans",
+        "flex min-h-screen flex-col items-center gap-4 p-24",
         fontSans.variable,
       )}
     >
