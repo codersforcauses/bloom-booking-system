@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "api.healthcheck",
+    "api.room",
 ]
 
 MIDDLEWARE = [
