@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "api.healthcheck",
     "storages",
     "api.user",
+    "api.room",
 ]
 
 MIDDLEWARE = [
