@@ -68,17 +68,21 @@
   body {
     @apply bg-background text-foreground font-montserrat;
   }
+  h1 {
+    @apply text-3xl font-bold leading-10 tracking-normal;
+  }
+
+  h2 {
+    @apply text-3xl font-bold leading-9 tracking-normal;
+  }
+
+  h3 {
+    @apply text-xl font-semibold leading-7 tracking-normal;
+  }
 
 }
 
 @layer utilities {
-  .subtitle {
-    @apply text-xl font-semibold leading-7 tracking-normal;
-  }
-
-  .title-lg {
-    @apply text-3xl font-bold leading-10 tracking-normal;
-  }
 
   .body-bold {
     @apply text-base font-bold leading-6 tracking-wide;
@@ -92,9 +96,6 @@
     @apply text-xs font-normal leading-5 tracking-wider;
   }
 
-  .title {
-    @apply text-3xl font-bold leading-9 tracking-normal;
-  }
 
   .body-sm-bold {
     @apply text-sm font-bold leading-5 tracking-wide;
