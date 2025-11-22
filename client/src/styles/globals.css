@@ -73,35 +73,35 @@
 
 @layer utilities {
   .subtitle {
-    @apply font-montserrat text-xl font-semibold leading-7 tracking-normal;
+    @apply text-xl font-semibold leading-7 tracking-normal;
   }
 
   .title-lg {
-    @apply font-montserrat text-3xl font-bold leading-10 tracking-normal;
+    @apply text-3xl font-bold leading-10 tracking-normal;
   }
 
   .body-bold {
-    @apply font-montserrat text-base font-bold leading-6 tracking-wide;
+    @apply text-base font-bold leading-6 tracking-wide;
   }
 
   .body-sm {
-    @apply font-montserrat text-sm font-normal leading-5 tracking-wide;
+    @apply text-sm font-normal leading-5 tracking-wide;
   }
 
   .caption {
-    @apply font-montserrat text-xs font-normal leading-5 tracking-wider;
+    @apply text-xs font-normal leading-5 tracking-wider;
   }
 
   .title {
-    @apply font-montserrat text-3xl font-bold leading-9 tracking-normal;
+    @apply text-3xl font-bold leading-9 tracking-normal;
   }
 
   .body-sm-bold {
-    @apply font-montserrat text-sm font-bold leading-5 tracking-wide;
+    @apply text-sm font-bold leading-5 tracking-wide;
   }
 
   .caption-link {
-    @apply font-montserrat text-xs font-normal leading-5 tracking-wider underline;
+    @apply text-xs font-normal leading-5 tracking-wider underline;
   }
 
 }
