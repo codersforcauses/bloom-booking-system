@@ -85,28 +85,24 @@
 
 @layer utilities {
 
-    .border-preset {
-        /* Can always override the border-black with another colour in className */
-        @apply border rounded-[var(--radius)]; 
-    }
-
     .text-bold {
         @apply text-base font-bold leading-6 tracking-wide;
-    }
-
-    .text-helper {
-        @apply text-sm font-normal leading-5 tracking-wide;
     }
 
     .text-bold-sm {
         @apply text-sm font-bold leading-5 tracking-wide;
     }
 
-    .caption {
+
+    .text-helper {
+        @apply text-sm font-normal leading-5 tracking-wide;
+    }
+
+    .text-caption {
         @apply text-xs font-normal leading-5 tracking-wider;
     }
 
-    .caption-link {
+    .text-caption-link {
         @apply text-xs font-normal leading-5 tracking-wider underline;
     }
 
