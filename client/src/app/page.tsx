@@ -26,7 +26,30 @@ export default function Home() {
         fontSans.variable,
       )}
     >
-      <h1 className="text-3xl text-primary">Test title</h1>
+      <h1 className="">Header Tag 1</h1>
+      <h2 className="">Header Tag 2</h2>
+      <h3 className="">Header Tag 3</h3>
+      <label> This is a label </label>
+      <p> This is a paragraph </p>
+      <p className="text-bold"> This is a paragraph with the text-bold class</p>
+      <p className="text-bold-sm">
+        {" "}
+        This is a paragraph with the text-bold-sm class
+      </p>
+      <p className="text-helper">
+        {" "}
+        This is a paragraph with the text-helper class
+      </p>
+      <p className="caption"> This is a paragraph with the caption class</p>
+      <p className="caption-link">
+        {" "}
+        This is a paragraph with the caption-link class
+      </p>
+      <p className="border-preset border-purple-500 px-4 py-2">
+        {" "}
+        border-preset{" "}
+      </p>
+
       <Button onClick={() => setClicked(true)}>
         {isLoading ? "Loading" : "Ping"}
       </Button>
