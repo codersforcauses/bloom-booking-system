@@ -23,3 +23,5 @@ class AmenitiesAdmin(admin.ModelAdmin):
     list_display = ("id", "name")
     search_fields = ("name",)
     list_display_links = ("name",)
+
+# Register your models here.
