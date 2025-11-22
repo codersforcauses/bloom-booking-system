@@ -26,6 +26,12 @@ export default function Home() {
         fontSans.variable,
       )}
     >
+      <Button onClick={() => setClicked(true)}>
+        {isLoading ? "Loading" : "Ping"}
+      </Button>
+      <p>
+        Response from server: <span>{data as string}</span>
+      </p>
       <h1 className="">Header Tag 1</h1>
       <h2 className="">Header Tag 2</h2>
       <h3 className="">Header Tag 3</h3>
@@ -45,17 +51,31 @@ export default function Home() {
         {" "}
         This is a paragraph with the caption-link class
       </p>
-      <p className="border-preset border-purple-500 px-4 py-2">
-        {" "}
-        border-preset{" "}
-      </p>
-
-      <Button onClick={() => setClicked(true)}>
-        {isLoading ? "Loading" : "Ping"}
-      </Button>
-      <p>
-        Response from server: <span>{data as string}</span>
-      </p>
+      <h3 className="mt-8"> Colours </h3>
+      <p className="caption"> ( Left as default from Tailwindcss config ) </p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="-8 flex flex-col items-center justify-center rounded-lg border border-black bg-primary text-white">
+          Primary
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-secondary p-8">
+          Secondary
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-destructive p-8 text-white">
+          Destructive
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-popover p-8">
+          Popover
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-popover-foreground p-8 text-white">
+          Popover Foreground
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-accent p-8">
+          Accent
+        </div>
+        <div className="bg-Card flex flex-col items-center justify-center rounded-lg border border-black p-8">
+          Card
+        </div>
+      </div>
     </main>
   );
 }

@@ -85,11 +85,6 @@
 
 @layer utilities {
 
-    .border-preset {
-        /* Can always override the border-black with another colour in className */
-        @apply border rounded-[var(--radius)]; 
-    }
-
     .text-bold {
         @apply text-base font-bold leading-6 tracking-wide;
     }
