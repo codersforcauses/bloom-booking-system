@@ -72,6 +72,7 @@ const config = {
             light: "var(--bloom-yellow-light)",
           },
           orbit: {
+            DEFAULT: "var(--bloom-orbit)",
             light: "var(--bloom-orbit-light)",
           },
         },
