@@ -71,3 +71,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .spinner-fade-mask {
+    /* Conic gradient used for masking effect
+       Reference: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/gradient/conic-gradient */
+    mask-image: conic-gradient(from 40deg, transparent 0%, black 100%);
+    mask-size: cover;
+    mask-repeat: no-repeat;
+  }
+}
