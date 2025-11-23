@@ -57,6 +57,24 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+
+        // Bloom project colors
+        bloom: {
+          gray: "var(--bloom-gray)",
+          red: "var(--bloom-red)",
+          blue: {
+            DEFAULT: "var(--bloom-blue)",
+            light: "var(--bloom-blue-light)",
+            community: "var(--bloom-blue-community)",
+          },
+          yellow: {
+            DEFAULT: "var(--bloom-yellow)",
+            light: "var(--bloom-yellow-light)",
+          },
+          orbit: {
+            light: "var(--bloom-orbit-light)",
+          },
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
