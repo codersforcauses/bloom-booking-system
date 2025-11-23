@@ -65,7 +65,6 @@ const config = {
           blue: {
             DEFAULT: "var(--bloom-blue)",
             light: "var(--bloom-blue-light)",
-            community: "var(--bloom-blue-community)",
           },
           yellow: {
             DEFAULT: "var(--bloom-yellow)",
