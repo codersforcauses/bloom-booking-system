@@ -33,6 +33,16 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+
+    /* Bloom project colors */
+    --bloom-gray: #e5e1e6ff;
+    --bloom-red: #be1b3bff;
+    --bloom-blue: #67d4ecff;
+    --bloom-blue-light: #b8e3edff;
+    --bloom-blue-community: #67ebf0ff;
+    --bloom-yellow: #f3d03aff;
+    --bloom-yellow-light: #f3d03aff;
+    --bloom-orbit-light: #a5a8e1ff;
   }
 
   .dark {

@@ -55,28 +55,40 @@ export default function Home() {
         This is a paragraph with the text-caption-link class
       </p>
       <h3 className="mt-8"> Colours </h3>
-      <p className="caption"> ( Left as default from Tailwindcss config ) </p>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="-8 flex flex-col items-center justify-center rounded-lg border border-black bg-primary text-white">
+      <p className="caption">
+        {" "}
+        (Bloom css colour palette bloom-(color name) ){" "}
+      </p>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-primary p-8 text-white">
           Primary
         </div>
         <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-secondary p-8">
           Secondary
         </div>
-        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-destructive p-8 text-white">
-          Destructive
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-gray p-8">
+          bloom-gray
         </div>
-        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-popover p-8">
-          Popover
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-red p-8 text-white">
+          bloom-red
         </div>
-        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-popover-foreground p-8 text-white">
-          Popover Foreground
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-blue p-8">
+          bloom-blue
         </div>
-        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-accent p-8">
-          Accent
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-blue-light p-8">
+          bloom-blue-light
         </div>
-        <div className="bg-Card flex flex-col items-center justify-center rounded-lg border border-black p-8">
-          Card
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-blue-community p-8">
+          bloom-blue-community
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-yellow p-8">
+          bloom-yellow
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-yellow-light p-8">
+          bloom-yellow-light
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-orbit-light p-8">
+          bloom-orbit-light
         </div>
       </div>
     </main>
