@@ -78,9 +78,6 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-blue-light p-8">
           bloom-blue-light
         </div>
-        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-blue-community p-8">
-          bloom-blue-community
-        </div>
         <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-yellow p-8">
           bloom-yellow
         </div>
