@@ -32,33 +32,25 @@ export default function Home() {
       <p>
         Response from server: <span>{data as string}</span>
       </p>
-      <h1 className="">Header Tag 1</h1>
-      <h2 className="">Header Tag 2</h2>
-      <h3 className="">Header Tag 3</h3>
+      <h1> Header 1 Tag </h1>
+      <h1 className="title-lg">Header Tag with title-lg</h1>
+      <h2 className="title">Header Tag with title</h2>
+      <h3 className="subtitle">Header Tag with subtitle</h3>
       <label> This is a label </label>
       <p> This is a paragraph </p>
-      <p className="text-bold"> This is a paragraph with the text-bold class</p>
-      <p className="text-bold-sm">
+      <p className="body"> This is a paragraph with the body class</p>
+      <p className="body-bold"> This is a paragraph with the body-bold class</p>
+      <p className="body-sm-bold">
         {" "}
-        This is a paragraph with the text-bold-sm class
+        This is a paragraph with the body-bold-sm class
       </p>
-      <p className="text-helper">
+      <p className="body-sm"> This is a paragraph with the body-sm class</p>
+      <p className="caption"> This is a paragraph with the caption class</p>
+      <p className="caption-link">
         {" "}
-        This is a paragraph with the text-helper class
-      </p>
-      <p className="text-caption">
-        {" "}
-        This is a paragraph with the text-caption class
-      </p>
-      <p className="text-caption-link">
-        {" "}
-        This is a paragraph with the text-caption-link class
+        This is a paragraph with the caption-link class
       </p>
       <h3 className="mt-8"> Colours </h3>
-      <p className="caption">
-        {" "}
-        (Bloom css colour palette bloom-(color name) ){" "}
-      </p>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-primary p-8 text-white">
           Primary
@@ -91,6 +83,10 @@ export default function Home() {
           bloom-orbit-light
         </div>
       </div>
+      <p className="caption">
+        {" "}
+        (Bloom css colour palette bloom-(color name) ){" "}
+      </p>
     </main>
   );
 }

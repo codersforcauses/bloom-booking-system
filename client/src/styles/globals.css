@@ -77,42 +77,43 @@
 
   /* Global Default text Styling */
   body {
-    @apply bg-background font-montserrat text-foreground;
-  }
-
-  /* Default Header Styling */
-  h1 {
-    @apply text-3xl font-bold leading-10 tracking-normal;
-  }
-
-  h2 {
-    @apply text-2xl font-bold leading-9 tracking-normal;
-  }
-
-  h3 {
-    @apply text-xl font-semibold leading-7 tracking-normal;
+    @apply font-montserrat;
   }
 }
 
 /* Utility Classes */
 @layer utilities {
-  .text-bold {
+  .title-lg {
+    @apply text-3xl font-bold leading-10 tracking-normal;
+  }
+
+  .title {
+    @apply text-2xl font-bold leading-9 tracking-normal;
+  }
+
+  .subtitle {
+    @apply text-xl font-semibold leading-7 tracking-normal;
+  }
+  .body {
+    @apply font-montserrat text-base font-medium leading-6 tracking-wide;
+  }
+  .body-bold {
     @apply text-base font-bold leading-6 tracking-wide;
   }
 
-  .text-bold-sm {
+  .body-sm-bold {
     @apply text-sm font-bold leading-5 tracking-wide;
   }
 
-  .text-helper {
+  .body-sm {
     @apply text-sm font-normal leading-5 tracking-wide;
   }
 
-  .text-caption {
+  .caption {
     @apply text-xs font-normal leading-5 tracking-wider;
   }
 
-  .text-caption-link {
+  .caption-link {
     @apply text-xs font-normal leading-5 tracking-wider underline;
   }
 }
