@@ -87,6 +87,9 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-yellow-light p-8">
           bloom-yellow-light
         </div>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-orbit p-8">
+          bloom-orbit
+        </div>
         <div className="flex flex-col items-center justify-center rounded-lg border border-black bg-bloom-orbit-light p-8">
           bloom-orbit-light
         </div>
