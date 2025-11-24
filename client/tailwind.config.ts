@@ -20,7 +20,8 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
+        // sans: ["var(--font-sans)", ...fontFamily.sans],
+        montserrat: ["var(--font-montserrat)", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -55,6 +56,24 @@ const config = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+
+        // Bloom project colors
+        bloom: {
+          gray: "var(--bloom-gray)",
+          red: "var(--bloom-red)",
+          blue: {
+            DEFAULT: "var(--bloom-blue)",
+            light: "var(--bloom-blue-light)",
+          },
+          yellow: {
+            DEFAULT: "var(--bloom-yellow)",
+            light: "var(--bloom-yellow-light)",
+          },
+          orbit: {
+            DEFAULT: "var(--bloom-orbit)",
+            light: "var(--bloom-orbit-light)",
+          },
         },
       },
       borderRadius: {
