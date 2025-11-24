@@ -12,12 +12,20 @@ import { cn } from "@/lib/utils";
  * @example
  * <Spinner className="size-6 text-blue-500" />
  */
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+function Spinner({
+  className,
+  width,
+  height = width,
+  ...props
+}: React.ComponentProps<"svg">) {
   return (
     <Loader2Icon
+      strokeWidth={3}
+      width={width}
+      height={height}
       role="status"
       aria-label="Loading"
-      className={cn("size-4 animate-spin", className)}
+      className={cn("animate-spin", className)}
       {...props}
     />
   );
