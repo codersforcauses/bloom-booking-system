@@ -21,6 +21,7 @@ drf-spectacular = "^0.29.0"
 boto3 = "^1.34.0"
 django-storages = "^1.14.0"
 pillow = "^12.0.0"
+google-api-python-client = "^2.187.0"
 
 
 [tool.poetry.group.dev.dependencies]
