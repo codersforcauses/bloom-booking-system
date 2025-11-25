@@ -1,53 +1,69 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
+import * as React from "react";
 
+// Removed ChevronDown import, no longer needed
 import { cn } from "@/lib/utils";
 
-type AccordionItemProps = {
-  id: string;
-  title: string;
-  children: ReactNode;
-  defaultOpen?: boolean;
-};
+const Accordion = AccordionPrimitive.Root;
 
-export function AccordionItem({
-  id,
-  title,
-  children,
-  defaultOpen = false,
-}: AccordionItemProps) {
-  const [open, setOpen] = useState(defaultOpen);
+const AccordionItem = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
+>(({ className, ...props }, ref) => (
+  <AccordionPrimitive.Item
+    ref={ref}
+    className={cn("border-b", className)}
+    {...props}
+  />
+));
+AccordionItem.displayName = "AccordionItem";
 
-  return (
-    <div className="border-b border-gray-200">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-4 py-3 text-left"
-        aria-expanded={open}
-        aria-controls={`${id}-panel`}
-      >
-        <span className="text-sm font-medium">{title}</span>
-        <span className="text-xl font-light">{open ? "−" : "+"}</span>
-      </button>
-
-      <div
-        id={`${id}-panel`}
-        className={cn(
-          "overflow-hidden px-4 transition-all",
-          open ? "max-h-screen pb-3" : "max-h-0",
-        )}
-      >
-        {open && <div className="pt-1">{children}</div>}
-      </div>
-    </div>
-  );
-}
-
-export function Accordion({ children }: { children: ReactNode }) {
-  return (
-    <div className="w-full overflow-hidden rounded-md border border-gray-200 bg-white">
+const AccordionTrigger = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
+>(({ className, children, ...props }, ref) => (
+  <AccordionPrimitive.Header className="flex">
+    <AccordionPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        // added `group` and removed hover underline + svg rotate rule
+        "group flex flex-1 items-center justify-between py-4 text-sm font-medium transition-all",
+        className,
+      )}
+      {...props}
+    >
       {children}
-    </div>
-  );
-}
+      {/* plus / minus icon matching the mockup */}
+      <span className="select-none text-xl leading-none">
+        <span className="group-data-[state=closed]:block group-data-[state=open]:hidden">
+          +
+        </span>
+        <span className="group-data-[state=open]:block group-data-[state=closed]:hidden">
+          −
+        </span>
+      </span>
+    </AccordionPrimitive.Trigger>
+  </AccordionPrimitive.Header>
+));
+AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
+
+const AccordionContent = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <AccordionPrimitive.Content
+    ref={ref}
+    className={cn(
+      "overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
+      className,
+    )}
+    {...props}
+  >
+    <div className="pb-4 pt-0">{children}</div>
+  </AccordionPrimitive.Content>
+));
+AccordionContent.displayName = AccordionPrimitive.Content.displayName;
+
+export { Accordion, AccordionContent,AccordionItem, AccordionTrigger };
