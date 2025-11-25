@@ -62,7 +62,10 @@ class BookingUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         visitor_email = request.data.get('visitor_email')
         cancel_reason = request.data.get('cancel_reason')
         if visitor_email and visitor_email != instance.visitor_email:
-            raise ValidationError({"message": "Visitor email is incorrect."})
+            raise ValidationError({
+                "status": "error",
+                "message": "Visitor email is incorrect."
+                })
 
         data = {
             "cancel_reason": cancel_reason,
@@ -75,6 +78,31 @@ class BookingUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
 
         response_serializer = BookingSerializer(instance, fields=('id', 'status', "cancel_reason", 'updated_at'))
         return Response(response_serializer.data)
+
+
+# GET /api/bookings/search
+class BookingSearchView(generics.ListAPIView):
+    serializer_class = BookingSerializer
+    http_method_names = ['get']
+
+    def get_serializer(self, *args, **kwargs):
+        # same as GET /api/bookings
+        kwargs["fields"] = ('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
+                            'recurrence_rule', 'status', 'google_event_id', 'created_at')
+        return super().get_serializer(*args, **kwargs)
+
+    def get_queryset(self):
+        queryset = Booking.objects.all().only('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
+                                              'recurrence_rule', 'status', 'google_event_id', 'created_at')
+        visitor_email = self.request.query_params.get('visitor_email')
+
+        if not visitor_email:
+            raise ValidationError({
+                "status": "error",
+                "message": "visitor_email is required"
+            })
+        queryset = queryset.filter(visitor_email__iexact=visitor_email)
+        return queryset
 
 
 # /test route
