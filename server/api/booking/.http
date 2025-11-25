@@ -1,6 +1,20 @@
 ### create a new booking (tested on http://localhost:8000/api/bookings/)
+POST http://localhost:8000/api/bookings/
+Content-Type: application/json
+
+{
+  "room_id": 1,
+  "visitor_name": "Tom Johnson",
+  "visitor_email": "tom@example.com",
+  "start_datetime": "2025-11-27T10:00:00Z",
+  "end_datetime": "2025-11-27T11:00:00Z",
+  "recurrence_rule": "",
+  "status": "CONFIRMED",
+  "google_event_id": "abc127"
+}
 
 ### get all (filtered) bookings (tested on http://localhost:8000/api/bookings/)
+GET http://localhost:8000/api/bookings/
 
 ### update a booking 
 PUT http://localhost:8000/api/bookings/2/
