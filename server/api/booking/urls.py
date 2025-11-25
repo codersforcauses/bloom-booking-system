@@ -1,9 +1,10 @@
 # from django.shortcuts import render
 from django.urls import path
 from .views import test
-from .views import BookingsListCreatView
+from .views import BookingsListCreatView, BookingUpdateDeleteView
 
 urlpatterns = [
     path('', BookingsListCreatView.as_view()),
+    path('<int:pk>/', BookingUpdateDeleteView.as_view()),
     path('test/', test),
 ]

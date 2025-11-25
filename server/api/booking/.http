@@ -1,0 +1,31 @@
+### create a new booking (tested on http://localhost:8000/api/bookings/)
+
+### get all (filtered) bookings (tested on http://localhost:8000/api/bookings/)
+
+### update a booking 
+PUT http://localhost:8000/api/bookings/2/
+Content-Type: application/json
+
+{
+  "start_datetime": "2025-11-04T14:00:00Z",
+  "end_datetime": "2025-11-04T16:00:00Z",
+  "recurrence_rule": ""
+}
+
+### delete a booking
+DELETE http://localhost:8000/api/bookings/1/
+Content-Type: application/json
+
+{
+  "visitor_email": "alice@example.com",
+  "cancel_reason": "Meeting postponed"
+}
+
+### delete a booking with wrong email
+DELETE http://localhost:8000/api/bookings/2/
+Content-Type: application/json
+
+{
+  "visitor_email": "alice@example.com",
+  "cancel_reason": "Meeting postponed"
+}

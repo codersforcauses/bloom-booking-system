@@ -2,16 +2,25 @@ from django.http import HttpResponse
 from rest_framework import generics
 from .models import Booking
 from .serializers import BookingSerializer
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 
 
-# /bookings/get and /bookings/post route
+# GET /api/bookings and POST /api/bookings route
 class BookingsListCreatView(generics.ListCreateAPIView):
-    queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     http_method_names = ['get', 'post']
 
+    def get_serializer(self, *args, **kwargs):
+        # avoid N+1 query problem
+        kwargs["fields"] = ('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
+                            'recurrence_rule', 'status', 'google_event_id', 'created_at')
+        return super().get_serializer(*args, **kwargs)
+
     def get_queryset(self):
-        queryset = Booking.objects.all()
+        # reduce data retrieved from database
+        queryset = Booking.objects.all().only('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
+                                              'recurrence_rule', 'status', 'google_event_id', 'created_at')
         room_id = self.request.query_params.get('room_id')
         date = self.request.query_params.get('date')
         visitor_name = self.request.query_params.get('visitor_name')
@@ -28,6 +37,44 @@ class BookingsListCreatView(generics.ListCreateAPIView):
             queryset = queryset.filter(start_datetime__date=date)
 
         return queryset
+
+
+# PUT /api/bookings/{id} and DELETE /api/bookings/{id}
+class BookingUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+    http_method_names = ['put', 'delete']
+
+    def update(self, request, *args, **kwargs):
+        partial = True      # allow partial update
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        response_serializer = BookingSerializer(instance, fields=('id', 'status', 'updated_at'))
+        return Response(response_serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        partial = True
+        instance = self.get_object()
+
+        visitor_email = request.data.get('visitor_email')
+        cancel_reason = request.data.get('cancel_reason')
+        if visitor_email and visitor_email != instance.visitor_email:
+            raise ValidationError({"message": "Visitor email is incorrect."})
+
+        data = {
+            "cancel_reason": cancel_reason,
+            "status": "CANCELLED"
+        }
+
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        response_serializer = BookingSerializer(instance, fields=('id', 'status', "cancel_reason", 'updated_at'))
+        return Response(response_serializer.data)
 
 
 # /test route
