@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "storages",
     "api.user",
     "api.room",
+    "api.booking",
 ]
 
 MIDDLEWARE = [
