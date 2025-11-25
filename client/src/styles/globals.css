@@ -33,6 +33,16 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+
+    /* Bloom project colors */
+    --bloom-gray: #e5e1e6ff;
+    --bloom-red: #be1b3bff;
+    --bloom-blue: #67d4ecff;
+    --bloom-blue-light: #b8e3edff;
+    --bloom-yellow: #f3d03aff;
+    --bloom-yellow-light: #f6e6a0ff;
+    --bloom-orbit: #2332ffff;
+    --bloom-orbit-light: #a5a8e1ff;
   }
 
   .dark {
@@ -64,10 +74,56 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
   }
+
+  /* Global Default text Styling */
+  body {
+    @apply font-montserrat;
+  }
 }
 
-@layer base {
-  body {
-    @apply bg-background text-foreground;
+/* Utility Classes */
+@layer utilities {
+  .title-lg {
+    @apply text-3xl font-bold leading-10 tracking-normal;
+  }
+
+  .title {
+    @apply text-2xl font-bold leading-9 tracking-normal;
+  }
+
+  .subtitle {
+    @apply text-xl font-semibold leading-7 tracking-normal;
+  }
+  .body {
+    @apply font-montserrat text-base font-medium leading-6 tracking-wide;
+  }
+  .body-bold {
+    @apply text-base font-bold leading-6 tracking-wide;
+  }
+
+  .body-sm-bold {
+    @apply text-sm font-bold leading-5 tracking-wide;
+  }
+
+  .body-sm {
+    @apply text-sm font-normal leading-5 tracking-wide;
+  }
+
+  .caption {
+    @apply text-xs font-normal leading-5 tracking-wider;
+  }
+
+  .caption-link {
+    @apply text-xs font-normal leading-5 tracking-wider underline;
+  }
+}
+
+@layer utilities {
+  .spinner-fade-mask {
+    /* Conic gradient used for masking effect
+       Reference: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/gradient/conic-gradient */
+    mask-image: conic-gradient(from 40deg, transparent 0%, black 100%);
+    mask-size: cover;
+    mask-repeat: no-repeat;
   }
 }
