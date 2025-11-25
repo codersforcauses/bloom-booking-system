@@ -19,8 +19,23 @@ export default function Home() {
         "flex min-h-screen flex-col items-center gap-4 p-24 font-montserrat",
       )}
     >
-      <Button onClick={() => setClicked(true)}>
-        {isLoading ? "Loading" : "Ping"}
+      <Button variant="login" onClick={() => setClicked(true)}>
+        {isLoading ? "Admin login" : "Admin login"}
+      </Button>
+      <Button variant="outlineTest" onClick={() => setClicked(true)}>
+        {isLoading ? "Hover" : "Outline"}
+      </Button>
+      <Button variant="link" onClick={() => setClicked(true)}>
+        {isLoading ? "Hover" : "Text"}
+      </Button>
+      <Button variant="confirm">
+        <span className="mr-1 text-xl leading-none">+</span> Confirm
+      </Button>
+      <Button variant="warning" onClick={() => setClicked(true)}>
+        {isLoading ? "Hover" : "Warning"}
+      </Button>
+      <Button variant="bookings" onClick={() => setClicked(true)}>
+        {isLoading ? "Hover" : "View bookings"}
       </Button>
       <p>
         Response from server: <span>{data as string}</span>

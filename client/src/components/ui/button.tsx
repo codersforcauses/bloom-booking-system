@@ -18,11 +18,12 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: 'relative text-primary hover:after:content-[""] hover:after:absolute hover:after:left-0 hover:after:-bottom-0.5 hover:after:h-0.5 hover:after:w-full hover:after:bg-primary hover:after:rounded hover:after:transition-all after:transition-all',
-        login: "text-10xl hover:bg-yellow-300",
-        outlineTest: "border border-black hover:bg-accent hover:bg-sky-200",
-        confirm: "bg-sky-300 hover:bg-accent hover:bg-sky-200",
-        warning: "bg-red-700 text-white hover:bg-red-500",
-        bookings: "bg-blue-500 text-white hover:bg-blue-300",
+        login: "text-10xl hover:bg-bloom-yellow",
+        outlineTest:
+          "border border-black hover:bg-accent hover:bg-bloom-blue-light",
+        confirm: "bg-bloom-blue hover:bg-accent hover:bg-bloom-blue-light",
+        warning: "bg-bloom-red text-white hover:bg-red-500",
+        bookings: "bg-bloom-orbit text-white hover:bg-bloom-orbit-light",
       },
       size: {
         default: "h-10 px-4 py-2",
