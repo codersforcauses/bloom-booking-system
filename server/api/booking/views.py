@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from rest_framework import generics
+from rest_framework import generics, permissions
 from .models import Booking
 from .serializers import BookingSerializer
 from rest_framework.response import Response
@@ -16,6 +16,14 @@ class BookingsListCreatView(generics.ListCreateAPIView):
         kwargs["fields"] = ('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
                             'recurrence_rule', 'status', 'google_event_id', 'created_at')
         return super().get_serializer(*args, **kwargs)
+
+    # set permission restrictions (commented as there is no user right now)
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.IsAdminUser()]
+        elif self.request.method == "POST":
+            return [permissions.AllowAny()]
+        return super().get_permissions()
 
     def get_queryset(self):
         # reduce data retrieved from database
