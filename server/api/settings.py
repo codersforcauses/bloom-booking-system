@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "api.healthcheck",
     "api.room",
+    "api.booking",
 ]
 
 MIDDLEWARE = [
