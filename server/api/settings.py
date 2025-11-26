@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "corsheaders",
     "api.healthcheck",
+    "api.room",
+    "api.booking",
 ]
 
 MIDDLEWARE = [
