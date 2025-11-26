@@ -16,7 +16,7 @@ class Booking(models.Model):
     visitor_email = models.CharField(max_length=100)
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
-    recurrence_rule = models.CharField(100, blank=True)             # return "" when there is no recurrence rule
+    recurrence_rule = models.CharField(max_length=100, blank=True)       # return "" when there is no recurrence rule
     status = models.CharField(max_length=9, choices=STATUS_CHOICES)
     google_event_id = models.CharField(max_length=100)              # Notion says it's an integer field, while github gives string
     cancel_reason = models.TextField(blank=True)                    # return "" when it is not cancelled
