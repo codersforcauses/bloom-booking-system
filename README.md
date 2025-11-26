@@ -125,7 +125,10 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api
 cd server
 poetry env use <your-python3.12-path> # specify python version
 poetry install
-poetry shell # if this fails, run: `poetry env activate` to check the virtual environment <path>. Then run `source <path>`
+
+eval $(poetry env activate) #Bash/Zsh/Csh
+Invoke-Expression (poetry env activate) #Powershell
+
 python manage.py migrate
 python manage.py createsuperuser  # optional
 python manage.py runserver

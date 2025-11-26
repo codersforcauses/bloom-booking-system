@@ -291,4 +291,7 @@ dist
 # misc
 .DS_Store
 
+# LSP config files
+pyrightconfig.json
+
 opt/
