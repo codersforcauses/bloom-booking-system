@@ -14,7 +14,7 @@ django-cors-headers = "^4.3.1"
 psycopg = {extras = ["binary", "pool"], version = "^3.2.1"}
 freezegun = "^1.5.1"
 gunicorn = "^23.0.0"
-pygments = ">=2.7.2"
+pygments = "^2.7.2"
 python-dotenv = "^1.0.1"
 django-extensions = "^3.2.3"
 drf-spectacular = "^0.29.0"
