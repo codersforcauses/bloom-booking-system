@@ -52,7 +52,7 @@ The easiest way to get started is using the VS Code Dev Container:
 
 - **Node.js 20.x.x** and **npm** - [Download here](https://nodejs.org/)
 - **Python 3.12.x** - [Download here](https://python.org/)
-- **Poetry 1.8.4** (Python package manager) - [Installation guide](https://python-poetry.org/docs/#installation)
+- **Poetry 1.8.x** (Python package manager) - [Installation guide](https://python-poetry.org/docs/#installation)
 - **Docker Desktop** - [Download here](https://www.docker.com/products/docker-desktop/)
 
 ### Installation Steps
