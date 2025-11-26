@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "corsheaders",
     "api.healthcheck",
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -162,3 +163,40 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
+AWS_QUERYSTRING_AUTH = False
+
+# Use AWS S3 for storage
+# example model:
+# ```
+# class Room(models.Model):
+#     name = models.CharField(max_length=255)
+#     image = models.ImageField(upload_to="rooms/")
+# ```
+# please use `rooms/` as upload_to path
+# make sure you are using 'storages.backends.s3.S3Storage' in your model's storage
+# ```
+# from django.core.files.storage import default_storage
+# print(default_storage.__class__)
+# ```
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": AWS_ACCESS_KEY_ID,
+            "secret_key": AWS_SECRET_ACCESS_KEY,
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "region_name": AWS_S3_REGION_NAME,
+            "querystring_auth": AWS_QUERYSTRING_AUTH,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
