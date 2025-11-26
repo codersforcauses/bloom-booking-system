@@ -1,3 +1,346 @@
-from django.test import TestCase
+from .models import Booking
+from api.room.models import Room
+from rest_framework import status
+from rest_framework.test import APITestCase
+from django.utils import timezone
+from datetime import timedelta, datetime
+from django.contrib.auth import get_user_model
 
-# Create your tests here.
+
+class BookingViewTest(APITestCase):
+
+    def setUp(self):
+        now = timezone.now()
+        self.room = Room.objects.create(
+            name='Meeting Room A',
+            img_url='http://example.com/roomA.jpg',
+            location_id=1,
+            capacity_id=2,
+            start_datetime='2025-11-01T09:00:00Z',
+            end_datetime='2025-11-01T18:00:00Z',
+            recurrence_rule='FREQ=WEEKLY;BYDAY=MO,WE,FR',
+            created_at=now,
+            updated_at=now,
+        )
+        self.booking = Booking.objects.create(
+            room_id=self.room.id,
+            visitor_name='default',
+            visitor_email='default@example.com',
+            start_datetime='2025-11-01T10:00:00Z',
+            end_datetime='2025-11-01T12:00:00Z',
+            recurrence_rule="",
+            status='CONFIRMED',
+            google_event_id='abc123'
+        )
+
+    def tearDown(self):
+        self.room.delete()
+        self.booking.delete()
+
+    def test_booking_creation(self):
+        payload = {
+            "room_id": self.room.id,
+            "visitor_name": "Alice Johnson",
+            "visitor_email": "alice@example.com",
+            "start_datetime": "2025-11-27T10:00:00Z",
+            "end_datetime": "2025-11-27T12:00:00Z",
+            "recurrence_rule": "",
+            "status": "CONFIRMED",
+            "google_event_id": "abc124"
+            }
+        url = '/api/bookings/'
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        now = timezone.now()
+        data = response.json()
+        self.assertEqual(data["id"], self.booking.id + 1)
+        self.assertEqual(data["visitor_name"], payload["visitor_name"])
+        self.assertEqual(data["visitor_email"], payload["visitor_email"])
+        self.assertEqual(data["start_datetime"], payload["start_datetime"])
+        self.assertEqual(data["end_datetime"], payload["end_datetime"])
+        self.assertEqual(data["recurrence_rule"], payload["recurrence_rule"])
+        self.assertEqual(data["status"], payload["status"])
+        self.assertEqual(data["google_event_id"], payload["google_event_id"])
+        self.assertIn("room", data)
+        self.assertEqual(data["room"]["id"], self.room.id)
+        self.assertEqual(data["room"]["name"], self.room.name)
+        self.assertNotIn("cancel_reason", data)
+        self.assertNotIn("updated_at", data)
+        self.assertAlmostEqual(datetime.fromisoformat(data["created_at"]), now, delta=timedelta(seconds=10))
+
+        self.assertTrue(Booking.objects.filter(id=data["id"]).exists())
+
+    def test_booking_creation_fails_with_invalid_status(self):
+        payload = {
+            "room_id": self.room.id,
+            "visitor_name": "Alice Johnson",
+            "visitor_email": "alice@example.com",
+            "start_datetime": "2025-11-27T10:00:00Z",
+            "end_datetime": "2025-11-27T12:00:00Z",
+            "recurrence_rule": "",
+            "status": "WHATEVER",
+            "google_event_id": "abc124"
+            }
+        url = '/api/bookings/'
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_booking_listing_fails_without_authentication(self):
+        url = '/api/bookings/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_booking_listing_fails_without_admin_authorization(self):
+        User = get_user_model()
+        not_admin = User.objects.create_user(
+            username='not_admin',
+            password='password',
+            is_staff=False
+        )
+        self.client.force_login(not_admin)
+        url = '/api/bookings/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_booking_listing(self):
+        User = get_user_model()
+        admin = User.objects.create_user(
+            username='admin',
+            password='password',
+            is_staff=True
+        )
+        self.client.force_login(admin)
+        url = '/api/bookings/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        data = data[0]
+        self.assertEqual(data["id"], self.booking.id)
+        self.assertEqual(data["visitor_name"], self.booking.visitor_name)
+        self.assertEqual(data["visitor_email"], self.booking.visitor_email)
+        self.assertEqual(data["start_datetime"], self.booking.start_datetime)
+        self.assertEqual(data["end_datetime"], self.booking.end_datetime)
+        self.assertEqual(data["recurrence_rule"], self.booking.recurrence_rule)
+        self.assertEqual(data["status"], self.booking.status)
+        self.assertEqual(data["google_event_id"], self.booking.google_event_id)
+        self.assertIn("room", data)
+        self.assertEqual(data["room"]["id"], self.room.id)
+        self.assertEqual(data["room"]["name"], self.room.name)
+        self.assertNotIn("cancel_reason", data)
+        self.assertNotIn("updated_at", data)
+        self.assertEqual(datetime.fromisoformat(data["created_at"]), self.booking.created_at)
+
+    def test_booking_filtering_with_room_id(self):
+        User = get_user_model()
+        admin = User.objects.create_user(
+            username='admin',
+            password='password',
+            is_staff=True
+        )
+        self.client.force_login(admin)
+
+        # when there is matched booking
+        url = '/api/bookings/?room_id=' + str(self.room.id)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        # when there is no matched booking
+        url = '/api/bookings/?room_id=' + str(self.room.id + 1)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 0)
+
+    def test_booking_filtering_with_date(self):
+        User = get_user_model()
+        admin = User.objects.create_user(
+            username='admin',
+            password='password',
+            is_staff=True
+        )
+        self.client.force_login(admin)
+
+        # when there is matched booking
+        date = datetime.fromisoformat(self.booking.start_datetime).date()
+        url = '/api/bookings/?date=' + str(date)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        # when there is no matched booking
+        url = '/api/bookings/?date=' + str(date + timedelta(days=1))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 0)
+
+    def test_booking_filtering_with_visitor_name(self):
+        User = get_user_model()
+        admin = User.objects.create_user(
+            username='admin',
+            password='password',
+            is_staff=True
+        )
+        self.client.force_login(admin)
+
+        # when there is matched booking
+        url = '/api/bookings/?visitor_name=' + self.booking.visitor_name
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        # when there is matched booking (case insensitive)
+        url = '/api/bookings/?visitor_name=' + self.booking.visitor_name.upper()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        # when there is matched booking (partial match)
+        url = '/api/bookings/?visitor_name=' + self.booking.visitor_name.split(' ')[0]
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        # when there is no matched booking
+        url = '/api/bookings/?visitor_name=' + 'whatever'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 0)
+
+    def test_booking_filtering_with_visitor_email(self):
+        User = get_user_model()
+        admin = User.objects.create_user(
+            username='admin',
+            password='password',
+            is_staff=True
+        )
+        self.client.force_login(admin)
+
+        # when there is matched booking
+        url = '/api/bookings/?visitor_email=' + self.booking.visitor_email
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        # when there is matched booking (case insensitive)
+        url = '/api/bookings/?visitor_email=' + self.booking.visitor_email.upper()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        # when there is no matched booking (no partial match)
+        url = '/api/bookings/?visitor_email=' + self.booking.visitor_email.split('@')[0]
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 0)
+
+        # when there is no matched booking
+        url = '/api/bookings/?visitor_email=' + 'whatever@example.com'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 0)
+
+    def test_booking_update(self):
+        payload = {
+            "start_datetime": "2025-11-03T12:00:00Z",
+            "end_datetime": "2025-11-03T13:00:00Z",
+            "recurrence_rule": ""
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/'
+        response = self.client.put(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        now = timezone.now()
+        data = response.json()
+        self.assertEqual(data["id"], self.booking.id)
+        self.assertEqual(data["status"], self.booking.status)
+        self.assertAlmostEqual(datetime.fromisoformat(data["updated_at"]), now, delta=timedelta(seconds=10))
+
+        self.assertNotIn("visitor_name", data)
+        self.assertNotIn("visitor_email", data)
+        self.assertNotIn("start_datetime", data)
+        self.assertNotIn("end_datetime", data)
+        self.assertNotIn("recurrence_rule", data)
+        self.assertNotIn("google_event_id", data)
+        self.assertNotIn("room", data)
+        self.assertNotIn("cancel_reason", data)
+        self.assertNotIn("created_at", data)
+
+        self.assertTrue(Booking.objects.filter(id=data["id"]).exists())
+
+    def test_booking_deletion(self):
+        payload = {
+            "visitor_email": self.booking.visitor_email,
+            "cancel_reason": "Meeting postponed"
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/'
+        response = self.client.delete(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        now = timezone.now()
+        data = response.json()
+        self.assertEqual(data["id"], self.booking.id)
+        self.assertEqual(data["status"], "CANCELLED")
+        self.assertEqual(data["cancel_reason"], payload["cancel_reason"])
+        self.assertAlmostEqual(datetime.fromisoformat(data["updated_at"]), now, delta=timedelta(seconds=10))
+
+        self.assertNotIn("visitor_name", data)
+        self.assertNotIn("visitor_email", data)
+        self.assertNotIn("start_datetime", data)
+        self.assertNotIn("end_datetime", data)
+        self.assertNotIn("recurrence_rule", data)
+        self.assertNotIn("google_event_id", data)
+        self.assertNotIn("room", data)
+        self.assertNotIn("created_at", data)
+
+        self.assertTrue(Booking.objects.filter(id=data["id"]).exists())     # the object is not deleted
+
+    def test_booking_deletion_fails_with_unmatched_email(self):
+        payload = {
+            "visitor_email": "whatever@email.com",
+            "cancel_reason": "Meeting postponed"
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/'
+        response = self.client.delete(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_booking_search(self):
+        # when there is matched booking
+        url = '/api/bookings/search/?visitor_email=' + self.booking.visitor_email
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        # when there is matched booking (case insensitive)
+        url = '/api/bookings/search/?visitor_email=' + self.booking.visitor_email.upper()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+
+        # when there is no matched booking
+        url = '/api/bookings/search/?visitor_email=' + 'whatever@example.com'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 0)
+
+    def test_booking_search_fails_with_no_email(self):
+        # when there is matched booking
+        url = '/api/bookings/search/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
