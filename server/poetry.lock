@@ -2,17 +2,17 @@
 
 [[package]]
 name = "asgiref"
-version = "3.8.1"
+version = "3.11.0"
 description = "ASGI specs, helper code, and adapters"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "asgiref-3.8.1-py3-none-any.whl", hash = "sha256:3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47"},
-    {file = "asgiref-3.8.1.tar.gz", hash = "sha256:c343bd80a0bec947a9860adb4c432ffa7db769836c64238fc34bdc3fec84d590"},
+    {file = "asgiref-3.11.0-py3-none-any.whl", hash = "sha256:1db9021efadb0d9512ce8ffaf72fcef601c7b73a8807a1bb2ef143dc6b14846d"},
+    {file = "asgiref-3.11.0.tar.gz", hash = "sha256:13acff32519542a1736223fb79a715acdebe24286d98e8b164a73085f40da2c4"},
 ]
 
 [package.extras]
-tests = ["mypy (>=0.800)", "pytest", "pytest-asyncio"]
+tests = ["mypy (>=1.14.0)", "pytest", "pytest-asyncio"]
 
 [[package]]
 name = "astroid"
@@ -186,17 +186,17 @@ files = [
 
 [[package]]
 name = "django"
-version = "5.1.12"
+version = "5.2.8"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "django-5.1.12-py3-none-any.whl", hash = "sha256:9eb695636cea3601b65690f1596993c042206729afb320ca0960b55f8ed4477b"},
-    {file = "django-5.1.12.tar.gz", hash = "sha256:8a8991b1ec052ef6a44fefd1ef336ab8daa221287bcb91a4a17d5e1abec5bbcc"},
+    {file = "django-5.2.8-py3-none-any.whl", hash = "sha256:37e687f7bd73ddf043e2b6b97cfe02fcbb11f2dbb3adccc6a2b18c6daa054d7f"},
+    {file = "django-5.2.8.tar.gz", hash = "sha256:23254866a5bb9a2cfa6004e8b809ec6246eba4b58a7589bc2772f1bcc8456c7f"},
 ]
 
 [package.dependencies]
-asgiref = ">=3.8.1,<4"
+asgiref = ">=3.8.1"
 sqlparse = ">=0.3.1"
 tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
@@ -206,18 +206,18 @@ bcrypt = ["bcrypt"]
 
 [[package]]
 name = "django-cors-headers"
-version = "4.4.0"
+version = "4.9.0"
 description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "django_cors_headers-4.4.0-py3-none-any.whl", hash = "sha256:5c6e3b7fe870876a1efdfeb4f433782c3524078fa0dc9e0195f6706ce7a242f6"},
-    {file = "django_cors_headers-4.4.0.tar.gz", hash = "sha256:92cf4633e22af67a230a1456cb1b7a02bb213d6536d2dcb2a4a24092ea9cebc2"},
+    {file = "django_cors_headers-4.9.0-py3-none-any.whl", hash = "sha256:15c7f20727f90044dcee2216a9fd7303741a864865f0c3657e28b7056f61b449"},
+    {file = "django_cors_headers-4.9.0.tar.gz", hash = "sha256:fe5d7cb59fdc2c8c646ce84b727ac2bca8912a247e6e68e1fb507372178e59e8"},
 ]
 
 [package.dependencies]
 asgiref = ">=3.6"
-django = ">=3.2"
+django = ">=4.2"
 
 [[package]]
 name = "django-extensions"
@@ -235,17 +235,40 @@ Django = ">=3.2"
 
 [[package]]
 name = "djangorestframework"
-version = "3.15.2"
+version = "3.16.1"
 description = "Web APIs for Django, made easy."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "djangorestframework-3.15.2-py3-none-any.whl", hash = "sha256:2b8871b062ba1aefc2de01f773875441a961fefbf79f5eed1e32b2f096944b20"},
-    {file = "djangorestframework-3.15.2.tar.gz", hash = "sha256:36fe88cd2d6c6bec23dca9804bab2ba5517a8bb9d8f47ebc68981b56840107ad"},
+    {file = "djangorestframework-3.16.1-py3-none-any.whl", hash = "sha256:33a59f47fb9c85ede792cbf88bde71893bcda0667bc573f784649521f1102cec"},
+    {file = "djangorestframework-3.16.1.tar.gz", hash = "sha256:166809528b1aced0a17dc66c24492af18049f2c9420dbd0be29422029cfc3ff7"},
 ]
 
 [package.dependencies]
 django = ">=4.2"
+
+[[package]]
+name = "drf-spectacular"
+version = "0.29.0"
+description = "Sane and flexible OpenAPI 3 schema generation for Django REST framework"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "drf_spectacular-0.29.0-py3-none-any.whl", hash = "sha256:d1ee7c9535d89848affb4427347f7c4a22c5d22530b8842ef133d7b72e19b41a"},
+    {file = "drf_spectacular-0.29.0.tar.gz", hash = "sha256:0a069339ea390ce7f14a75e8b5af4a0860a46e833fd4af027411a3e94fc1a0cc"},
+]
+
+[package.dependencies]
+Django = ">=2.2"
+djangorestframework = ">=3.10.3"
+inflection = ">=0.3.1"
+jsonschema = ">=2.6.0"
+PyYAML = ">=5.1"
+uritemplate = ">=2.0.0"
+
+[package.extras]
+offline = ["drf-spectacular-sidecar"]
+sidecar = ["drf-spectacular-sidecar"]
 
 [[package]]
 name = "flake8"
@@ -279,13 +302,13 @@ flake8 = ">=3.8.4,<7"
 
 [[package]]
 name = "freezegun"
-version = "1.5.1"
+version = "1.5.5"
 description = "Let your Python tests travel through time"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "freezegun-1.5.1-py3-none-any.whl", hash = "sha256:bf111d7138a8abe55ab48a71755673dbaa4ab87f4cff5634a4442dfec34c15f1"},
-    {file = "freezegun-1.5.1.tar.gz", hash = "sha256:b29dedfcda6d5e8e083ce71b2b542753ad48cfec44037b3fc79702e2980a89e9"},
+    {file = "freezegun-1.5.5-py3-none-any.whl", hash = "sha256:cd557f4a75cf074e84bc374249b9dd491eaeacd61376b9eb3c423282211619d2"},
+    {file = "freezegun-1.5.5.tar.gz", hash = "sha256:ac7742a6cc6c25a2c35e9292dfd554b897b517d2dec26891a2e8debf205cb94a"},
 ]
 
 [package.dependencies]
@@ -445,18 +468,53 @@ all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2
 
 [[package]]
 name = "iniconfig"
-version = "2.0.0"
+version = "2.3.0"
 description = "brain-dead simple config-ini parsing"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
-    {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
+    {file = "iniconfig-2.3.0-py3-none-any.whl", hash = "sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12"},
+    {file = "iniconfig-2.3.0.tar.gz", hash = "sha256:c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730"},
 ]
 
 [[package]]
+name = "jsonschema"
+version = "4.25.1"
+description = "An implementation of JSON Schema validation for Python"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "jsonschema-4.25.1-py3-none-any.whl", hash = "sha256:3fba0169e345c7175110351d456342c364814cfcf3b964ba4587f22915230a63"},
+    {file = "jsonschema-4.25.1.tar.gz", hash = "sha256:e4a9655ce0da0c0b67a085847e00a3a51449e1157f4f75e9fb5aa545e122eb85"},
+]
+
+[package.dependencies]
+attrs = ">=22.2.0"
+jsonschema-specifications = ">=2023.03.6"
+referencing = ">=0.28.4"
+rpds-py = ">=0.7.1"
+
+[package.extras]
+format = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-validator", "rfc3987", "uri-template", "webcolors (>=1.11)"]
+format-nongpl = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-validator", "rfc3986-validator (>0.1.0)", "rfc3987-syntax (>=1.1.0)", "uri-template", "webcolors (>=24.6.0)"]
+
+[[package]]
+name = "jsonschema-specifications"
+version = "2025.9.1"
+description = "The JSON Schema meta-schemas and vocabularies, exposed as a Registry"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "jsonschema_specifications-2025.9.1-py3-none-any.whl", hash = "sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe"},
+    {file = "jsonschema_specifications-2025.9.1.tar.gz", hash = "sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d"},
+]
+
+[package.dependencies]
+referencing = ">=0.31.0"
+
+[[package]]
 name = "lazy-object-proxy"
-version = "1.10.0"
+version = "1.12.0"
 description = "A fast and thorough lazy object proxy."
 optional = false
 python-versions = ">=3.8"
@@ -513,29 +571,29 @@ files = [
 
 [[package]]
 name = "packaging"
-version = "24.1"
+version = "25.0"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "packaging-24.1-py3-none-any.whl", hash = "sha256:5b8f2217dbdbd2f7f384c41c628544e6d52f2d0f53c6d0c3ea61aa5d1d7ff124"},
-    {file = "packaging-24.1.tar.gz", hash = "sha256:026ed72c8ed3fcce5bf8950572258698927fd1dbda10a5e981cdf0ac37f4f002"},
+    {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
+    {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
 ]
 
 [[package]]
 name = "pluggy"
-version = "1.5.0"
+version = "1.6.0"
 description = "plugin and hook calling mechanisms for python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pluggy-1.5.0-py3-none-any.whl", hash = "sha256:44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669"},
-    {file = "pluggy-1.5.0.tar.gz", hash = "sha256:2cffa88e94fdc978c4c574f15f9e59b7f4201d439195c3715ca9e2486f1d0cf1"},
+    {file = "pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746"},
+    {file = "pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3"},
 ]
 
 [package.extras]
 dev = ["pre-commit", "tox"]
-testing = ["pytest", "pytest-benchmark"]
+testing = ["coverage", "pytest", "pytest-benchmark"]
 
 [[package]]
 name = "proto-plus"
@@ -575,19 +633,19 @@ files = [
 
 [[package]]
 name = "psycopg"
-version = "3.2.1"
+version = "3.2.13"
 description = "PostgreSQL database adapter for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "psycopg-3.2.1-py3-none-any.whl", hash = "sha256:ece385fb413a37db332f97c49208b36cf030ff02b199d7635ed2fbd378724175"},
-    {file = "psycopg-3.2.1.tar.gz", hash = "sha256:dc8da6dc8729dacacda3cc2f17d2c9397a70a66cf0d2b69c91065d60d5f00cb7"},
+    {file = "psycopg-3.2.13-py3-none-any.whl", hash = "sha256:a481374514f2da627157f767a9336705ebefe93ea7a0522a6cbacba165da179a"},
+    {file = "psycopg-3.2.13.tar.gz", hash = "sha256:309adaeda61d44556046ec9a83a93f42bbe5310120b1995f3af49ab6d9f13c1d"},
 ]
 
 [package.dependencies]
-psycopg-binary = {version = "3.2.1", optional = true, markers = "implementation_name != \"pypy\" and extra == \"binary\""}
+psycopg-binary = {version = "3.2.13", optional = true, markers = "implementation_name != \"pypy\" and extra == \"binary\""}
 psycopg-pool = {version = "*", optional = true, markers = "extra == \"pool\""}
-typing-extensions = ">=4.4"
+typing-extensions = {version = ">=4.6", markers = "python_version < \"3.13\""}
 tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
 [package.extras]
@@ -596,11 +654,11 @@ c = ["psycopg-c (==3.2.1)"]
 dev = ["ast-comments (>=1.1.2)", "black (>=24.1.0)", "codespell (>=2.2)", "dnspython (>=2.1)", "flake8 (>=4.0)", "mypy (>=1.6)", "types-setuptools (>=57.4)", "wheel (>=0.37)"]
 docs = ["Sphinx (>=5.0)", "furo (==2022.6.21)", "sphinx-autobuild (>=2021.3.14)", "sphinx-autodoc-typehints (>=1.12)"]
 pool = ["psycopg-pool"]
-test = ["anyio (>=4.0)", "mypy (>=1.6)", "pproxy (>=2.7)", "pytest (>=6.2.5)", "pytest-cov (>=3.0)", "pytest-randomly (>=3.5)"]
+test = ["anyio (>=4.0)", "mypy (>=1.14)", "pproxy (>=2.7)", "pytest (>=6.2.5)", "pytest-cov (>=3.0)", "pytest-randomly (>=3.5)"]
 
 [[package]]
 name = "psycopg-binary"
-version = "3.2.1"
+version = "3.2.13"
 description = "PostgreSQL database adapter for Python -- C optimisation distribution"
 optional = false
 python-versions = ">=3.8"
@@ -662,17 +720,17 @@ files = [
 
 [[package]]
 name = "psycopg-pool"
-version = "3.2.2"
+version = "3.2.8"
 description = "Connection Pool for Psycopg"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "psycopg_pool-3.2.2-py3-none-any.whl", hash = "sha256:273081d0fbfaced4f35e69200c89cb8fbddfe277c38cc86c235b90a2ec2c8153"},
-    {file = "psycopg_pool-3.2.2.tar.gz", hash = "sha256:9e22c370045f6d7f2666a5ad1b0caf345f9f1912195b0b25d0d3bcc4f3a7389c"},
+    {file = "psycopg_pool-3.2.8-py3-none-any.whl", hash = "sha256:5474137f3a58e697e0141d0311e70ec067fc4466031496d7f9ef3e2c28a1dc09"},
+    {file = "psycopg_pool-3.2.8.tar.gz", hash = "sha256:854e17c2a637c3b9f8d8b24faad57d4cf850baf3fc03ca56ef7e5b4998e391b9"},
 ]
 
 [package.dependencies]
-typing-extensions = ">=4.4"
+typing-extensions = ">=4.6"
 
 [[package]]
 name = "pyasn1"
@@ -737,23 +795,24 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pytest"
-version = "8.3.2"
+version = "8.4.2"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pytest-8.3.2-py3-none-any.whl", hash = "sha256:4ba08f9ae7dcf84ded419494d229b48d0903ea6407b030eaec46df5e6a73bba5"},
-    {file = "pytest-8.3.2.tar.gz", hash = "sha256:c132345d12ce551242c87269de812483f5bcc87cdbb4722e48487ba194f9fdce"},
+    {file = "pytest-8.4.2-py3-none-any.whl", hash = "sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79"},
+    {file = "pytest-8.4.2.tar.gz", hash = "sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01"},
 ]
 
 [package.dependencies]
-colorama = {version = "*", markers = "sys_platform == \"win32\""}
-iniconfig = "*"
-packaging = "*"
+colorama = {version = ">=0.4", markers = "sys_platform == \"win32\""}
+iniconfig = ">=1"
+packaging = ">=20"
 pluggy = ">=1.5,<2"
+pygments = ">=2.7.2"
 
 [package.extras]
-dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests", "setuptools", "xmlschema"]
 
 [[package]]
 name = "python-dateutil"
@@ -771,13 +830,13 @@ six = ">=1.5"
 
 [[package]]
 name = "python-dotenv"
-version = "1.0.1"
+version = "1.2.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca"},
-    {file = "python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"},
+    {file = "python_dotenv-1.2.1-py3-none-any.whl", hash = "sha256:b81ee9561e9ca4004139c6cbba3a238c32b03e4894671e181b671e8cb8425d61"},
+    {file = "python_dotenv-1.2.1.tar.gz", hash = "sha256:42667e897e16ab0d66954af0e60a9caa94f0fd4ecf3aaf6d2d260eec1aa36ad6"},
 ]
 
 [package.extras]
@@ -820,24 +879,24 @@ pyasn1 = ">=0.1.3"
 
 [[package]]
 name = "six"
-version = "1.16.0"
+version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
-    {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
-    {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+    {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
+    {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
 ]
 
 [[package]]
 name = "sqlparse"
-version = "0.5.1"
+version = "0.5.3"
 description = "A non-validating SQL parser."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "sqlparse-0.5.1-py3-none-any.whl", hash = "sha256:773dcbf9a5ab44a090f3441e2180efe2560220203dc2f8c0b0fa141e18b505e4"},
-    {file = "sqlparse-0.5.1.tar.gz", hash = "sha256:bb6b4df465655ef332548e24f08e205afc81b9ab86cb1c45657a7ff173a3a00e"},
+    {file = "sqlparse-0.5.3-py3-none-any.whl", hash = "sha256:cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca"},
+    {file = "sqlparse-0.5.3.tar.gz", hash = "sha256:09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272"},
 ]
 
 [package.extras]
@@ -846,24 +905,35 @@ doc = ["sphinx"]
 
 [[package]]
 name = "typing-extensions"
-version = "4.12.2"
-description = "Backported and Experimental Type Hints for Python 3.8+"
+version = "4.15.0"
+description = "Backported and Experimental Type Hints for Python 3.9+"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d"},
-    {file = "typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"},
+    {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
+    {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
 ]
 
 [[package]]
 name = "tzdata"
-version = "2024.1"
+version = "2025.2"
 description = "Provider of IANA time zone data"
 optional = false
 python-versions = ">=2"
 files = [
-    {file = "tzdata-2024.1-py2.py3-none-any.whl", hash = "sha256:9068bc196136463f5245e51efda838afa15aaeca9903f49050dfa2679db4d252"},
-    {file = "tzdata-2024.1.tar.gz", hash = "sha256:2674120f8d891909751c38abcdfd386ac0a5a1127954fbc332af6b5ceae07efd"},
+    {file = "tzdata-2025.2-py2.py3-none-any.whl", hash = "sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8"},
+    {file = "tzdata-2025.2.tar.gz", hash = "sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9"},
+]
+
+[[package]]
+name = "uritemplate"
+version = "4.2.0"
+description = "Implementation of RFC 6570 URI Templates"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "uritemplate-4.2.0-py3-none-any.whl", hash = "sha256:962201ba1c4edcab02e60f9a0d3821e82dfc5d2d6662a21abd533879bdb8a686"},
+    {file = "uritemplate-4.2.0.tar.gz", hash = "sha256:480c2ed180878955863323eea31b0ede668795de182617fef9c6ca09e6ec9d0e"},
 ]
 
 [[package]]
@@ -896,7 +966,7 @@ zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
 name = "wrapt"
-version = "1.16.0"
+version = "1.17.3"
 description = "Module for decorators, wrappers and monkey patching."
 optional = false
 python-versions = ">=3.6"
