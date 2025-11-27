@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { HiOutlineUser } from "react-icons/hi";
 
 import { usePings } from "@/hooks/pings";
 import { cn } from "@/lib/utils";
@@ -20,9 +21,10 @@ export default function Home() {
       )}
     >
       <Button variant="login" onClick={() => setClicked(true)}>
-        {isLoading ? "Admin login" : "Admin login"}
+        <HiOutlineUser className="text-xl" />
+        Admin login
       </Button>
-      <Button variant="outlineTest" onClick={() => setClicked(true)}>
+      <Button variant="outline" onClick={() => setClicked(true)}>
         {isLoading ? "Hover" : "Outline"}
       </Button>
       <Button variant="link" onClick={() => setClicked(true)}>
@@ -34,7 +36,7 @@ export default function Home() {
       <Button variant="warning" onClick={() => setClicked(true)}>
         {isLoading ? "Hover" : "Warning"}
       </Button>
-      <Button variant="bookings" onClick={() => setClicked(true)}>
+      <Button variant="booking" onClick={() => setClicked(true)}>
         {isLoading ? "Hover" : "View bookings"}
       </Button>
       <p>
