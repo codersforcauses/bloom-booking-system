@@ -19,7 +19,7 @@ const buttonVariants = cva(
         login: "flex gap-2 items-centre hover:bg-bloom-yellow",
         outline: "border border-black hover:bg-bloom-blue-light",
         confirm: "bg-bloom-blue hover:bg-bloom-blue-light",
-        warning: "bg-bloom-red text-white hover:bg-bloom-red/80",
+        warning: "bg-bloom-red text-white hover:bg-bloom-red-light",
         booking: "bg-bloom-orbit text-white hover:bg-bloom-orbit-light",
       },
       size: {
