@@ -21,26 +21,11 @@ export default function Home() {
       )}
     >
       <Button variant="login" onClick={() => setClicked(true)}>
-        <HiOutlineUser className="text-xl" />
-        Admin login
-      </Button>
-      <Button variant="outline" onClick={() => setClicked(true)}>
-        {isLoading ? "Hover" : "Outline"}
-      </Button>
-      <Button variant="link" onClick={() => setClicked(true)}>
-        {isLoading ? "Hover" : "Text"}
-      </Button>
-      <Button variant="confirm">
-        <span className="mr-1 text-xl leading-none">+</span> Confirm
-      </Button>
-      <Button variant="warning" onClick={() => setClicked(true)}>
-        {isLoading ? "Hover" : "Warning"}
-      </Button>
-      <Button variant="booking" onClick={() => setClicked(true)}>
-        {isLoading ? "Hover" : "View bookings"}
+        Ping
       </Button>
       <p>
-        Response from server: <span>{data as string}</span>
+        Response from server:{" "}
+        <span className="font-bold">{data as string}</span>
       </p>
     </main>
   );
