@@ -5,7 +5,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-normal ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-normal ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -17,7 +17,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-8 hover:underline decoration-2",
         login: "flex gap-2 items-centre hover:bg-bloom-yellow",
-        outline: "border border-black hover:bg-bloom-blue-light",
+        outline: "border border-2 border-black hover:bg-bloom-blue-light",
         confirm: "bg-bloom-blue hover:bg-bloom-blue-light",
         warning: "bg-bloom-red text-white hover:bg-bloom-red-light",
         booking: "bg-bloom-orbit text-white hover:bg-bloom-orbit-light",
