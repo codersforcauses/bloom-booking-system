@@ -1,11 +1,12 @@
 // Text fields, Dropdown Menus, Date Fields, Time Fields, Badge Fields, are all variations of the Input field.
 // To see how each one is used, refer to this page.
 // Currently only the Text and Badge field has been implemented.
-
-"use client";
 import React from "react";
 
 import InputField from "@/components/ui/input";
+
+"use client";
+console.log("RENDER", Date.now());
 
 const AMENITIES = [
   "Audio",
@@ -18,6 +19,7 @@ const AMENITIES = [
 
 export default function TestInputPage() {
   const [name, setName] = React.useState("");
+  const [occurences, setOccurences] = React.useState("");
   const [amenities, setAmenities] = React.useState<string[]>([]);
 
   return (
@@ -27,10 +29,20 @@ export default function TestInputPage() {
 
         {/* Text input */}
         <InputField
+          kind="text"
           label="Name"
           name="guestName"
           value={name}
           onChange={setName}
+        />
+
+        {/* Number input */}
+        <InputField
+          kind="number"
+          label="Occurences"
+          name="occurences"
+          value={occurences}
+          onChange={setOccurences}
         />
 
         {/* Badge input */}

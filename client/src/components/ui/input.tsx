@@ -6,7 +6,7 @@ import React from "react";
 
 import Badge from "@/components/ui/badge";
 
-type FieldKind = "text" | "select" | "badge" | "date" | "time";
+type FieldKind = "text" | "number" | "select" | "badge" | "date" | "time";
 
 type BaseFieldProps = {
   name: string;
@@ -22,6 +22,17 @@ type TextFieldProps = BaseFieldProps & {
   kind?: "text";
   value: string;
   onChange: (value: string) => void;
+};
+
+// NUMBER
+type NumberFieldProps = BaseFieldProps & {
+  kind: "number";
+  value: string;
+  onChange: (value: string) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  placeholder?: string;
 };
 
 // SELECT (AKA DROPDOWN)
@@ -52,6 +63,7 @@ type TimeFieldProps = BaseFieldProps & {
 
 export type InputFieldProps =
   | TextFieldProps
+  | NumberFieldProps
   | SelectFieldProps
   | BadgeFieldProps
   | DateFieldProps
@@ -83,6 +95,21 @@ const InputField: React.FC<InputFieldProps> = (props) => {
         value={textProps.value}
         onChange={(e) => textProps.onChange(e.target.value)}
         placeholder="Text"
+      />
+    );
+  } else if (kind === "number") {
+    const numberProps = props as NumberFieldProps;
+
+    control = (
+      <input
+        id={name}
+        name={name}
+        className="body w-full bg-transparent outline-none placeholder:text-[var(--bloom-gray)]"
+        value={numberProps.value}
+        onChange={(e) => numberProps.onChange(e.target.value)}
+        placeholder="0"
+        type="number"
+        inputMode="numeric"
       />
     );
   } else if (kind === "badge" && badgeProps) {
