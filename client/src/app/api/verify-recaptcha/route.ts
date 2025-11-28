@@ -12,9 +12,11 @@ export async function POST(req: Request) {
         "RECAPTCHA_SECRET_KEY is not set in environment variables",
       );
     } else {
-      return Response.json(
+      return new Response(
         JSON.stringify({ message: "Internal server error" }),
-        { status: 500 },
+        {
+          status: 500,
+        },
       );
     }
   }

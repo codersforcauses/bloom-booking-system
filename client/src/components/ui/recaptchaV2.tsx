@@ -35,7 +35,8 @@ const ReCAPTCHA_v2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
         setVerified(res.ok);
       }
     } catch (e) {
-      alert(e);
+      console.error(e);
+      alert("Unable to verify Captcha. Please try again.");
       setVerified(false);
     }
   }
