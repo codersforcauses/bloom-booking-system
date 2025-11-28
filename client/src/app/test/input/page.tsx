@@ -1,12 +1,10 @@
 // Text fields, Dropdown Menus, Date Fields, Time Fields, Badge Fields, are all variations of the Input field.
 // To see how each one is used, refer to this page.
 // Currently only the Text and Badge field has been implemented.
+"use client";
 import React from "react";
 
 import InputField from "@/components/ui/input";
-
-"use client";
-console.log("RENDER", Date.now());
 
 const AMENITIES = [
   "Audio",
@@ -17,10 +15,22 @@ const AMENITIES = [
   "Speaker Phone",
 ];
 
+const FREQUENCIES = [
+  { label: "Does not repeat", value: "dnr" },
+  { label: "Daily", value: "daily" },
+  { label: "Weekly on Monday", value: "weekly-mon" },
+  {
+    label: "Everyday Weekday (Monday to Friday)",
+    value: "weekly-mon-tue-wed-thu-fri",
+  },
+  { label: "Custom...", value: "custom" },
+];
+
 export default function TestInputPage() {
   const [name, setName] = React.useState("");
   const [occurences, setOccurences] = React.useState("");
   const [amenities, setAmenities] = React.useState<string[]>([]);
+  const [frequency, setFrequency] = React.useState("");
 
   return (
     <div className="min-h-screen bg-[hsl(var(--secondary))] p-8">
@@ -53,6 +63,16 @@ export default function TestInputPage() {
           options={AMENITIES}
           value={amenities}
           onChange={setAmenities}
+        />
+
+        <InputField
+          kind="select"
+          label="Frequency"
+          name="frequency"
+          options={FREQUENCIES}
+          value={frequency}
+          onChange={setFrequency}
+          placeholder="Select frequency"
         />
       </div>
     </div>
