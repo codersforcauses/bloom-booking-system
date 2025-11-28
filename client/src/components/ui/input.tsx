@@ -1,10 +1,13 @@
-// Text fields, Dropdown Menus, Date Fields, Time Fields, Badge Fields, are all variations of the Input field.
-// Currently only the Text and Badge field has been implemented.
-// If you are working on another variant, create a new .tsx file for it and import it here.
-
 import React from "react";
 
 import Badge from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type FieldKind = "text" | "number" | "select" | "badge" | "date" | "time";
 
@@ -17,14 +20,12 @@ type BaseFieldProps = {
   error?: string;
 };
 
-// TEXT (This is the default one)
 type TextFieldProps = BaseFieldProps & {
   kind?: "text";
   value: string;
   onChange: (value: string) => void;
 };
 
-// NUMBER
 type NumberFieldProps = BaseFieldProps & {
   kind: "number";
   value: string;
@@ -35,30 +36,32 @@ type NumberFieldProps = BaseFieldProps & {
   placeholder?: string;
 };
 
-// SELECT (AKA DROPDOWN)
-type SelectFieldProps = BaseFieldProps & {
-  kind: "select";
-  // TODO
+type SelectOption = {
+  label: string;
+  value: string;
 };
 
-// BADGE
+type SelectFieldProps = BaseFieldProps & {
+  kind: "select";
+  options: SelectOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+};
+
 type BadgeFieldProps = BaseFieldProps & {
   kind: "badge";
-  options: string[]; // define the values in page.tsx
-  value: string[]; // selected values
+  options: string[];
+  value: string[];
   onChange: (value: string[]) => void;
 };
 
-// DATE
 type DateFieldProps = BaseFieldProps & {
   kind: "date";
-  // TODO
 };
 
-// TIME
 type TimeFieldProps = BaseFieldProps & {
   kind: "time";
-  // TODO
 };
 
 export type InputFieldProps =
@@ -73,20 +76,26 @@ const InputField: React.FC<InputFieldProps> = (props) => {
   const { label, required, className, fieldClassName, error, name } = props;
 
   const kind: FieldKind = props.kind ?? "text";
+
   const isBadge = kind === "badge";
   const badgeProps = isBadge ? (props as BadgeFieldProps) : null;
 
-  const wrapperClasses = "space-y-1 " + (className ?? "");
-  const fieldClasses =
-    "rounded-md border px-3 py-2 bg-background shadow-[0_4px_0_0_#D1D5DB] " +
-    (fieldClassName ?? "");
+  const isSelect = kind === "select";
+  const selectProps = isSelect ? (props as SelectFieldProps) : null;
+
+  const wrapperClasses = ["space-y-1", className].filter(Boolean).join(" ");
+  const fieldClasses = [
+    "rounded-md border px-3 py-2 bg-background",
+    "shadow-[0_4px_0_0_#D1D5DB]",
+    fieldClassName,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   let control: React.ReactNode = null;
 
   if (kind === "text") {
-    // For Text
     const textProps = props as TextFieldProps;
-
     control = (
       <input
         id={name}
@@ -99,7 +108,6 @@ const InputField: React.FC<InputFieldProps> = (props) => {
     );
   } else if (kind === "number") {
     const numberProps = props as NumberFieldProps;
-
     control = (
       <input
         id={name}
@@ -107,13 +115,32 @@ const InputField: React.FC<InputFieldProps> = (props) => {
         className="body w-full bg-transparent outline-none placeholder:text-[var(--bloom-gray)]"
         value={numberProps.value}
         onChange={(e) => numberProps.onChange(e.target.value)}
-        placeholder="0"
+        placeholder={numberProps.placeholder ?? "Number"}
         type="number"
         inputMode="numeric"
+        min={numberProps.min}
+        max={numberProps.max}
+        step={numberProps.step}
       />
     );
+  } else if (kind === "select" && selectProps) {
+    control = (
+      <Select value={selectProps.value} onValueChange={selectProps.onChange}>
+        <SelectTrigger className="body flex w-full items-center justify-between border-none bg-transparent px-0 py-0 shadow-none focus:ring-0 focus:ring-offset-0">
+          <SelectValue
+            placeholder={selectProps.placeholder ?? "Select an option"}
+          />
+        </SelectTrigger>
+        <SelectContent>
+          {selectProps.options.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
   } else if (kind === "badge" && badgeProps) {
-    // For Badge
     control = (
       <div className="flex min-h-[1.5rem] flex-wrap items-center gap-2">
         {badgeProps.value.length === 0 ? (
@@ -141,7 +168,6 @@ const InputField: React.FC<InputFieldProps> = (props) => {
       </div>
     );
   } else {
-    // Just in case
     control = (
       <div className="body-sm text-[var(--bloom-red)]">
         Not implemented yet: <span className="font-mono">{kind}</span>
@@ -156,10 +182,8 @@ const InputField: React.FC<InputFieldProps> = (props) => {
         {required && <span className="text-[var(--bloom-red)]"> *</span>}
       </label>
 
-      {/* Text Field Container */}
       <div className={fieldClasses}>{control}</div>
 
-      {/* Badge Field Container*/}
       {isBadge && badgeProps && (
         <div className="mt-2 flex flex-wrap gap-2">
           {badgeProps.options.map((option) => {
@@ -169,7 +193,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
                 key={option}
                 type="button"
                 onClick={() => {
-                  if (selected) return; // only add via the list and removal via "×"
+                  if (selected) return;
                   badgeProps.onChange([...badgeProps.value, option]);
                 }}
                 className="focus:outline-none"
