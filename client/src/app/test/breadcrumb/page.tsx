@@ -7,7 +7,7 @@ export default function TestPage() {
 
       <Breadcrumb
         items={[
-          { label: "Book Room", href: "/" },
+          { label: "Find my booking", href: "/" },
           { label: "List of Bookings" },
         ]}
       />
