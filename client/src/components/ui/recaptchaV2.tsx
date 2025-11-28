@@ -25,10 +25,17 @@ const ReCAPTCHA_v2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
           },
           body: JSON.stringify({ token }),
         });
+
+        // if status code is not 200, show the error in an alert form
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(`${data.message}! Status: ${res.status}`);
+        }
+
         setVerified(res.ok);
       }
     } catch (e) {
-      alert("Error: " + e);
+      alert(e);
       setVerified(false);
     }
   }
