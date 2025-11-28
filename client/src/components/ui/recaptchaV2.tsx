@@ -14,7 +14,7 @@ interface ReCAPTCHAV2Props {
 const ReCAPTCHA_v2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
-  async function handleCaptchaSubmission(token: string | null) {
+  const handleCaptchaSubmission = async (token: string | null) => {
     try {
       if (token) {
         const res = await fetch("/api/verify-recaptcha", {
@@ -39,14 +39,14 @@ const ReCAPTCHA_v2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
       alert("Unable to verify Captcha. Please try again.");
       setVerified(false);
     }
-  }
+  };
 
-  const handleChange = (token: string | null) => {
+  const handleChange = async (token: string | null) => {
     // console.log("Captcha token:", token);
     if (!token) {
-      setVerified(false);
+      return setVerified(false);
     }
-    handleCaptchaSubmission(token);
+    await handleCaptchaSubmission(token);
   };
 
   return (
