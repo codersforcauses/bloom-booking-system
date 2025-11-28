@@ -1,6 +1,6 @@
-// Text fields, Dropdown Menus, Date Fields, Time Fields, Badge Fields, are all variations of the Input field.
+// Text, Number, Select, Date, Time, Badge, are all variations of the Input field.
 // To see how each one is used, refer to this page.
-// Currently only the Text and Badge field has been implemented.
+// Currently only the Date and Time field are NOT implemented.
 "use client";
 import React from "react";
 
@@ -44,6 +44,7 @@ export default function TestInputPage() {
           name="guestName"
           value={name}
           onChange={setName}
+          placeholder="Text"
         />
 
         {/* Number input */}
@@ -53,6 +54,7 @@ export default function TestInputPage() {
           name="occurences"
           value={occurences}
           onChange={setOccurences}
+          placeholder="Number"
         />
 
         {/* Badge input */}
@@ -63,8 +65,10 @@ export default function TestInputPage() {
           options={AMENITIES}
           value={amenities}
           onChange={setAmenities}
+          placeholder="Select Amenities"
         />
 
+        {/* Select input */}
         <InputField
           kind="select"
           label="Frequency"

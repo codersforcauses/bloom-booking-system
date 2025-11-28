@@ -1,3 +1,11 @@
+// This file contains the following input field types:
+// - Text
+// - Number
+// - Select
+// - Badge
+// - Date (not implemented)
+// - Time (not implemented)
+
 import React from "react";
 
 import Badge from "@/components/ui/badge";
@@ -18,6 +26,7 @@ type BaseFieldProps = {
   className?: string;
   fieldClassName?: string;
   error?: string;
+  placeholder?: string;
 };
 
 type TextFieldProps = BaseFieldProps & {
@@ -33,20 +42,14 @@ type NumberFieldProps = BaseFieldProps & {
   min?: number;
   max?: number;
   step?: number;
-  placeholder?: string;
 };
 
-type SelectOption = {
-  label: string;
-  value: string;
-};
-
+type SelectOption = { label: string; value: string };
 type SelectFieldProps = BaseFieldProps & {
   kind: "select";
   options: SelectOption[];
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string;
 };
 
 type BadgeFieldProps = BaseFieldProps & {
@@ -103,7 +106,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
         className="body w-full bg-transparent outline-none placeholder:text-[var(--bloom-gray)]"
         value={textProps.value}
         onChange={(e) => textProps.onChange(e.target.value)}
-        placeholder="Text"
+        placeholder={textProps.placeholder ?? "Text"}
       />
     );
   } else if (kind === "number") {
@@ -145,7 +148,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
       <div className="flex min-h-[1.5rem] flex-wrap items-center gap-2">
         {badgeProps.value.length === 0 ? (
           <span className="body text-[var(--bloom-gray)] opacity-100">
-            Select Amenities
+            {badgeProps.placeholder ?? "Select amenities"}
           </span>
         ) : (
           badgeProps.value.map((item) => (
