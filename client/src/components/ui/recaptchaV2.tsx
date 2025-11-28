@@ -4,7 +4,7 @@ import React, { useRef } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 
 interface ReCAPTCHAV2Props {
-  setVerified?: (verified: boolean) => void;
+  setVerified: (verified: boolean) => void;
 }
 
 // v2 - I'm not a robot checkbox
@@ -25,18 +25,18 @@ const ReCAPTCHA_v2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
           },
           body: JSON.stringify({ token }),
         });
-        setVerified?.(res.ok);
+        setVerified(res.ok);
       }
     } catch (e) {
       alert("Error: " + e);
-      setVerified?.(false);
+      setVerified(false);
     }
   }
 
   const handleChange = (token: string | null) => {
     // console.log("Captcha token:", token);
     if (!token) {
-      setVerified?.(false);
+      setVerified(false);
     }
     handleCaptchaSubmission(token);
   };
