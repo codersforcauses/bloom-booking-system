@@ -88,7 +88,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
 
   const wrapperClasses = ["space-y-1", className].filter(Boolean).join(" ");
   const fieldClasses = [
-    "rounded-md border px-3 py-2 bg-background",
+    "rounded-md border bg-background",
     "shadow-[0_4px_0_0_#D1D5DB]",
     fieldClassName,
   ]
@@ -103,7 +103,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
       <input
         id={name}
         name={name}
-        className="body w-full bg-transparent outline-none placeholder:text-[var(--bloom-gray)]"
+        className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
         value={textProps.value}
         onChange={(e) => textProps.onChange(e.target.value)}
         placeholder={textProps.placeholder ?? "Text"}
@@ -115,7 +115,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
       <input
         id={name}
         name={name}
-        className="body w-full bg-transparent outline-none placeholder:text-[var(--bloom-gray)]"
+        className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
         value={numberProps.value}
         onChange={(e) => numberProps.onChange(e.target.value)}
         placeholder={numberProps.placeholder ?? "Number"}
@@ -129,7 +129,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
   } else if (kind === "select" && selectProps) {
     control = (
       <Select value={selectProps.value} onValueChange={selectProps.onChange}>
-        <SelectTrigger className="body flex w-full items-center justify-between border-none bg-transparent px-0 py-0 shadow-none focus:ring-0 focus:ring-offset-0">
+        <SelectTrigger className="body flex w-full items-center justify-between border-none bg-transparent px-3 py-2 shadow-none focus:ring-0 focus:ring-offset-0">
           <SelectValue
             placeholder={selectProps.placeholder ?? "Select an option"}
           />
@@ -147,7 +147,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
     control = (
       <div className="flex min-h-[1.5rem] flex-wrap items-center gap-2">
         {badgeProps.value.length === 0 ? (
-          <span className="body text-[var(--bloom-gray)] opacity-100">
+          <span className="body px-3 py-2 text-[var(--bloom-gray)] opacity-100">
             {badgeProps.placeholder ?? "Select amenities"}
           </span>
         ) : (

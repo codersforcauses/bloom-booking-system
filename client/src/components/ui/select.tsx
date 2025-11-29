@@ -46,7 +46,7 @@ const SelectContent = React.forwardRef<
         ref={ref}
         position={position}
         className={cn(
-          "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
+          "z-50 w-[var(--radix-select-trigger-width)] break-words rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[side=bottom]:slide-in-from-top-2",
@@ -55,15 +55,7 @@ const SelectContent = React.forwardRef<
         )}
         {...props}
       >
-        <SelectPrimitive.Viewport
-          className={cn(
-            "p-1",
-            position === "popper" &&
-              "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
-          )}
-        >
-          {children}
-        </SelectPrimitive.Viewport>
+        <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   );
