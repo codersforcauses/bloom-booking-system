@@ -98,84 +98,15 @@ const InputField: React.FC<InputFieldProps> = (props) => {
   let control: React.ReactNode = null;
 
   if (kind === "text") {
-    const textProps = props as TextFieldProps;
-    control = (
-      <input
-        id={name}
-        name={name}
-        className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
-        value={textProps.value}
-        onChange={(e) => textProps.onChange(e.target.value)}
-        placeholder={textProps.placeholder ?? "Text"}
-      />
-    );
+    control = renderTextFieldControl(props as TextFieldProps, name);
   } else if (kind === "number") {
-    const numberProps = props as NumberFieldProps;
-    control = (
-      <input
-        id={name}
-        name={name}
-        className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
-        value={numberProps.value}
-        onChange={(e) => numberProps.onChange(e.target.value)}
-        placeholder={numberProps.placeholder ?? "Number"}
-        type="number"
-        inputMode="numeric"
-        min={numberProps.min}
-        max={numberProps.max}
-        step={numberProps.step}
-      />
-    );
+    control = renderNumberFieldControl(props as NumberFieldProps, name);
   } else if (kind === "select" && selectProps) {
-    control = (
-      <Select value={selectProps.value} onValueChange={selectProps.onChange}>
-        <SelectTrigger className="body flex w-full items-center justify-between border-none bg-transparent px-3 py-2 shadow-none focus:ring-0 focus:ring-offset-0">
-          <SelectValue
-            placeholder={selectProps.placeholder ?? "Select an option"}
-          />
-        </SelectTrigger>
-        <SelectContent>
-          {selectProps.options.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
+    control = renderSelectFieldControl(selectProps);
   } else if (kind === "badge" && badgeProps) {
-    control = (
-      <div className="flex min-h-[1.5rem] flex-wrap items-center gap-2">
-        {badgeProps.value.length === 0 ? (
-          <span className="body px-3 py-2 text-[var(--bloom-gray)] opacity-100">
-            {badgeProps.placeholder ?? "Select amenities"}
-          </span>
-        ) : (
-          badgeProps.value.map((item) => (
-            <Badge key={item} className="inline-flex items-center gap-1">
-              <span>{item}</span>
-              <button
-                type="button"
-                onClick={() =>
-                  badgeProps.onChange(
-                    badgeProps.value.filter((v) => v !== item),
-                  )
-                }
-                className="ml-1 text-[var(--bloom-red)] hover:opacity-80"
-              >
-                ×
-              </button>
-            </Badge>
-          ))
-        )}
-      </div>
-    );
+    control = renderBadgeFieldControl(badgeProps);
   } else {
-    control = (
-      <div className="body-sm text-[var(--bloom-red)]">
-        Not implemented yet: <span className="font-mono">{kind}</span>
-      </div>
-    );
+    control = renderNotImplementedControl(kind);
   }
 
   return (
@@ -222,3 +153,87 @@ const InputField: React.FC<InputFieldProps> = (props) => {
 };
 
 export default InputField;
+
+/* ----------------- Helper render functions (Improves Readability) ----------------- */
+function renderTextFieldControl(props: TextFieldProps, name: string) {
+  return (
+    <input
+      id={name}
+      name={name}
+      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
+      value={props.value}
+      onChange={(e) => props.onChange(e.target.value)}
+      placeholder={props.placeholder ?? "Text"}
+    />
+  );
+}
+
+function renderNumberFieldControl(props: NumberFieldProps, name: string) {
+  return (
+    <input
+      id={name}
+      name={name}
+      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
+      value={props.value}
+      onChange={(e) => props.onChange(e.target.value)}
+      placeholder={props.placeholder ?? "Number"}
+      type="number"
+      inputMode="numeric"
+      min={props.min}
+      max={props.max}
+      step={props.step}
+    />
+  );
+}
+
+function renderSelectFieldControl(props: SelectFieldProps) {
+  return (
+    <Select value={props.value} onValueChange={props.onChange}>
+      <SelectTrigger className="body flex w-full items-center justify-between border-none bg-transparent px-3 py-2 shadow-none focus:ring-0 focus:ring-offset-0">
+        <SelectValue placeholder={props.placeholder ?? "Select an option"} />
+      </SelectTrigger>
+      <SelectContent>
+        {props.options.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function renderBadgeFieldControl(props: BadgeFieldProps) {
+  return (
+    <div className="flex min-h-[1.5rem] flex-wrap items-center gap-2">
+      {props.value.length === 0 ? (
+        <span className="body px-3 py-2 text-[var(--bloom-gray)] opacity-100">
+          {props.placeholder ?? "Select amenities"}
+        </span>
+      ) : (
+        props.value.map((item) => (
+          <Badge key={item} className="inline-flex items-center gap-1">
+            <span>{item}</span>
+            <button
+              type="button"
+              onClick={() =>
+                props.onChange(props.value.filter((v) => v !== item))
+              }
+              className="ml-1 text-[var(--bloom-red)] hover:opacity-80"
+            >
+              ×
+            </button>
+          </Badge>
+        ))
+      )}
+    </div>
+  );
+}
+
+function renderNotImplementedControl(kind: FieldKind) {
+  return (
+    <div className="body-sm text-[var(--bloom-red)]">
+      Not implemented yet: <span className="font-mono">{kind}</span>
+    </div>
+  );
+}
