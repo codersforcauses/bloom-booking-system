@@ -154,7 +154,6 @@ const InputField: React.FC<InputFieldProps> = (props) => {
 
 export default InputField;
 
-/* ----------------- Helper render functions (Improves Readability) ----------------- */
 function renderTextFieldControl(props: TextFieldProps, name: string) {
   return (
     <input
