@@ -1,47 +1,36 @@
-# api/booking/google_calendar/test_google_calendar_mock.py
-
-from unittest.mock import patch, MagicMock
-from api.booking.google_calendar import events
-
-
-@patch("api.booking.google_calendar.events.get_calendar_service")
-def test_create_event(mock_service):
-    # Create a fake service client
-    mock_client = MagicMock()
-    mock_service.return_value = mock_client
-
-    # Call the create_event function
-    events.create_event({"summary": "Test Event"})
-
-    # Assert that insert was called
-    mock_client.events.return_value.insert.assert_called_once()
+from api.booking.google_calendar.events import (
+    create_event,
+    get_event,
+    update_event,
+    delete_event,
+)
 
 
-@patch("api.booking.google_calendar.events.get_calendar_service")
-def test_get_event(mock_service):
-    mock_client = MagicMock()
-    mock_service.return_value = mock_client
+def test_google_calendar_crud():
 
-    events.get_event("123")
+    event_data = {
+        "summary": "Test Event",
+        "description": "CRUD test event",
+        "start": {
+            "dateTime": "2025-11-29T15:00:00",
+            "timeZone": "Australia/Perth",
+        },
+        "end": {
+            "dateTime": "2025-11-29T16:00:00",
+            "timeZone": "Australia/Perth",
+        },
+    }
 
-    mock_client.events.return_value.get.assert_called_once()
+    created = create_event(event_data)
+    event_id = created["id"]
 
+    fetched = get_event(event_id)
+    assert fetched["summary"] == "Test Event"
 
-@patch("api.booking.google_calendar.events.get_calendar_service")
-def test_update_event(mock_service):
-    mock_client = MagicMock()
-    mock_service.return_value = mock_client
+    updated_data = dict(event_data)
+    updated_data["summary"] = "Updated Test Event"
 
-    events.update_event("123", {"summary": "Updated"})
+    updated = update_event(event_id, updated_data)
+    assert updated["summary"] == "Updated Test Event"
 
-    mock_client.events.return_value.update.assert_called_once()
-
-
-@patch("api.booking.google_calendar.events.get_calendar_service")
-def test_delete_event(mock_service):
-    mock_client = MagicMock()
-    mock_service.return_value = mock_client
-
-    events.delete_event("123")
-
-    mock_client.events.return_value.delete.assert_called_once()
+    delete_event(event_id)
