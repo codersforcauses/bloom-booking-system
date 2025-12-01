@@ -12,20 +12,17 @@ type BreadcrumbProps = {
 };
 
 const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, className }) => {
-  if (!items || items.length === 0) return null;
+  if (!items?.length) return null;
 
   return (
     <nav aria-label="Breadcrumb" className={className}>
-      <ol className="flex flex-wrap items-center gap-1 text-sm">
-        {items.map((item, index) => {
-          const isLast = index === items.length - 1;
+      <ul className="flex flex-wrap items-center gap-2 text-sm">
+        {items.map((item, i) => {
+          const last = i === items.length - 1;
 
           return (
-            <li
-              key={`${item.label}-${index}`}
-              className="flex items-center gap-1"
-            >
-              {!isLast && item.href ? (
+            <li key={`${item.label}-${i}`} className="flex items-center gap-2">
+              {!last && item.href ? (
                 <Link
                   href={item.href}
                   className="underline-offset-2 hover:underline"
@@ -34,18 +31,16 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, className }) => {
                 </Link>
               ) : (
                 <span
-                  className={isLast ? "font-medium" : ""}
-                  style={isLast ? { color: "var(--bloom-orbit)" } : {}}
+                  style={last ? { color: "var(--bloom-orbit)" } : undefined}
                 >
                   {item.label}
                 </span>
               )}
-
-              {!isLast && <span>/</span>}
+              {!last && <span>/</span>}
             </li>
           );
         })}
-      </ol>
+      </ul>
     </nav>
   );
 };
