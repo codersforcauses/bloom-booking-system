@@ -223,3 +223,5 @@ else:
         },
     }
     MEDIA_URL = "/media/"
+
+AUTH_USER_MODEL = 'api_user.CustomUser'
