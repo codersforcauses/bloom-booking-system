@@ -105,6 +105,7 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": False,
 
     "SIGNING_KEY": SECRET_KEY,
+    "ALGORITHM": "HS256",
 }
 
 # Database
@@ -175,7 +176,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_AUTHENTICATION_CLASSES": "rest_framework_simplejwt.authentication.JWTAuthentication",
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
 }
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
