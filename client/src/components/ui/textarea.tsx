@@ -27,7 +27,7 @@ const Textarea: React.FC<TextareaProps> = ({
 }) => {
   return (
     <>
-      <label htmlFor={name} className="body mb-1 block">
+      <label htmlFor={name} className="body-sm-bold mb-1 block">
         {label ? label : capitalizeFirstLetter(name)}
       </label>
       <div className="w-full rounded-md border border-[hsl(var(--border))] bg-background shadow-[0_4px_0_0_#D1D5DB]">
@@ -36,7 +36,7 @@ const Textarea: React.FC<TextareaProps> = ({
           name={name}
           placeholder={placeholder ? placeholder : capitalizeFirstLetter(name)}
           rows={rows ? rows : 4}
-          className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[hsl(var(--input))]"
+          className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />
