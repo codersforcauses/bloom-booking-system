@@ -1,3 +1,18 @@
+// Usage:
+// <Textarea  id="componentIdentifier" // optional (defaults to name if not provided)
+//            name="fieldName"
+//            label="fieldLabel" // optional (defaults to name with first letter capitalized if not provided)
+//            placeholder="placeholderText" // optional (defaults to name with first letter capitalized if not provided)
+//            rows={4} // optional (defaults to 4 if not provided)
+//            value={fieldValue} // useState variable
+//            setValue={fieldSetterFunction} // useState setter function
+// />
+
+// Style (apart from border color: --border, other styles match InputField):
+// label: body-sm-bold, default text color
+// textarea: border color: --border, background color: --background, shadow: 0 4px 0 #D1D5DB
+// placeholder: text color: --bloom-gray
+
 "use client";
 import React, { useState } from "react";
 
