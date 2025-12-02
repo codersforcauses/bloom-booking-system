@@ -105,6 +105,7 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": False,
 
     "SIGNING_KEY": SECRET_KEY,
+    "ALGORITHM": "HS256",
 }
 
 # Database
