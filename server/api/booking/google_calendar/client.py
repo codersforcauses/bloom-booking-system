@@ -11,20 +11,18 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-# Use environment variable for Google credentials
 cred_path = os.getenv("GOOGLE_CREDENTIALS_FILE")
+calendar_id = os.getenv("GOOGLE_CALENDAR_ID")
 
-# -----------------------------
-# Validate credentials file
-# -----------------------------
-if not cred_path or not os.path.exists(cred_path):
+if not cred_path:
     raise FileNotFoundError(
-        f"GOOGLE_CREDENTIALS_FILE is missing or invalid.\nChecked: {os.path.abspath(cred_path)}"
+        "GOOGLE_CREDENTIALS_FILE is missing or invalid. "
+        f"Checked: {os.path.join(BASE_DIR, '.env')}"
     )
 
-# -----------------------------
-# Create Google Calendar service
-# -----------------------------
+if not calendar_id:
+    raise ValueError(
+        "GOOGLE_CALENDAR_ID is missing. Set it in your .env file.")
 
 
 def get_calendar_service():

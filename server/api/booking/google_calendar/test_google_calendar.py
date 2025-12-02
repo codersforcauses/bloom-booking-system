@@ -12,11 +12,11 @@ def test_google_calendar_crud():
         "summary": "Test Event",
         "description": "CRUD test event",
         "start": {
-            "dateTime": "2025-11-29T15:00:00",
+            "dateTime": "2025-12-2T15:00:00",
             "timeZone": "Australia/Perth",
         },
         "end": {
-            "dateTime": "2025-11-29T16:00:00",
+            "dateTime": "2025-12-2T16:00:00",
             "timeZone": "Australia/Perth",
         },
     }
