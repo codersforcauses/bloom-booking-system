@@ -296,5 +296,5 @@ pyrightconfig.json
 
 opt/
 
-# sample google service account
+# google api 
 server/api/booking/google_calendar/google_calendar_service.json
