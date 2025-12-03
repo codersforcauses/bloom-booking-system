@@ -20,13 +20,14 @@ def test_google_calendar_crud():
         "summary": "Test Event",
         "description": "CRUD test event",
         "start": {
-            "dateTime": "2025-12-2T15:00:00",
+            "dateTime": "2025-12-02T15:00:00",
             "timeZone": "Australia/Perth",
         },
         "end": {
-            "dateTime": "2025-12-2T16:00:00",
+            "dateTime": "2025-12-02T16:00:00",
             "timeZone": "Australia/Perth",
         },
+        'recurrence': ['RRULE:FREQ=WEEKLY;COUNT=10'],
     }
 
     created = create_event(event_data)
