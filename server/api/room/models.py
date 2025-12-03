@@ -10,8 +10,8 @@ class Room(models.Model):
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
     recurrence_rule = models.TextField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
