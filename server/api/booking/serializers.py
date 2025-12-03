@@ -41,3 +41,12 @@ class BookingSerializer(DynamicFieldsModelSerializer):
     def create(self, validated_data):
         validated_data['google_event_id'] = 'to_be_implemented'
         return super().create(validated_data)
+
+
+# though dynamic fields are supported, define a separate serializer for list view for reusability
+class BookingListSerializer(BookingSerializer):
+    class Meta:
+        model = Booking
+        fields = ('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
+                  'recurrence_rule', 'status', 'google_event_id', 'created_at')
+        read_only_fields = ['google_event_id']

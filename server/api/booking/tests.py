@@ -37,6 +37,7 @@ class BookingViewTest(APITestCase):
         self.room.delete()
         self.booking.delete()
 
+    # POST /api/bookings
     def test_booking_creation(self):
         payload = {
             "room_id": self.room.id,
@@ -85,6 +86,7 @@ class BookingViewTest(APITestCase):
         response = self.client.post(url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    # GET /api/bookings
     def test_booking_listing_fails_without_authentication(self):
         url = '/api/bookings/'
         response = self.client.get(url)
@@ -252,6 +254,84 @@ class BookingViewTest(APITestCase):
         data = response.json()
         self.assertEqual(len(data), 0)
 
+    # GET /api/bookings/{id}
+    def test_booking_retrieval_fails_without_authentication_and_no_visitor_emails_provided(self):
+        url = '/api/bookings/' + str(self.booking.id) + '/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_booking_retrieval_fails_without_admin_authorization_and_no_visitor_email_provided(self):
+        User = get_user_model()
+        not_admin = User.objects.create_user(
+            username='not_admin',
+            password='password',
+            is_staff=False
+        )
+        self.client.force_login(not_admin)
+        url = '/api/bookings/' + str(self.booking.id) + '/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_booking_retrieval_with_admin_authorization(self):
+        User = get_user_model()
+        admin = User.objects.create_user(
+            username='admin',
+            password='password',
+            is_staff=True
+        )
+        self.client.force_login(admin)
+        url = '/api/bookings/' + str(self.booking.id) + '/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.booking.id)
+        self.assertEqual(data["visitor_name"], self.booking.visitor_name)
+        self.assertEqual(data["visitor_email"], self.booking.visitor_email)
+        self.assertEqual(data["start_datetime"], self.booking.start_datetime)
+        self.assertEqual(data["end_datetime"], self.booking.end_datetime)
+        self.assertEqual(data["recurrence_rule"], self.booking.recurrence_rule)
+        self.assertEqual(data["status"], self.booking.status)
+        self.assertEqual(data["google_event_id"], self.booking.google_event_id)
+        self.assertIn("room", data)
+        self.assertEqual(data["room"]["id"], self.room.id)
+        self.assertEqual(data["room"]["name"], self.room.name)
+        self.assertNotIn("cancel_reason", data)
+        self.assertNotIn("updated_at", data)
+        self.assertEqual(datetime.fromisoformat(data["created_at"]), self.booking.created_at)
+
+    def test_booking_retrieval_with_visitor_email(self):
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=' + self.booking.visitor_email
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["id"], self.booking.id)
+        self.assertEqual(data["visitor_name"], self.booking.visitor_name)
+        self.assertEqual(data["visitor_email"], self.booking.visitor_email)
+        self.assertEqual(data["start_datetime"], self.booking.start_datetime)
+        self.assertEqual(data["end_datetime"], self.booking.end_datetime)
+        self.assertEqual(data["recurrence_rule"], self.booking.recurrence_rule)
+        self.assertEqual(data["status"], self.booking.status)
+        self.assertEqual(data["google_event_id"], self.booking.google_event_id)
+        self.assertIn("room", data)
+        self.assertEqual(data["room"]["id"], self.room.id)
+        self.assertEqual(data["room"]["name"], self.room.name)
+        self.assertNotIn("cancel_reason", data)
+        self.assertNotIn("updated_at", data)
+        self.assertEqual(datetime.fromisoformat(data["created_at"]), self.booking.created_at)
+
+    def test_booking_retrieval_fails_as_not_found_with_unmatched_visitor_email(self):
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=whatever@example.com'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_booking_retrieval_fails_as_not_found_with_no_matching_id(self):
+        url = '/api/bookings/' + str(self.booking.id + 1) + '/?visitor_email=' + self.booking.visitor_email
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    # PUT /api/bookings/{id}
     def test_booking_update(self):
         payload = {
             "start_datetime": "2025-11-03T12:00:00Z",
@@ -280,6 +360,7 @@ class BookingViewTest(APITestCase):
 
         self.assertTrue(Booking.objects.filter(id=data["id"]).exists())
 
+    # DELETE /api/bookings/{id}
     def test_booking_deletion(self):
         payload = {
             "visitor_email": self.booking.visitor_email,
@@ -316,6 +397,7 @@ class BookingViewTest(APITestCase):
         response = self.client.delete(url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    # GET/api/bookings/search
     def test_booking_search(self):
         # when there is matched booking
         url = '/api/bookings/search/?visitor_email=' + self.booking.visitor_email
