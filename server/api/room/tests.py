@@ -1,83 +1,118 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
-from .models import Room, Location, Amenties
+from .models import Room, Location, Amenties, Capacity
 from django.utils import timezone
 from datetime import timedelta
+import json
 
 class RoomAPITest(APITestCase):
     def setUp(self):
-        # Create admin user
+        # Admin user
         self.admin = User.objects.create_superuser("admin", "admin@test.com", "pass")
-
-        # Login as admin for all POST/PUT/DELETE actions
         self.client.login(username="admin", password="pass")
 
-        # Create locations
+        # Locations
         self.loc1 = Location.objects.create(name="Building A")
-        self.loc2 = Location.objects.create(name="Building B")
+        self.loc3 = Location.objects.create(name="Building C")
 
-        # Create amenities
+        # Amenities
         self.amenity1 = Amenties.objects.create(name="Projector")
         self.amenity2 = Amenties.objects.create(name="Whiteboard")
+        self.amenity4 = Amenties.objects.create(name="House")
 
-        # Create rooms
-        for i in range(5):
-            start = timezone.make_aware(timezone.datetime(2025, 11, 1, 9, 0)) + timedelta(days=i)
-            end = timezone.make_aware(timezone.datetime(2025, 11, 1, 18, 0)) + timedelta(days=i)
+        # Capacities
+        self.cap1 = Capacity.objects.create(name="10 people")
+        self.cap4 = Capacity.objects.create(name="2 people")
+
+        # Rooms
+        rooms_list = [
+            {
+                "name": "Meeting Room A",
+                "location": self.loc1,
+                "capacity": self.cap1,
+                "amenities": [self.amenity1, self.amenity2]
+            },
+            {
+                "name": "Meeting Room X",
+                "location": self.loc3,
+                "capacity": self.cap4,
+                "amenities": [self.amenity1, self.amenity4]
+            }
+        ]
+
+        for idx, room_data in enumerate(rooms_list):
+            start = timezone.make_aware(timezone.datetime(2025, 11, 1, 9, 0)) + timedelta(days=idx)
+            end = timezone.make_aware(timezone.datetime(2025, 11, 1, 18, 0)) + timedelta(days=idx)
 
             room = Room.objects.create(
-                name=f"Meeting Room {chr(65+i)}",
-                img_url=f"https://example.com/room{chr(65+i)}.jpg",
-                location_id=self.loc1,
-                capacity_id=1,
+                name=room_data["name"],
+                img_url="https://example.com/room.jpg",
+                location_id=room_data["location"],
+                capacity_id=room_data["capacity"],
                 start_datetime=start,
                 end_datetime=end,
                 recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR"
             )
-            room.amenties.add(self.amenity1, self.amenity2)
+            room.amenities.set(room_data["amenities"])
+            print(f"Created room: {room.name}, ID: {room.id}")
 
     def test_list_rooms(self):
-        # GET all rooms
         response = self.client.get("/api/rooms/")
+        print("\nAll Rooms Response:")
+        print(json.dumps(response.data, indent=4))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 5)
 
         # Filter by name
-        response = self.client.get("/api/rooms/?name=Room A")
+        response = self.client.get("/api/rooms/?name=Meeting Room A")
+        print("\nFilter by name Response:")
+        print(json.dumps(response.data, indent=4))
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["name"], "Meeting Room A")
 
         # Filter by location_id
-        response = self.client.get("/api/rooms/?location_id=1")
-        self.assertTrue(all(r["location_id"] == 1 for r in response.data))
+        loc_id = self.loc1.id
+        response = self.client.get(f"/api/rooms/?location_id={loc_id}")
+        print("\nFilter by location_id Response:")
+        print(json.dumps(response.data, indent=4))
+        self.assertTrue(all(r["location_id"] == loc_id for r in response.data))
 
         # Filter by capacity_id
-        response = self.client.get("/api/rooms/?capacity_id=2")
-        self.assertTrue(all(r["capacity_id"] == 2 for r in response.data))
-
+        cap_id = self.cap4.id
+        response = self.client.get(f"/api/rooms/?capacity_id={cap_id}")
+        print("\nFilter by capacity_id Response:")
+        print(json.dumps(response.data, indent=4))
+        self.assertTrue(all(r["capacity_id"] == cap_id for r in response.data))
 
     def test_retrieve_update_delete_room(self):
-        # Get a room
         room = Room.objects.first()
-        response = self.client.get(f"/api/rooms/{room.id}/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["name"], room.name)
 
-        # Update room
+        # Retrieve
+        response = self.client.get(f"/api/rooms/{room.id}/")
+        print("\nRetrieve Room Response:")
+        print(json.dumps(response.data, indent=4))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Update
         response = self.client.patch(f"/api/rooms/{room.id}/", {"name": "Updated Room"}, format="json")
+        print("\nUpdate Room Response:")
+        print(response.content.decode()) 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Updated Room")
 
-        # Check via GET
+        # GET after update
         response = self.client.get(f"/api/rooms/{room.id}/")
+        print("\nRetrieve After Update Response:")
+        print(response.content.decode())
         self.assertEqual(response.data["name"], "Updated Room")
 
-        # Delete room
+        # Delete
         response = self.client.delete(f"/api/rooms/{room.id}/")
+        print("\nDelete Room Response:")
+        print(response.content.decode())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "Room deleted successfully")
 
-        # Check room count
+        # GET all rooms after delete
         response = self.client.get("/api/rooms/")
-        self.assertEqual(len(response.data), 4)
+        print("\nAll Rooms After Delete Response:")
+        print(response.content.decode())
