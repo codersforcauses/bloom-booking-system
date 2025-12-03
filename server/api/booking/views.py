@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 
 # GET /api/bookings and POST /api/bookings route
-class BookingsListCreatView(generics.ListCreateAPIView):
+class BookingsListCreateView(generics.ListCreateAPIView):
     serializer_class = BookingListSerializer
     http_method_names = ['get', 'post']
 
