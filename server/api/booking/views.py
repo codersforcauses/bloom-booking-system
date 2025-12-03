@@ -1,23 +1,16 @@
-from django.http import HttpResponse
 from rest_framework import generics, permissions
 from .models import Booking
-from .serializers import BookingSerializer
+from .serializers import BookingSerializer, BookingListSerializer
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
 
 # GET /api/bookings and POST /api/bookings route
 class BookingsListCreatView(generics.ListCreateAPIView):
-    serializer_class = BookingSerializer
+    serializer_class = BookingListSerializer
     http_method_names = ['get', 'post']
 
-    def get_serializer(self, *args, **kwargs):
-        # handle dynamic fields
-        kwargs["fields"] = ('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
-                            'recurrence_rule', 'status', 'google_event_id', 'created_at')
-        return super().get_serializer(*args, **kwargs)
-
-    # set permission restrictions (commented as there is no user right now)
+    # set permission restrictions
     def get_permissions(self):
         if self.request.method == "GET":
             return [permissions.IsAdminUser()]
@@ -45,11 +38,23 @@ class BookingsListCreatView(generics.ListCreateAPIView):
         return queryset
 
 
-# PUT /api/bookings/{id} and DELETE /api/bookings/{id}
-class BookingUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Booking.objects.all()
-    serializer_class = BookingSerializer
-    http_method_names = ['put', 'delete']
+# GET /api/bookings, PUT /api/bookings/{id} and DELETE /api/bookings/{id}
+class BookingListUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    http_method_names = ['get', 'put', 'delete']
+
+    # use BookingListSerializer for GET and BookingSerializer for PUT and DELETE
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return BookingListSerializer
+        return BookingSerializer
+
+    # set permission restrictions
+    def get_permissions(self):
+        # for GET requests without visitor_email, only admin can access
+        if self.request.method == "GET" and not self.request.query_params.get('visitor_email'):
+            return [permissions.IsAdminUser()]
+        else:
+            return [permissions.AllowAny()]
 
     def update(self, request, *args, **kwargs):
         partial = True      # allow partial update
@@ -85,17 +90,21 @@ class BookingUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         response_serializer = BookingSerializer(instance, fields=('id', 'status', "cancel_reason", 'updated_at'))
         return Response(response_serializer.data)
 
+    def get_queryset(self):
+        queryset = Booking.objects.select_related("room")
+        visitor_email = self.request.query_params.get('visitor_email')
+
+        if self.request.method == "GET":
+            if visitor_email:
+                queryset = queryset.filter(visitor_email__iexact=visitor_email)
+
+        return queryset
+
 
 # GET /api/bookings/search
 class BookingSearchView(generics.ListAPIView):
-    serializer_class = BookingSerializer
+    serializer_class = BookingListSerializer
     http_method_names = ['get']
-
-    def get_serializer(self, *args, **kwargs):
-        # same as GET /api/bookings
-        kwargs["fields"] = ('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
-                            'recurrence_rule', 'status', 'google_event_id', 'created_at')
-        return super().get_serializer(*args, **kwargs)
 
     def get_queryset(self):
         queryset = Booking.objects.select_related("room")
@@ -106,10 +115,6 @@ class BookingSearchView(generics.ListAPIView):
                 "status": "error",
                 "message": "visitor_email is required"
             })
+
         queryset = queryset.filter(visitor_email__iexact=visitor_email)
         return queryset
-
-
-# /test route
-def test(request):
-    return HttpResponse("Hello, Django!")
