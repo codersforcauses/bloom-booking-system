@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
-from .models import Room
+from .models import Room, Location, Amenties
 from django.utils import timezone
 from datetime import timedelta
 
@@ -13,19 +13,29 @@ class RoomAPITest(APITestCase):
         # Login as admin for all POST/PUT/DELETE actions
         self.client.login(username="admin", password="pass")
 
+        # Create locations
+        self.loc1 = Location.objects.create(name="Building A")
+        self.loc2 = Location.objects.create(name="Building B")
+
+        # Create amenities
+        self.amenity1 = Amenties.objects.create(name="Projector")
+        self.amenity2 = Amenties.objects.create(name="Whiteboard")
+
+        # Create rooms
         for i in range(5):
             start = timezone.make_aware(timezone.datetime(2025, 11, 1, 9, 0)) + timedelta(days=i)
             end = timezone.make_aware(timezone.datetime(2025, 11, 1, 18, 0)) + timedelta(days=i)
 
-            Room.objects.create(
+            room = Room.objects.create(
                 name=f"Meeting Room {chr(65+i)}",
                 img_url=f"https://example.com/room{chr(65+i)}.jpg",
-                location_id=(i % 2) + 1,  # 1 or 2
-                capacity_id=(i % 3) + 1,  # 1,2,3
+                location_id=self.loc1,
+                capacity_id=1,
                 start_datetime=start,
                 end_datetime=end,
                 recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR"
             )
+            room.amenties.add(self.amenity1, self.amenity2)
 
     def test_list_rooms(self):
         # GET all rooms
