@@ -37,6 +37,7 @@
     /* Bloom project colors */
     --bloom-gray: #e5e1e6ff;
     --bloom-red: #be1b3bff;
+    --bloom-red-light: #fb2c36;
     --bloom-blue: #67d4ecff;
     --bloom-blue-light: #b8e3edff;
     --bloom-yellow: #f3d03aff;
@@ -115,5 +116,15 @@
 
   .caption-link {
     @apply text-xs font-normal leading-5 tracking-wider underline;
+  }
+}
+
+@layer utilities {
+  .spinner-fade-mask {
+    /* Conic gradient used for masking effect
+       Reference: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/gradient/conic-gradient */
+    mask-image: conic-gradient(from 40deg, transparent 0%, black 100%);
+    mask-size: cover;
+    mask-repeat: no-repeat;
   }
 }

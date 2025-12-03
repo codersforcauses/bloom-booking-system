@@ -50,7 +50,7 @@ export default function Navbar() {
             <Button variant="outline">Book room</Button>
           </Link>
           <Link href="/bookings" className="hover:text-primary">
-            <Button variant="">Find my booking</Button>
+            <Button variant="link">Find my booking</Button>
           </Link>
           <Link href="/about" className="hover:text-primary">
             <Button variant="login">Admin login</Button>

@@ -61,7 +61,10 @@ const config = {
         // Bloom project colors
         bloom: {
           gray: "var(--bloom-gray)",
-          red: "var(--bloom-red)",
+          red: {
+            DEFAULT: "var(--bloom-red)",
+            light: "var(--bloom-red-light)",
+          },
           blue: {
             DEFAULT: "var(--bloom-blue)",
             light: "var(--bloom-blue-light)",
