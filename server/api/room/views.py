@@ -3,6 +3,13 @@ from rest_framework.response import Response
 from .models import Room
 from .serializers import RoomSerializer
 
+# Viewset is library that provides CRUD operations for api
+# Admin have create update delete permissions everyone can read
+# get request can filter by name, location_id, capacity_id for get
+
+# per issue thing:
+# Update has custom response with id name updated_at
+# Delete has custom response message
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
