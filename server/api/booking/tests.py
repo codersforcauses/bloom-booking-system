@@ -60,7 +60,8 @@ class BookingViewTest(APITestCase):
         self.assertEqual(data["end_datetime"], payload["end_datetime"])
         self.assertEqual(data["recurrence_rule"], payload["recurrence_rule"])
         self.assertEqual(data["status"], payload["status"])
-        self.assertEqual(data["google_event_id"], "")
+        # To do: modify after implementing Google Calendar integration
+        self.assertEqual(data["google_event_id"], "to_be_implemented")
         self.assertIn("room", data)
         self.assertEqual(data["room"]["id"], self.room.id)
         self.assertEqual(data["room"]["name"], self.room.name)

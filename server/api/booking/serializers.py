@@ -35,3 +35,9 @@ class BookingSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Booking
         fields = '__all__'
+        read_only_fields = ['google_event_id']      # google_event_id cannot be set from clients
+
+    # Todo: integrate with helper functions for Google Calendar API
+    def create(self, validated_data):
+        validated_data['google_event_id'] = 'to_be_implemented'
+        return super().create(validated_data)
