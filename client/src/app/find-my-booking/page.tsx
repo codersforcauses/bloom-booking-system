@@ -17,16 +17,20 @@ export default function FindMyBookingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 rounded-lg border bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))] shadow-sm">
-      <h2 className="title mb-4">Enter your email</h2>
-      <form action={callApi}>
+    <div className="mx-auto max-w-lg space-y-6 bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))]">
+      <form
+        className="flex flex-col flex-wrap items-center justify-center gap-8"
+        action={callApi}
+      >
+        <h2 className="title mb-2">Enter your email</h2>
         <InputField
+          className="w-full"
           kind="text"
           label=""
           name="email"
           value={email}
           onChange={setEmail}
-          placeholder="Email"
+          placeholder="Enter your email"
         />
         {/* captcha (need to wait for this?) */}
         {/* <ReCAPTCHA_v2 setVerified={setVerified}></ReCAPTCHA_v2> */}
