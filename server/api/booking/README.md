@@ -53,7 +53,7 @@ Backend API for create a booking, list and filter bookings for admin, list one's
 ]
 
 3. GET /api/bookings/{id} - for admin
-- Purpose: retrive the detail of a booking for admin by id. 
+- Purpose: Retrieve the detail of a booking for admin by id. 
 - Access: Admin
 - Sample Response:
 url: /api/bookings/1
@@ -73,7 +73,7 @@ url: /api/bookings/1
 ]
 
 4. GET /api/bookings/bookings/{id} - for everyone
-- Purpose: retrive the detail of a booking by id and visitor_email. When the id and visitor_email do not match to a single object, return 404 Not Found Error. 
+- Purpose: Retrieve the detail of a booking by id and visitor_email. When the id and visitor_email do not match to a single object, return 404 Not Found Error. 
 - Access：Everyone
 - Query Params: visitor_email. Example:?visitor_email=alice@example.com
 - Sample Response:

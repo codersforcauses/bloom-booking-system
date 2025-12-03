@@ -24,4 +24,4 @@ class Booking(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Room {self.room_id} booked by {self.visitor_name} from {self.start_datetime}to {self.end_datetime}"
+        return f"Room {self.room_id} booked by {self.visitor_name} from {self.start_datetime} to {self.end_datetime}"
