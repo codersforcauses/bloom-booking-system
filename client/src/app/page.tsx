@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { HiOutlineUser } from "react-icons/hi";
 
 import { usePings } from "@/hooks/pings";
 import { cn } from "@/lib/utils";
@@ -19,11 +20,12 @@ export default function Home() {
         "flex min-h-screen flex-col items-center gap-4 p-24 font-montserrat",
       )}
     >
-      <Button onClick={() => setClicked(true)}>
-        {isLoading ? "Loading" : "Ping"}
+      <Button variant="login" onClick={() => setClicked(true)}>
+        Ping
       </Button>
       <p>
-        Response from server: <span>{data as string}</span>
+        Response from server:{" "}
+        <span className="font-bold">{data as string}</span>
       </p>
     </main>
   );
