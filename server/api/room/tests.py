@@ -1,34 +1,73 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
+from .models import Room
+from django.utils import timezone
+from datetime import timedelta
 
 class RoomAPITest(APITestCase):
     def setUp(self):
+        # Create admin user
         self.admin = User.objects.create_superuser("admin", "admin@test.com", "pass")
-    # ok i need test case basically post bunch of rooms
-    # then i need to filter with get requests like name, location, capacity, or date).
-    # then get then by id
-    # then update
-    # check with get response
-    #then delete
-    def test_list_rooms(self):
-        response = self.client.get("/api/rooms/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_create_room_admin(self):
-
+        # Login as admin for all POST/PUT/DELETE actions
         self.client.login(username="admin", password="pass")
 
-        data = {
-            "name": "Meeting Room A",
-            "img_url": "https://example.com/roomA.jpg",
-            "location_id": 1,
-            "capacity_id": 2,
-            "start_datetime": "2025-11-01T09:00:00Z",
-            "end_datetime": "2025-11-01T18:00:00Z",
-            "recurrence_rule": "FREQ=WEEKLY;BYDAY=MO,WE,FR"
-        }
+        for i in range(5):
+            start = timezone.make_aware(timezone.datetime(2025, 11, 1, 9, 0)) + timedelta(days=i)
+            end = timezone.make_aware(timezone.datetime(2025, 11, 1, 18, 0)) + timedelta(days=i)
 
-        response = self.client.post("/api/rooms/", data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            Room.objects.create(
+                name=f"Meeting Room {chr(65+i)}",
+                img_url=f"https://example.com/room{chr(65+i)}.jpg",
+                location_id=(i % 2) + 1,  # 1 or 2
+                capacity_id=(i % 3) + 1,  # 1,2,3
+                start_datetime=start,
+                end_datetime=end,
+                recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR"
+            )
 
+    def test_list_rooms(self):
+        # GET all rooms
+        response = self.client.get("/api/rooms/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 5)
+
+        # Filter by name
+        response = self.client.get("/api/rooms/?name=Room A")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Meeting Room A")
+
+        # Filter by location_id
+        response = self.client.get("/api/rooms/?location_id=1")
+        self.assertTrue(all(r["location_id"] == 1 for r in response.data))
+
+        # Filter by capacity_id
+        response = self.client.get("/api/rooms/?capacity_id=2")
+        self.assertTrue(all(r["capacity_id"] == 2 for r in response.data))
+
+
+    def test_retrieve_update_delete_room(self):
+        # Get a room
+        room = Room.objects.first()
+        response = self.client.get(f"/api/rooms/{room.id}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], room.name)
+
+        # Update room
+        response = self.client.patch(f"/api/rooms/{room.id}/", {"name": "Updated Room"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], "Updated Room")
+
+        # Check via GET
+        response = self.client.get(f"/api/rooms/{room.id}/")
+        self.assertEqual(response.data["name"], "Updated Room")
+
+        # Delete room
+        response = self.client.delete(f"/api/rooms/{room.id}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["message"], "Room deleted successfully")
+
+        # Check room count
+        response = self.client.get("/api/rooms/")
+        self.assertEqual(len(response.data), 4)
