@@ -38,9 +38,9 @@ class BookingsListCreateView(generics.ListCreateAPIView):
         return queryset
 
 
-# GET /api/bookings, PUT /api/bookings/{id} and DELETE /api/bookings/{id}
+# GET /api/bookings, PUT/PATCH /api/bookings/{id} and DELETE /api/bookings/{id}
 class BookingListUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    http_method_names = ['get', 'put', 'delete']
+    http_method_names = ['get', 'put', 'patch', 'delete']
 
     # use BookingListSerializer for GET and BookingSerializer for PUT and DELETE
     def get_serializer_class(self):
@@ -65,6 +65,10 @@ class BookingListUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
 
         response_serializer = BookingSerializer(instance, fields=('id', 'status', 'updated_at'))
         return Response(response_serializer.data)
+
+    # PATCH method
+    def partial_update(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         partial = True
