@@ -12,7 +12,7 @@ class BookingsListCreatView(generics.ListCreateAPIView):
     http_method_names = ['get', 'post']
 
     def get_serializer(self, *args, **kwargs):
-        # avoid N+1 query problem
+        # handle dynamic fields
         kwargs["fields"] = ('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
                             'recurrence_rule', 'status', 'google_event_id', 'created_at')
         return super().get_serializer(*args, **kwargs)
@@ -26,9 +26,7 @@ class BookingsListCreatView(generics.ListCreateAPIView):
         return super().get_permissions()
 
     def get_queryset(self):
-        # reduce data retrieved from database
-        queryset = Booking.objects.all().only('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
-                                              'recurrence_rule', 'status', 'google_event_id', 'created_at')
+        queryset = Booking.objects.select_related("room")   # optimize performance with foreign key
         room_id = self.request.query_params.get('room_id')
         date = self.request.query_params.get('date')
         visitor_name = self.request.query_params.get('visitor_name')
@@ -100,8 +98,7 @@ class BookingSearchView(generics.ListAPIView):
         return super().get_serializer(*args, **kwargs)
 
     def get_queryset(self):
-        queryset = Booking.objects.all().only('id', 'room', 'room_id', 'visitor_name', 'visitor_email', 'start_datetime', 'end_datetime',
-                                              'recurrence_rule', 'status', 'google_event_id', 'created_at')
+        queryset = Booking.objects.select_related("room")
         visitor_email = self.request.query_params.get('visitor_email')
 
         if not visitor_email:

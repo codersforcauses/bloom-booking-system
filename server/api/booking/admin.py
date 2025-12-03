@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import Booking
 
 
+# not be used in production
 class BookingAdmin(admin.ModelAdmin):
     list_display = ('id', 'room_id', 'visitor_name', 'visitor_email',
                     'start_datetime', 'end_datetime', 'recurrence_rule',
