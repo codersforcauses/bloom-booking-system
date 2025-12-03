@@ -27,6 +27,10 @@ def create_event(event_data: dict):
     Returns:
         dict: The created event object from Google Calendar.
     """
+    if not CALENDAR_ID:
+        raise ValueError(
+            "GOOGLE_CALENDAR_ID is missing. Set it in your environment.")
+
     service = get_calendar_service()
     return service.events().insert(calendarId=CALENDAR_ID, body=event_data).execute()
 
@@ -41,6 +45,9 @@ def get_event(event_id: str):
     Returns:
         dict: Event details.
     """
+    if not CALENDAR_ID:
+        raise ValueError(
+            "GOOGLE_CALENDAR_ID is missing. Set it in your environment.")
     service = get_calendar_service()
     return service.events().get(calendarId=CALENDAR_ID, eventId=event_id).execute()
 
@@ -56,6 +63,9 @@ def update_event(event_id: str, updated_data: dict):
     Returns:
         dict: Updated event object.
     """
+    if not CALENDAR_ID:
+        raise ValueError(
+            "GOOGLE_CALENDAR_ID is missing. Set it in your environment.")
     service = get_calendar_service()
     return service.events().update(calendarId=CALENDAR_ID, eventId=event_id, body=updated_data).execute()
 
@@ -70,5 +80,8 @@ def delete_event(event_id: str):
     Returns:
         dict: Response from Google Calendar API (usually empty).
     """
+    if not CALENDAR_ID:
+        raise ValueError(
+            "GOOGLE_CALENDAR_ID is missing. Set it in your environment.")
     service = get_calendar_service()
     return service.events().delete(calendarId=CALENDAR_ID, eventId=event_id).execute()
