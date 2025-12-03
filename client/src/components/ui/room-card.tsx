@@ -59,7 +59,7 @@ const Amenities = ({
         <div
           key={amenity}
           title={amenity}
-          className="flex h-[24px] w-[24px] cursor-help items-center justify-center rounded-full border-[1.5px] border-[#437DD6] text-[#437DD6] transition"
+          className="flex h-[24px] w-[24px] cursor-help items-center justify-center rounded-full border-[1.5px] border-bloom-orbit text-bloom-orbit transition"
         >
           {amenityIcons[amenity] || amenityIcons["Default"]}
         </div>
@@ -107,7 +107,7 @@ function UserCard({ room }: { room: Room }) {
       </CardHeader>
 
       <CardContent className="pb-2">
-        <span className="text-[13px] font-semibold text-[#888888]">
+        <span className="text-[13px] font-semibold text-gray-400">
           {room.location}
         </span>
       </CardContent>
@@ -174,24 +174,23 @@ function AdminCard({ room }: { room: Room; hideIcon?: boolean }) {
       <div className="space-y-4 px-4 pb-4">
         {roomDetailsGroups.map((item) => (
           <div key={item.label} className="flex text-[14px] font-medium">
-            <span className="min-w-28 text-[#9C9C9C]">{item.label}</span>
+            <span className="min-w-28 text-gray-400">{item.label}</span>
             <span className="">{item.value}</span>
           </div>
         ))}
       </div>
 
       <div className="flex gap-4 px-4 pb-4">
-        <Button className="h-[23px] bg-[#2332FF] px-2 text-[10px] hover:bg-[#437DD6]">
+        <Button className="h-[23px] bg-bloom-orbit px-2 text-[10px] hover:bg-bloom-orbit-light">
           View Bookings
         </Button>
-        <Button className="h-[23px] bg-[#F3D03A] text-[10px] hover:bg-[#FFC400]">
+        <Button className="h-[23px] bg-bloom-yellow text-[10px] hover:bg-bloom-yellow-light">
           Edit
         </Button>
         <Button
           className={cn(
-            "h-[23px] bg-[#BE1B3B] text-[10px] hover:bg-[#EB5757]",
-            room.removed &&
-              "cursor-not-allowed bg-[#9C9C9C] hover:bg-[#9C9C9C]",
+            "h-[23px] bg-bloom-red text-[10px] hover:bg-bloom-red-light",
+            room.removed && "cursor-not-allowed bg-gray-400 hover:bg-gray-400",
           )}
         >
           {room.removed ? "Removed" : "Remove"}
@@ -267,7 +266,7 @@ function MobileCard({ room }: { room: Room; hideIcon?: boolean }) {
                 ) : item.label === "Available" ? (
                   <span
                     className={cn(
-                      item.value ? "text-[#17AF87]" : "text-[#EB5757]",
+                      item.value ? "text-green-500" : "text-bloom-red",
                     )}
                   >
                     {item.value ? "Available" : "Not Available"}
@@ -275,7 +274,7 @@ function MobileCard({ room }: { room: Room; hideIcon?: boolean }) {
                 ) : (
                   <>
                     <span>{item.label}</span>
-                    <span className="text-[#9C9C9C]">{item.value}</span>
+                    <span className="text-gray-400">{item.value}</span>
                   </>
                 )}
               </div>
@@ -290,8 +289,8 @@ function MobileCard({ room }: { room: Room; hideIcon?: boolean }) {
           className={cn(
             "h-[30px] w-[79px] text-[10px] font-bold",
             room.available
-              ? "bg-[#2332FF] text-white hover:bg-[#437DD6]"
-              : "cursor-not-allowed border-[#437DD6] text-[#437DD6] hover:bg-white",
+              ? "bg-bloom-orbit text-white hover:bg-bloom-orbit-light"
+              : "cursor-not-allowed border-bloom-orbit text-bloom-orbit hover:bg-white",
           )}
         >
           {room.available ? "Book" : "Booked"}
