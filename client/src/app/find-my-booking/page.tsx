@@ -10,14 +10,16 @@ export default function FindMyBookingPage() {
   const [verified, setVerified] = useState(false);
   const [email, setEmail] = useState("");
 
-  function callApi() {
-    return;
+  function callApi(formData: FormData) {
+    const email = formData.get("email");
+    alert(`Email: ${email}`);
+    // TODO
   }
 
   return (
     <div className="mx-auto max-w-lg space-y-6 rounded-lg border bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))] shadow-sm">
       <h2 className="title mb-4">Enter your email</h2>
-      <form>
+      <form action={callApi}>
         <InputField
           kind="text"
           label=""
@@ -28,7 +30,7 @@ export default function FindMyBookingPage() {
         />
         {/* captcha (need to wait for this?) */}
         {/* <ReCAPTCHA_v2 setVerified={setVerified}></ReCAPTCHA_v2> */}
-        <Button variant={"confirm"}>Search</Button>
+        <Button variant={"default"}>Search</Button>
       </form>
     </div>
   );
