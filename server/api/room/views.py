@@ -1,7 +1,8 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from .models import Room
-from .serializers import RoomSerializer
+from .serializers import RoomSerializer, RoomListSerializer
+
 
 # Viewset is library that provides CRUD operations for api
 # Admin have create update delete permissions everyone can read
@@ -18,6 +19,12 @@ class RoomViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "destroy"]:
             return [permissions.IsAdminUser()]
         return [permissions.AllowAny()]
+
+    # 2 different serialiser because api requirements want more or less details depending on request type
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return RoomListSerializer
+        return RoomSerializer
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -43,6 +50,7 @@ class RoomViewSet(viewsets.ModelViewSet):
         return Response({
             "id": instance.id,
             "name": instance.name,
+            "amenities": serializer.data.get("amenities", []),
             "updated_at": instance.updated_at
         })
 
