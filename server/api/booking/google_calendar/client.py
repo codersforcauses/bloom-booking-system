@@ -10,14 +10,12 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-cred_path = os.getenv("GOOGLE_CREDENTIALS_FILE")
-calendar_id = os.getenv("GOOGLE_CALENDAR_ID")
-
 
 def get_calendar_service():
 
+    cred_path = os.getenv("GOOGLE_CREDENTIALS_FILE")
     if not cred_path:
-        raise FileNotFoundError(
+        raise ValueError(
             "GOOGLE_CREDENTIALS_FILE is missing or invalid. "
             f"Checked: {os.path.join(BASE_DIR, '.env')}"
         )

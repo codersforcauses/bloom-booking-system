@@ -1,10 +1,20 @@
 import os
 from .client import get_calendar_service
 
-CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
+
+def requires_calendar_id(func):
+    def wrapper(*args, **kwargs):
+        CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
+        if not CALENDAR_ID:
+            raise ValueError(
+                "GOOGLE_CALENDAR_ID is missing. Set it in your environment."
+            )
+        return func(CALENDAR_ID, *args, **kwargs)
+    return wrapper
 
 
-def create_event(event_data: dict):
+@requires_calendar_id
+def create_event(CALENDAR_ID, event_data: dict):
     """
     Create a new Google Calendar event.
 
@@ -24,18 +34,16 @@ def create_event(event_data: dict):
             "dateTime": "2025-02-01T11:00:00+08:00",
             "timeZone": "Australia/Perth"
         }
+    - 'recurrence': ['RRULE:FREQ=WEEKLY;COUNT=10'].
     Returns:
         dict: The created event object from Google Calendar.
     """
-    if not CALENDAR_ID:
-        raise ValueError(
-            "GOOGLE_CALENDAR_ID is missing. Set it in your environment.")
-
     service = get_calendar_service()
     return service.events().insert(calendarId=CALENDAR_ID, body=event_data).execute()
 
 
-def get_event(event_id: str):
+@requires_calendar_id
+def get_event(CALENDAR_ID, event_id: str):
     """
     Retrieve a specific event.
 
@@ -45,14 +53,12 @@ def get_event(event_id: str):
     Returns:
         dict: Event details.
     """
-    if not CALENDAR_ID:
-        raise ValueError(
-            "GOOGLE_CALENDAR_ID is missing. Set it in your environment.")
     service = get_calendar_service()
     return service.events().get(calendarId=CALENDAR_ID, eventId=event_id).execute()
 
 
-def update_event(event_id: str, updated_data: dict):
+@requires_calendar_id
+def update_event(CALENDAR_ID, event_id: str, updated_data: dict):
     """
     Update an existing event.
 
@@ -63,14 +69,12 @@ def update_event(event_id: str, updated_data: dict):
     Returns:
         dict: Updated event object.
     """
-    if not CALENDAR_ID:
-        raise ValueError(
-            "GOOGLE_CALENDAR_ID is missing. Set it in your environment.")
     service = get_calendar_service()
     return service.events().update(calendarId=CALENDAR_ID, eventId=event_id, body=updated_data).execute()
 
 
-def delete_event(event_id: str):
+@requires_calendar_id
+def delete_event(CALENDAR_ID, event_id: str):
     """
     Delete an event.
 
@@ -80,8 +84,5 @@ def delete_event(event_id: str):
     Returns:
         dict: Response from Google Calendar API (usually empty).
     """
-    if not CALENDAR_ID:
-        raise ValueError(
-            "GOOGLE_CALENDAR_ID is missing. Set it in your environment.")
     service = get_calendar_service()
     return service.events().delete(calendarId=CALENDAR_ID, eventId=event_id).execute()
