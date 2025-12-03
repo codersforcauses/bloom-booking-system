@@ -45,8 +45,7 @@ class BookingViewTest(APITestCase):
             "start_datetime": "2025-11-27T10:00:00Z",
             "end_datetime": "2025-11-27T12:00:00Z",
             "recurrence_rule": "",
-            "status": "CONFIRMED",
-            "google_event_id": "abc124"
+            "status": "CONFIRMED"
             }
         url = '/api/bookings/'
         response = self.client.post(url, payload, format='json')
@@ -61,7 +60,7 @@ class BookingViewTest(APITestCase):
         self.assertEqual(data["end_datetime"], payload["end_datetime"])
         self.assertEqual(data["recurrence_rule"], payload["recurrence_rule"])
         self.assertEqual(data["status"], payload["status"])
-        self.assertEqual(data["google_event_id"], payload["google_event_id"])
+        self.assertEqual(data["google_event_id"], "")
         self.assertIn("room", data)
         self.assertEqual(data["room"]["id"], self.room.id)
         self.assertEqual(data["room"]["name"], self.room.name)
@@ -79,8 +78,7 @@ class BookingViewTest(APITestCase):
             "start_datetime": "2025-11-27T10:00:00Z",
             "end_datetime": "2025-11-27T12:00:00Z",
             "recurrence_rule": "",
-            "status": "WHATEVER",
-            "google_event_id": "abc124"
+            "status": "WHATEVER"
             }
         url = '/api/bookings/'
         response = self.client.post(url, payload, format='json')
