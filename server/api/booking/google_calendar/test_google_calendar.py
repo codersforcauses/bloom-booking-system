@@ -1,8 +1,16 @@
+import pytest
+import os
 from api.booking.google_calendar.events import (
     create_event,
     get_event,
     update_event,
     delete_event,
+)
+# skip if no Google Calendar env variables are set
+pytestmark = pytest.mark.skipif(
+    not os.getenv("GOOGLE_CREDENTIALS_FILE") or not os.getenv(
+        "GOOGLE_CALENDAR_ID"),
+    reason="Google Calendar integration env vars missing. Set GOOGLE_CREDENTIALS_FILE and GOOGLE_CALENDAR_ID to run this test."
 )
 
 
