@@ -13,13 +13,19 @@ class Amenties(models.Model):
     def __str__(self):
         return self.name
 
+class Capacity(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.TextField()
+
+    def __str__(self):
+        return str(self.name)
 class Room(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.TextField()
     img_url = models.TextField()
     location_id = models.ForeignKey(Location, on_delete=models.CASCADE)
-    capacity_id = models.IntegerField()
-    amenties = models.ManyToManyField(Amenties, blank=True)
+    capacity_id = models.ForeignKey(Capacity, on_delete=models.CASCADE)
+    amenities = models.ManyToManyField(Amenties, blank=True)
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
     recurrence_rule = models.TextField()
