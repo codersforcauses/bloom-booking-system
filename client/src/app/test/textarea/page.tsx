@@ -30,11 +30,7 @@ export default function TextareaTestPage() {
             value={message}
             onChange={setMessage}
             required={true}
-            requiredText=" (required)"
-            labelClassName="text-blue-800 text-center"
-            requiredTextClassName="text-purple-600"
-            divClassName="w-[90%] mx-auto bg-green-100"
-            textareaClassName="bg-green-100 placeholder:text-gray-600"
+            className="bg-green-100 placeholder:text-red-600 w-[90%] bg-green-100"
           /> */}
           <Button type="submit" className="mx-auto mt-4">
             Submit
