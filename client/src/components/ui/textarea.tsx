@@ -5,7 +5,13 @@
 //            placeholder="placeholderText" // optional (defaults to name with first letter capitalized if not provided)
 //            rows={4} // optional (defaults to 4 if not provided)
 //            value={fieldValue} // useState variable
-//            setValue={fieldSetterFunction} // useState setter function
+//            onChange={fieldSetterFunction} // useState setter function
+//            required={true} // optional (if required, shows requiredText)
+//            requiredText="requiredText" // optional (default to asterisk)
+//            labelClassName="customLabelClass" // optional, additional classNames for label
+//            requiredTextClassName="customAsteriskClass" // optional, additional classNames for asterisk when required = true
+//            divClassName="customDivClass" // optional, additional classNames for div wrapping textarea
+//            textareaClassName="customTextareaClass" // optional, additional classNames for textarea
 // />
 
 // Style (apart from border color: --border, other styles match InputField):
@@ -14,7 +20,9 @@
 // placeholder: text color: --bloom-gray
 
 "use client";
-import React, { useState } from "react";
+import React from "react";
+
+import { cn } from "@/lib/utils";
 
 interface TextareaProps {
   id?: string;
@@ -23,7 +31,13 @@ interface TextareaProps {
   placeholder?: string;
   rows?: number;
   value: string;
-  setValue: (value: string) => void;
+  onChange: (value: string) => void;
+  required?: boolean;
+  requiredText?: string;
+  labelClassName?: string;
+  requiredTextClassName?: string;
+  divClassName?: string;
+  textareaClassName?: string;
 }
 
 // Use to capitalize the first letter of name as label placeholder if not passed
@@ -38,22 +52,46 @@ const Textarea: React.FC<TextareaProps> = ({
   placeholder,
   rows,
   value,
-  setValue,
+  onChange,
+  required,
+  requiredText,
+  labelClassName,
+  requiredTextClassName,
+  divClassName,
+  textareaClassName,
 }) => {
   return (
     <>
-      <label htmlFor={name} className="body-sm-bold mb-1 block">
+      <label
+        htmlFor={name}
+        className={cn("body-sm-bold mb-1 block", labelClassName)}
+      >
         {label ? label : capitalizeFirstLetter(name)}
+        {required && (
+          <span
+            className={cn("text-[var(--bloom-red)]", requiredTextClassName)}
+          >
+            {requiredText ? requiredText : "*"}
+          </span>
+        )}
       </label>
-      <div className="w-full rounded-md border border-[hsl(var(--border))] bg-background shadow-[0_4px_0_0_#D1D5DB]">
+      <div
+        className={cn(
+          "w-full rounded-md border border-[hsl(var(--border))] bg-background shadow-[0_4px_0_0_#D1D5DB]",
+          divClassName,
+        )}
+      >
         <textarea
           id={id ? id : name}
           name={name}
           placeholder={placeholder ? placeholder : capitalizeFirstLetter(name)}
           rows={rows ? rows : 4}
-          className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
+          className={cn(
+            "body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]",
+            textareaClassName,
+          )}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
         />
       </div>
     </>
