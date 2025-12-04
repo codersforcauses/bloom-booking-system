@@ -9,7 +9,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         username_or_email = attrs.get('username')
         password = attrs.get('password')
         user = authenticate(username=username_or_email, password=password)
-        
+
         if not user:
             User = get_user_model()
             try:
