@@ -5,6 +5,9 @@ from django.contrib.auth import get_user_model
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    '''
+    Custom serializer to allow authentication with either username or email
+    '''
     def validate(self, attrs):
         username_or_email = attrs.get('username')
         password = attrs.get('password')
