@@ -106,6 +106,7 @@ SIMPLE_JWT = {
 
     "SIGNING_KEY": SECRET_KEY,
     "ALGORITHM": "HS256",
+    "TOKEN_OBTAIN_SERIALIZER": "server.api.user.serializers.CustomTokenObtainPairSerializer",
 }
 
 # Database
