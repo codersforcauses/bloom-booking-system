@@ -50,7 +50,7 @@ class CustomUserModelTests(TestCase):
         user.refresh_from_db()
         self.assertGreater(user.updated_at, original_updated)
 
-    def test___str__method_returns_correct_format(self):
+    def test_str_method_returns_correct_format(self):
         user = CustomUser.objects.create_user(
             username='struser', email='str@example.com', password='pw'
         )
