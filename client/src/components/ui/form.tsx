@@ -117,7 +117,13 @@ type controlledFieldProps<TSchema> = {
   name: string; // match the field defined in yup
   children: (props: {
     value: TSchema;
-    onChange: (value: TSchema | React.ChangeEvent<HTMLInputElement>) => void;
+    onChange: (
+      value:
+        | TSchema
+        | React.ChangeEvent<
+            HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+          >,
+    ) => void;
   }) => ReactElement;
 };
 
