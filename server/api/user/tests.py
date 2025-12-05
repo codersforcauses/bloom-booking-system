@@ -132,7 +132,7 @@ class CustomTokenObtainPairSerializerTests(TestCase):
 # --- 3. Views Tests ---
 class CustomTokenObtainPairViewTests(APITestCase):
     """
-    测试登录和刷新令牌接口。
+    Tests for login and refresh token endpoints.
     """
     def setUp(self):
         self.username = "viewtestuser"
