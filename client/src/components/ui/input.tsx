@@ -3,13 +3,20 @@
 // - Number
 // - Select
 // - Badge
-// - Date (not implemented)
+// - Date
 // - Time (HH:MM input)
 // - Time-Select (08:00–17:00, 30-min intervals)
 
+import { format } from "date-fns";
 import React from "react";
 
 import Badge from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -69,6 +76,8 @@ type BadgeFieldProps = BaseFieldProps & {
 
 type DateFieldProps = BaseFieldProps & {
   kind: "date";
+  value: Date | undefined;
+  onChange: (value: Date | undefined) => void;
 };
 
 type TimeFieldProps = BaseFieldProps & {
@@ -117,6 +126,9 @@ const InputField: React.FC<InputFieldProps> = (props) => {
   const isSelect = kind === "select";
   const selectProps = isSelect ? (props as SelectFieldProps) : null;
 
+  const isDate = kind === "date";
+  const dateProps = isDate ? (props as DateFieldProps) : null;
+
   const isTimeSelect = kind === "time-select";
   const timeSelectProps = isTimeSelect ? (props as TimeSelectFieldProps) : null;
 
@@ -137,6 +149,8 @@ const InputField: React.FC<InputFieldProps> = (props) => {
     control = renderNumberFieldControl(props as NumberFieldProps, name);
   } else if (kind === "select" && selectProps) {
     control = renderSelectFieldControl(selectProps);
+  } else if (kind === "date" && dateProps) {
+    control = renderDateFieldControl(dateProps);
   } else if (kind === "time") {
     control = renderTimeFieldControl(props as TimeFieldProps, name);
   } else if (kind === "time-select" && timeSelectProps) {
@@ -240,6 +254,35 @@ function renderSelectFieldControl(props: SelectFieldProps) {
   );
 }
 
+function renderDateFieldControl(props: DateFieldProps) {
+  const hasValue = !!props.value;
+  const label = hasValue
+    ? format(props.value as Date, "dd/MM/yyyy")
+    : (props.placeholder ?? "Select date");
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        className={
+          "body w-full bg-transparent px-3 py-2 text-left outline-none " +
+          (!hasValue ? "text-[var(--bloom-gray)]" : "")
+        }
+      >
+        {label}
+      </PopoverTrigger>
+
+      <PopoverContent align="start" className="p-0">
+        <Calendar
+          mode="single"
+          selected={props.value}
+          onSelect={props.onChange}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function renderTimeFieldControl(props: TimeFieldProps, name: string) {
   const handleChange = (raw: string) => {
     // strip non-digits, cap at 4 digits
@@ -250,10 +293,10 @@ function renderTimeFieldControl(props: TimeFieldProps, name: string) {
       return;
     }
 
-    // Validate hour / minute ranges before formatting
+    // hour n minute validation
     if (digits.length <= 2) {
       const hh = Number(digits);
-      if (hh > 23) return; // reject invalid hour input
+      if (hh > 23) return;
       props.onChange(digits);
       return;
     }
