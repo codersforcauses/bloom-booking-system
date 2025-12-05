@@ -4,7 +4,6 @@ cd server && python manage.py test api.user
 '''
 from django.test import TestCase
 from django.urls import reverse, resolve
-from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework import exceptions
@@ -12,13 +11,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from django.db import IntegrityError
 from unittest.mock import patch
-from datetime import datetime, timedelta, timezone as dt_timezone
+from datetime import timedelta
 # import modules to be tested
 from .models import CustomUser
 from .serializers import CustomTokenObtainPairSerializer
 from .views import CustomTokenObtainPairView
-
-UserModel = get_user_model()
 
 
 # --- 1. Models Tests ---
@@ -46,8 +43,8 @@ class CustomUserModelTests(TestCase):
         """
         Use mock to test that the updated_at field automatically updates on save.
         """
-        time1 = datetime(2023, 1, 1, 10, 0, 0, tzinfo=dt_timezone.utc)
-        time2 = datetime(2023, 1, 1, 11, 0, 0, tzinfo=dt_timezone.utc)
+        time1 = timezone.now()
+        time2 = time1 + timedelta(hours=1)
 
         with patch('django.utils.timezone.now') as mock_now:
             # create user at time1
@@ -203,7 +200,7 @@ class CustomTokenObtainPairViewTests(APITestCase):
         self.assertLess(refresh_time_difference, 5)
 
 
-# 4. URLs Tests
+# 4. --- URLs Tests ---
 class URLsTests(TestCase):
     """
     test /login and /refresh URLs resolve to correct views.
