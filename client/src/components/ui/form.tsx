@@ -36,9 +36,8 @@
 // 1. Default behaviour: when no extra error handling logic is added,
 //    an alert will come up to show error messages of all fields to users
 // 2. onError function as error handler
-// 3. (not recommended unless necessary)
-//    wraps the children to   {(methods) => (<>{children}</>)}
-//    then get errors by methods.formState.errors
+// 3. wraps the children to   {(methods) => (<>{children}</>)}
+//    then get errors by methods.formState.errors or check validity of form data by methods.formState.isValid
 // To get example, check /app/test/form/page.tsx
 
 "use client";

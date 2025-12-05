@@ -394,7 +394,7 @@ export default function TestFormPage() {
                 <Button
                   type="submit"
                   variant="confirm"
-                  disabled={Object.keys(methods.formState.errors).length > 0}
+                  disabled={!methods.formState.isValid} // better than methods.formState.errors as errors will be empty at the beginning
                 >
                   Okay
                 </Button>
