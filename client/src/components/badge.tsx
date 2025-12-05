@@ -13,7 +13,7 @@ export function Badge({ children, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md border px-2 py-0.5",
+        "inline-flex items-center rounded-md border px-2 py-1",
         "caption bg-[hsl(var(--secondary))] text-[hsl(var(--card-foreground))]",
         className,
       )}
