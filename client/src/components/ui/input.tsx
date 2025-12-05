@@ -300,9 +300,9 @@ function renderTimeSelectFieldControl(props: TimeSelectFieldProps) {
 
 function renderBadgeFieldControl(props: BadgeFieldProps) {
   return (
-    <div className="flex min-h-[1.5rem] flex-wrap items-center gap-2">
+    <div className="flex min-h-[38px] flex-wrap items-center gap-2 px-1.5 py-1.5">
       {props.value.length === 0 ? (
-        <span className="body px-3 py-2 text-[var(--bloom-gray)] opacity-100">
+        <span className="body mx-1.5 text-[var(--bloom-gray)] opacity-100">
           {props.placeholder ?? "Select amenities"}
         </span>
       ) : (
