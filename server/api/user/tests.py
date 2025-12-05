@@ -161,7 +161,7 @@ class CustomTokenObtainPairViewTests(APITestCase):
         self.assertEqual(response.status_code, 401)
         self.assertIn('detail', response.data)
 
-    def test_sucessful_response(self):
+    def test_successful_response(self):
         """test response includes both access and refresh tokens."""
 
         login_response = self.client.post(self.login_url, self.valid_data, format='json')
