@@ -1,3 +1,7 @@
+'''
+To run this test file, use the command:
+cd server && python manage.py test api.user
+'''
 from django.test import TestCase
 from django.urls import reverse, resolve
 from django.contrib.auth import get_user_model
@@ -7,8 +11,8 @@ from rest_framework import exceptions
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from django.db import IntegrityError
-from datetime import timedelta
-from time import sleep
+from unittest.mock import patch
+from datetime import datetime, timedelta, timezone as dt_timezone
 # import modules to be tested
 from .models import CustomUser
 from .serializers import CustomTokenObtainPairSerializer
@@ -38,17 +42,30 @@ class CustomUserModelTests(TestCase):
                 username='second', email='dup@example.com', password='pw'
             )
 
-    def test_updated_at_field_auto_updates_on_save(self):
-        user = CustomUser.objects.create_user(
-            username='updatetest', email='update@example.com', password='pw'
-        )
-        original_updated = user.updated_at
-        # ensure a measurable time difference
-        sleep(0.01)
-        user.username = 'updatetest2'
-        user.save()
-        user.refresh_from_db()
-        self.assertGreater(user.updated_at, original_updated)
+    def test_auto_updates_on_save(self):
+        """
+        Use mock to test that the updated_at field automatically updates on save.
+        """
+        time1 = datetime(2023, 1, 1, 10, 0, 0, tzinfo=dt_timezone.utc)
+        time2 = datetime(2023, 1, 1, 11, 0, 0, tzinfo=dt_timezone.utc)
+
+        with patch('django.utils.timezone.now') as mock_now:
+            # create user at time1
+            mock_now.return_value = time1
+            user = CustomUser.objects.create_user(
+                username='updatetest', email='update@example.com', password='pw'
+            )
+            user.refresh_from_db()
+            original_updated = user.updated_at
+            self.assertEqual(original_updated, time1)
+
+            # Update user at time2
+            mock_now.return_value = time2
+            user.first_name = "NewName"
+            user.save()
+            user.refresh_from_db()
+            self.assertGreater(user.updated_at, original_updated)
+            self.assertEqual(user.updated_at, time2)
 
     def test_str_method_returns_correct_format(self):
         user = CustomUser.objects.create_user(
@@ -149,24 +166,19 @@ class CustomTokenObtainPairViewTests(APITestCase):
         self.invalid_data = {'username': 'wronguser', 'password': 'wrongpassword'}
 
     def test_post_request_with_valid_username(self):
-        """test POST request with valid username credentials"""
+        """test POST request with valid username credentials
+        and data structure of response."""
         response = self.client.post(self.login_url, self.valid_data, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
 
     def test_post_request_with_invalid_credentials(self):
-        """test POST request with invalid credentials"""
+        """test POST request with invalid credentials
+        and data structure of error response."""
         response = self.client.post(self.login_url, self.invalid_data, format='json')
         self.assertEqual(response.status_code, 401)
         self.assertIn('detail', response.data)
-
-    def test_successful_response(self):
-        """test response includes both access and refresh tokens."""
-
-        login_response = self.client.post(self.login_url, self.valid_data, format='json')
-        self.assertIn('refresh', login_response.data)
-        self.assertIn('access', login_response.data)
 
     def test_token_expiration_settings(self):
         """
