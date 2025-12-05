@@ -26,7 +26,7 @@ import { Button } from "./button";
  *
  * @param title Optional title displayed at the top of the dialog
  * @param successText Text displayed when the operation is complete
- * @param color Optional color for the success icon and button (default: `#006DD5`)
+ * @param color Optional color for the success icon and button (default: `var(--bloom-blue)`)
  * @param showIcon Whether to show the icon above the content (default: `true`)
  * @param children React node used as the DialogTrigger
  *
@@ -34,7 +34,7 @@ import { Button } from "./button";
  * <AlertDialog
  *   title="Excel sheet download"
  *   successText="Your request for excel sheet download successfully"
- *   color="#67D4EC"
+ *   color="var(--bloom-blue)"
  * >
  *   <Button>Open Dialog</Button>
  * </AlertDialog>
@@ -43,7 +43,7 @@ function AlertDialog({
   title,
   successText,
   children,
-  color = "#006DD5",
+  color = "var(--bloom-blue)",
   showIcon = true,
 }: {
   title?: string;
@@ -81,7 +81,7 @@ function AlertDialog({
           <DialogClose asChild>
             <Button
               className={cn(
-                "mt-4 h-[41px] w-[72px] text-[14px] text-white focus:ring-2",
+                "mt-4 h-[41px] w-[72px] border-b-4 text-[14px] text-white",
                 isPending && "bg-gray-300 text-black",
               )}
               disabled={isPending}
