@@ -180,7 +180,7 @@ class CustomTokenObtainPairViewTests(APITestCase):
         access_exp_timestamp = access_token['exp']
         expected_exp = timezone.now() + timedelta(minutes=15)
         time_difference = abs(expected_exp.timestamp() - access_exp_timestamp)
-        # allow 5sec difference for processisng time
+        # allow 5sec difference for processing time
         self.assertLess(time_difference, 5)
 
         refresh_token = RefreshToken(response.data['refresh'])
