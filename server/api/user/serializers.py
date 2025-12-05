@@ -24,7 +24,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 user = authenticate(username=user_obj.username, password=password)
 
         if not user:
-            raise exceptions.AuthenticationFailed('Invalid credentials')
+            raise exceptions.ValidationError({'detail': ['Invalid credentials']})
 
         self.user = user
 
