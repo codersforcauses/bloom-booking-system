@@ -35,6 +35,8 @@ export default function TestInputPage() {
   const [timeManual, setTimeManual] = React.useState("");
   const [timeSelect, setTimeSelect] = React.useState("");
 
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
+
   return (
     <div className="min-h-screen bg-[hsl(var(--secondary))] p-8">
       <div className="mx-auto max-w-lg space-y-6 rounded-lg border bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))] shadow-sm">
@@ -100,6 +102,16 @@ export default function TestInputPage() {
           value={timeSelect}
           onChange={setTimeSelect}
           placeholder="Select a time"
+        />
+
+        {/* Date input */}
+        <InputField
+          kind="date"
+          label="Date"
+          name="bookingDate"
+          value={date}
+          onChange={setDate}
+          placeholder="Select date"
         />
       </div>
     </div>
