@@ -9,6 +9,7 @@
 //                                    name: { message: "name is a required field" },
 //                                    age: { message: "age is a required field" }
 //                                  }
+//        className="customFormClassName" // optional
 // >
 // {children} // free to add any contents here, but using ControlledField for input is a must
 // </Form>
@@ -35,9 +36,9 @@
 // 1. Default behaviour: when no extra error handling logic is added,
 //    an alert will come up to show error messages of all fields to users
 // 2. onError function as error handler
-// 3. import { useFormContext } from "react-hook-form"
-//    and use const { formState: { errors } } = useFormContext() to get errors,
-//    then customize directly within the form as children
+// 3. (not recommended unless necessary)
+//    wraps the children to   {(methods) => (<>{children}</>)}
+//    then get errors by methods.formState.errors
 // To get example, check /app/test/form/page.tsx
 
 "use client";
@@ -49,17 +50,21 @@ import {
   FormProvider,
   useForm,
   useFormContext,
+  UseFormReturn,
 } from "react-hook-form";
 import * as yup from "yup";
+
+import { cn } from "@/lib/utils";
 
 type FormData<TSchema extends yup.AnyObjectSchema> = yup.InferType<TSchema>;
 
 // Ensure that form data and the yup schema is of the same type
 type FormProps<TSchema extends yup.AnyObjectSchema> = {
   schema: TSchema;
-  children: ReactNode;
+  children: ReactNode | ((methods: UseFormReturn<any>) => ReactNode);
   onSubmit: (data: FormData<TSchema>) => void;
   onError?: (errors: FieldErrors<FormData<TSchema>>) => void;
+  className?: string;
 };
 
 // Helper function to make yup invalidation errors to a message paragraph
@@ -81,6 +86,7 @@ const Form = <TSchema extends yup.AnyObjectSchema>({
   children,
   onSubmit,
   onError,
+  className,
 }: FormProps<TSchema>) => {
   const methods = useForm<yup.InferType<TSchema>>({
     resolver: yupResolver(schema),
@@ -94,9 +100,12 @@ const Form = <TSchema extends yup.AnyObjectSchema>({
             if (onError) onError(errors);
             else alert(getErrorMessage(errors));
           })}
-          className="flex w-full flex-col space-y-5 rounded-md border px-8 py-8"
+          className={cn(
+            "flex w-full flex-col space-y-3 rounded-md border border-[hsl(var(--border))] bg-background px-8 py-8",
+            className,
+          )}
         >
-          {children}
+          {typeof children === "function" ? children(methods) : children}
         </form>
       </FormProvider>
     </>
