@@ -48,8 +48,8 @@ class RoomAPITest(APITestCase):
             room = Room.objects.create(
                 name=room_data["name"],
                 img_url="https://example.com/room.jpg",
-                location_id=room_data["location"],
-                capacity_id=room_data["capacity"],
+                location=room_data["location"],
+                capacity=room_data["capacity"],
                 start_datetime=start,
                 end_datetime=end,
                 recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR"
@@ -73,13 +73,13 @@ class RoomAPITest(APITestCase):
         # Filter by location_id
         loc_id = self.loc1.id
         response = self.client.get(f"/api/rooms/?location_id={loc_id}")
-        print("\nFilter by location_id Response:")
+        print("\nFilter by location Response:")
         print(json.dumps(response.data, indent=4))
 
         # Filter by capacity_id
         cap_id = self.cap4.id
         response = self.client.get(f"/api/rooms/?capacity_id={cap_id}")
-        print("\nFilter by capacity_id Response:")
+        print("\nFilter by capacity Response:")
         print(json.dumps(response.data, indent=4))
 
     def test_retrieve_update_delete_room(self):

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Room, Location, Capacity, Amenties
+from .models import Room, Amenties
 
 
 class AmenitySerializer(serializers.ModelSerializer):
@@ -26,8 +26,8 @@ class RoomSerializer(serializers.ModelSerializer):
 
 
 class RoomListSerializer(serializers.ModelSerializer):
-    location_id = serializers.StringRelatedField(read_only=True)
-    capacity_id = serializers.StringRelatedField(read_only=True)
+    location = serializers.StringRelatedField(read_only=True)
+    capacity = serializers.StringRelatedField(read_only=True)
     amenities = AmenitySerializer(many=True, read_only=True)
 
     class Meta:
@@ -36,8 +36,8 @@ class RoomListSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "img_url",
-            "location_id",
-            "capacity_id",
+            "location",
+            "capacity",
             "amenities",
             "start_datetime",
             "end_datetime",
