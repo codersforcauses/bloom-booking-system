@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
-from api.pagination import StandardResultsSetPagination
+from api.utils.pagination import StandardResultsSetPagination
 from rest_framework import viewsets
 from rest_framework.decorators import action
 
