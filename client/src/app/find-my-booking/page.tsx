@@ -13,7 +13,6 @@ export default function FindMyBookingPage() {
 
   async function searchBookings(formData: FormData) {
     const email = formData.get("email");
-    // TODO: sanitise input?
     const apiUrl = `/api/bookings/search?visitor_email=${email}`;
     await api({ url: apiUrl, method: "get" })
       .then((response) => {
@@ -24,6 +23,10 @@ export default function FindMyBookingPage() {
         // TODO: handle error
         console.error("Error searching bookings:", error);
       });
+  }
+
+  function isValidEmail(email: string) {
+    return email.length > 0;
   }
 
   return (
@@ -42,9 +45,13 @@ export default function FindMyBookingPage() {
           onChange={setEmail}
           placeholder="Enter your email"
         />
-        {/* TODO: captcha (need to wait for this?) */}
-        {/* <ReCAPTCHA_v2 setVerified={setVerified}></ReCAPTCHA_v2> */}
-        <Button variant={"default"}>Search</Button>
+        <ReCAPTCHA_v2 setVerified={setVerified}></ReCAPTCHA_v2>
+        <Button
+          variant={"default"}
+          disabled={!verified || !isValidEmail(email)}
+        >
+          Search
+        </Button>
       </form>
     </div>
   );
