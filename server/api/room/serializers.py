@@ -10,7 +10,6 @@ class AmenitySerializer(serializers.ModelSerializer):
 # 2 different serialiser because api requirements want more or less details depending on request type
 class RoomSerializer(serializers.ModelSerializer):
     location = serializers.StringRelatedField(read_only=True)
-    capacity = serializers.StringRelatedField(read_only=True)
     amenities = AmenitySerializer(many=True, read_only=True)
 
     class Meta:
@@ -18,7 +17,7 @@ class RoomSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "img_url",
+            "img",
             "location",
             "capacity",
             "amenities",
@@ -27,7 +26,6 @@ class RoomSerializer(serializers.ModelSerializer):
 
 class RoomListSerializer(serializers.ModelSerializer):
     location = serializers.StringRelatedField(read_only=True)
-    capacity = serializers.StringRelatedField(read_only=True)
     amenities = AmenitySerializer(many=True, read_only=True)
 
     class Meta:
@@ -35,7 +33,7 @@ class RoomListSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "img_url",
+            "img",
             "location",
             "capacity",
             "amenities",
