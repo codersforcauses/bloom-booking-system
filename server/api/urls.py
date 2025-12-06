@@ -25,6 +25,13 @@ from drf_spectacular.views import (
     SpectacularRedocView
 )
 
+from rest_framework_nested.routers import DefaultRouter
+from rest_framework.routers import APIRootView
+from api.booking.urls import router as bookings_router
+
+router = DefaultRouter()
+router.APIRootView = APIRootView
+router.registry.extend(bookings_router.registry)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -36,7 +43,7 @@ urlpatterns = [
          name="redoc"),
     path("api/users/", include(("api.user.urls"))),
     path("api/", include(("api.room.urls"))),
-    path("api/bookings/", include("api.booking.urls")),
+    path("api/bookings", include(router.urls)),
 ]
 
 if settings.DEBUG:
