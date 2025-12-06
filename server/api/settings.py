@@ -167,6 +167,8 @@ STATIC_URL = "/static/"
 # STATIC_ROOT is where the static files get copied to when "collectstatic" is run.
 STATIC_ROOT = "static_files"
 
+MEDIA_ROOT = BASE_DIR / "room_images"
+
 # This is where to _find_ static files when 'collectstatic' is run.
 # These files are then copied to the STATIC_ROOT location.
 STATICFILES_DIRS = ("static",)
