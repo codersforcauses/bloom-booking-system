@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
+from api.pagination import StandardResultsSetPagination
 
 
 # For admin to filter booking in /api/bookings
@@ -26,6 +27,7 @@ class BookingsListCreateView(generics.ListCreateAPIView):
     http_method_names = ['get', 'post']
     filter_backends = [DjangoFilterBackend]
     filterset_class = ListBookingFilter
+    pagination_class = StandardResultsSetPagination
 
     # set permission restrictions
     def get_permissions(self):
@@ -112,6 +114,7 @@ class BookingListUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
 class BookingSearchView(generics.ListAPIView):
     serializer_class = BookingListSerializer
     http_method_names = ['get']
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         queryset = Booking.objects.select_related("room")

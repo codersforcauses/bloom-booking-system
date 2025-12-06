@@ -5,6 +5,10 @@ from rest_framework.test import APITestCase
 from django.utils import timezone
 from datetime import timedelta, datetime
 from django.contrib.auth import get_user_model
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
 class BookingViewTest(APITestCase):
@@ -117,7 +121,7 @@ class BookingViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-        data = data[0]
+        data = data["results"][0]
         self.assertEqual(data["id"], self.booking.id)
         self.assertEqual(data["visitor_name"], self.booking.visitor_name)
         self.assertEqual(data["visitor_email"], self.booking.visitor_email)
@@ -147,14 +151,14 @@ class BookingViewTest(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
 
         # when there is no matched booking
         url = '/api/bookings/?room_id=' + str(self.room.id + 1)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 0)
+        self.assertEqual(len(data["results"]), 0)
 
     def test_booking_filtering_with_date(self):
         User = get_user_model()
@@ -171,14 +175,14 @@ class BookingViewTest(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
 
         # when there is no matched booking
         url = '/api/bookings/?date=' + str(date + timedelta(days=1))
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 0)
+        self.assertEqual(len(data["results"]), 0)
 
     def test_booking_filtering_with_visitor_name(self):
         User = get_user_model()
@@ -194,28 +198,28 @@ class BookingViewTest(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
 
         # when there is matched booking (case insensitive)
         url = '/api/bookings/?visitor_name=' + self.booking.visitor_name.upper()
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
 
         # when there is matched booking (partial match)
         url = '/api/bookings/?visitor_name=' + self.booking.visitor_name.split(' ')[0]
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
 
         # when there is no matched booking
         url = '/api/bookings/?visitor_name=' + 'whatever'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 0)
+        self.assertEqual(len(data["results"]), 0)
 
     def test_booking_filtering_with_visitor_email(self):
         User = get_user_model()
@@ -231,28 +235,28 @@ class BookingViewTest(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
 
         # when there is matched booking (case insensitive)
         url = '/api/bookings/?visitor_email=' + self.booking.visitor_email.upper()
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
 
         # when there is no matched booking (no partial match)
         url = '/api/bookings/?visitor_email=' + self.booking.visitor_email.split('@')[0]
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 0)
+        self.assertEqual(len(data["results"]), 0)
 
         # when there is no matched booking
         url = '/api/bookings/?visitor_email=' + 'whatever@example.com'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 0)
+        self.assertEqual(len(data["results"]), 0)
 
     # GET /api/bookings/{id}
     def test_booking_retrieval_fails_without_authentication_and_no_visitor_emails_provided(self):
@@ -443,24 +447,75 @@ class BookingViewTest(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
 
         # when there is matched booking (case insensitive)
         url = '/api/bookings/search/?visitor_email=' + self.booking.visitor_email.upper()
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
 
         # when there is no matched booking
         url = '/api/bookings/search/?visitor_email=' + 'whatever@example.com'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 0)
+        self.assertEqual(len(data["results"]), 0)
 
     def test_booking_search_fails_with_no_email(self):
         # when there is matched booking
         url = '/api/bookings/search/'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_booking_listing_with_default_pagination_size(self):
+        payload = {
+            "room_id": self.room.id,
+            "visitor_name": "Alice Johnson",
+            "visitor_email": "alice@example.com",
+            "start_datetime": "2025-11-27T10:00:00Z",
+            "end_datetime": "2025-11-27T12:00:00Z",
+            "recurrence_rule": "",
+            "status": "CONFIRMED"
+            }
+        url = '/api/bookings/'
+        for i in range(20):
+            self.client.post(url, payload, format='json')
+
+        User = get_user_model()
+        admin = User.objects.create_user(
+            username='admin',
+            password='password',
+            is_staff=True
+        )
+        self.client.force_login(admin)
+        response = self.client.get(url)
+        data = response.json()
+        self.assertEqual(len(data["results"]), int(os.getenv("DEFAULT_PAGE_SIZE", 10)))
+
+    def test_booking_listing_with_custom_pagination_size(self):
+        payload = {
+            "room_id": self.room.id,
+            "visitor_name": "Alice Johnson",
+            "visitor_email": "alice@example.com",
+            "start_datetime": "2025-11-27T10:00:00Z",
+            "end_datetime": "2025-11-27T12:00:00Z",
+            "recurrence_rule": "",
+            "status": "CONFIRMED"
+            }
+        post_url = '/api/bookings/'
+        for i in range(20):
+            self.client.post(post_url, payload, format='json')
+
+        User = get_user_model()
+        admin = User.objects.create_user(
+            username='admin',
+            password='password',
+            is_staff=True
+        )
+        get_url = '/api/bookings/?page_size=15'
+        self.client.force_login(admin)
+        response = self.client.get(get_url)
+        data = response.json()
+        self.assertEqual(len(data["results"]), 15)
