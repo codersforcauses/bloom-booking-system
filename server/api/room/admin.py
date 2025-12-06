@@ -3,7 +3,7 @@ from .models import Room, Location, Capacity, Amenties
 # Register your models here.
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "location_id", "capacity_id", "start_datetime", "end_datetime")
+    list_display = ("id", "name", "location", "capacity", "start_datetime", "end_datetime")
     search_fields = ("name",)
 
 @admin.register(Location)
