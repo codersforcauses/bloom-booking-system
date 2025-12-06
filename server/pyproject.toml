@@ -17,6 +17,7 @@ gunicorn = "^23.0.0"
 python-dotenv = "^1.0.1"
 django-extensions = "^3.2.3"
 django-filter = "^25.2"
+drf-nested-routers = "^0.95.0"
 
 
 [tool.poetry.group.dev.dependencies]
