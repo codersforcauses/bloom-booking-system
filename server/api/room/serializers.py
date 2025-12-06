@@ -1,15 +1,6 @@
 from rest_framework import serializers
 from .models import Room, Location, Capacity, Amenties
 
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = ["id", "name"]
-
-class CapacitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Capacity
-        fields = ["id", "name"]
 
 class AmenitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,8 +9,8 @@ class AmenitySerializer(serializers.ModelSerializer):
 
 # 2 different serialiser because api requirements want more or less details depending on request type
 class RoomSerializer(serializers.ModelSerializer):
-    location = LocationSerializer(read_only=True)
-    capacity = CapacitySerializer(read_only=True)
+    location = serializers.StringRelatedField(read_only=True)
+    capacity = serializers.StringRelatedField(read_only=True)
     amenities = AmenitySerializer(many=True, read_only=True)
 
     class Meta:
@@ -35,10 +26,23 @@ class RoomSerializer(serializers.ModelSerializer):
 
 
 class RoomListSerializer(serializers.ModelSerializer):
-    location = LocationSerializer(read_only=True)
-    capacity = CapacitySerializer(read_only=True)
+    location_id = serializers.StringRelatedField(read_only=True)
+    capacity_id = serializers.StringRelatedField(read_only=True)
     amenities = AmenitySerializer(many=True, read_only=True)
 
     class Meta:
         model = Room
-        fields = "__all__"
+        fields = [
+            "id",
+            "name",
+            "img_url",
+            "location_id",
+            "capacity_id",
+            "amenities",
+            "start_datetime",
+            "end_datetime",
+            "recurrence_rule",
+            "created_at",
+            "updated_at",
+        ]
+
