@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "api.healthcheck",
     "api.room",
     "api.booking",
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -159,3 +160,12 @@ STATICFILES_DIRS = ("static",)
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Add pagination
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+}

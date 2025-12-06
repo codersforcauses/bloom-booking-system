@@ -3,12 +3,29 @@ from .models import Booking
 from .serializers import BookingSerializer, BookingListSerializer
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from django_filters.rest_framework import DjangoFilterBackend
+import django_filters
+
+
+# For admin to filter booking in /api/bookings
+class ListBookingFilter(django_filters.FilterSet):
+    room_id = django_filters.NumberFilter()
+    date = django_filters.DateFilter(field_name='start_datetime', lookup_expr='date')
+    visitor_name = django_filters.CharFilter(lookup_expr='icontains')       # contain + case insensitive
+    visitor_email = django_filters.CharFilter(lookup_expr='iexact')         # exact + case insensitive
+
+    class Meta:
+        model = Booking
+        fields = ["room_id", "date", "visitor_name", "visitor_email"]
 
 
 # GET /api/bookings and POST /api/bookings route
 class BookingsListCreateView(generics.ListCreateAPIView):
+    queryset = Booking.objects.select_related("room")
     serializer_class = BookingListSerializer
     http_method_names = ['get', 'post']
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ListBookingFilter
 
     # set permission restrictions
     def get_permissions(self):
@@ -20,20 +37,6 @@ class BookingsListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = Booking.objects.select_related("room")   # optimize performance with foreign key
-        room_id = self.request.query_params.get('room_id')
-        date = self.request.query_params.get('date')
-        visitor_name = self.request.query_params.get('visitor_name')
-        visitor_email = self.request.query_params.get('visitor_email')
-
-        # optionally filter by visitor name, email, room name or date
-        if room_id:
-            queryset = queryset.filter(room_id=room_id)
-        if visitor_name:
-            queryset = queryset.filter(visitor_name__icontains=visitor_name)    # contain + case insensitive
-        if visitor_email:
-            queryset = queryset.filter(visitor_email__iexact=visitor_email)     # exact + case insensitive
-        if date:        # suppose start datetime and end datetime must be on the same day
-            queryset = queryset.filter(start_datetime__date=date)
 
         return queryset
 
