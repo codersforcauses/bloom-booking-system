@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from .models import Room
@@ -59,8 +58,3 @@ class RoomViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response({"message": "Room deleted successfully"})
-=======
-from django.shortcuts import render
-
-# Create your views here.
->>>>>>> Stashed changes
