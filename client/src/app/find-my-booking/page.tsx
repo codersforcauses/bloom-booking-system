@@ -11,6 +11,10 @@ export default function FindMyBookingPage() {
   const [verified, setVerified] = useState(false);
   const [email, setEmail] = useState("");
 
+  /**
+   * Fetches booking information for the email specified in the form.
+   * @param formData - content of the form inputs
+   */
   async function searchBookings(formData: FormData) {
     const email = formData.get("email");
     const apiUrl = `/api/bookings/search?visitor_email=${email}`;
