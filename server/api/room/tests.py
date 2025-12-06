@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
@@ -114,3 +115,8 @@ class RoomAPITest(APITestCase):
         response = self.client.get("/api/rooms/")
         print("\nAll Rooms After Delete Response:")
         print(response.content.decode())
+=======
+from django.test import TestCase
+
+# Create your tests here.
+>>>>>>> Stashed changes
