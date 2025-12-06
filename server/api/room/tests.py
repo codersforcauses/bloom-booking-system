@@ -1,9 +1,8 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
-from .models import Room, Location, Amenties, Capacity
+from .models import Room, Location, Amenties
 from django.utils import timezone
-from datetime import timedelta
 import json
 
 class RoomAPITest(APITestCase):
@@ -21,96 +20,84 @@ class RoomAPITest(APITestCase):
         self.amenity2 = Amenties.objects.create(name="Whiteboard")
         self.amenity4 = Amenties.objects.create(name="House")
 
-        # Capacities
-        self.cap1 = Capacity.objects.create(name="10 people")
-        self.cap4 = Capacity.objects.create(name="2 people")
-
         # Rooms
-        rooms_list = [
-            {
-                "name": "Meeting Room A",
-                "location": self.loc1,
-                "capacity": self.cap1,
-                "amenities": [self.amenity1, self.amenity2]
-            },
-            {
-                "name": "Meeting Room X",
-                "location": self.loc3,
-                "capacity": self.cap4,
-                "amenities": [self.amenity1, self.amenity4]
-            }
-        ]
+        self.room1 = Room.objects.create(
+            name="Conference Room 1",
+            location=self.loc1,
+            capacity=10,
+            start_datetime=timezone.make_aware(timezone.datetime(2025, 10, 1, 9, 0)),
+            end_datetime=timezone.make_aware(timezone.datetime(2025, 10, 1, 18, 0)),
+            recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE,"
+        )
+        self.room1.amenities.set([self.amenity1, self.amenity2])
 
-        for idx, room_data in enumerate(rooms_list):
-            start = timezone.make_aware(timezone.datetime(2025, 11, 1, 9, 0)) + timedelta(days=idx)
-            end = timezone.make_aware(timezone.datetime(2025, 11, 1, 18, 0)) + timedelta(days=idx)
+        self.room2 = Room.objects.create(
+            name="Meeting Room A",
+            location=self.loc3,
+            capacity=5,
+            start_datetime=timezone.make_aware(timezone.datetime(2025, 11, 1, 10, 0)),
+            end_datetime=timezone.make_aware(timezone.datetime(2025, 11, 1, 17, 0)),
+            recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR"
+        )
+        self.room2.amenities.set([self.amenity4])
 
-            room = Room.objects.create(
-                name=room_data["name"],
-                img="https://example.com/room.jpg",
-                location=room_data["location"],
-                capacity=room_data["capacity"],
-                start_datetime=start,
-                end_datetime=end,
-                recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR"
-            )
-            room.amenities.set(room_data["amenities"])
-            print(f"Created room: {room.name}, ID: {room.id}")
-
-    def test_list_rooms(self):
+    # -------- LIST & FILTER TESTS --------
+    def test_list_all_rooms(self):
         response = self.client.get("/api/rooms/")
         print("\nAll Rooms Response:")
         print(json.dumps(response.data, indent=4))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
-        # Filter by name
+    def test_filter_rooms_by_name(self):
         response = self.client.get("/api/rooms/?name=Meeting Room A")
-        print("\nFilter by name Response:")
+        print("\nFilter by Name Response:")
         print(json.dumps(response.data, indent=4))
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["name"], "Meeting Room A")
 
-        # Filter by location_id
+    def test_filter_rooms_by_location(self):
         loc_id = self.loc1.id
         response = self.client.get(f"/api/rooms/?location_id={loc_id}")
-        print("\nFilter by location Response:")
+        print("\nFilter by Location Response:")
         print(json.dumps(response.data, indent=4))
+        self.assertTrue(all(r["location_id"] == loc_id for r in response.data))
 
-        # Filter by capacity_id
-        cap_id = self.cap4.id
-        response = self.client.get(f"/api/rooms/?capacity_id={cap_id}")
-        print("\nFilter by capacity Response:")
-        print(json.dumps(response.data, indent=4))
-
-    def test_retrieve_update_delete_room(self):
+    # -------- RETRIEVE TEST --------
+    def test_retrieve_room(self):
         room = Room.objects.first()
-
-        # Retrieve
         response = self.client.get(f"/api/rooms/{room.id}/")
         print("\nRetrieve Room Response:")
         print(json.dumps(response.data, indent=4))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], room.id)
 
-        # Update
-        response = self.client.patch(f"/api/rooms/{room.id}/", {"name": "Updated Room"}, format="json")
+    # -------- UPDATE TEST --------
+    def test_update_room(self):
+        room = Room.objects.first()
+        response = self.client.patch(
+            f"/api/rooms/{room.id}/", 
+            {"name": "Updated Room"}, 
+            format="json"
+        )
         print("\nUpdate Room Response:")
-        print(response.content.decode()) 
+        print(response.content.decode())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Updated Room")
 
-        # GET after update
+        # Confirm update
         response = self.client.get(f"/api/rooms/{room.id}/")
-        print("\nRetrieve After Update Response:")
-        print(response.content.decode())
         self.assertEqual(response.data["name"], "Updated Room")
 
-        # Delete
+    # -------- DELETE TEST --------
+    def test_delete_room(self):
+        room = Room.objects.first()
         response = self.client.delete(f"/api/rooms/{room.id}/")
         print("\nDelete Room Response:")
         print(response.content.decode())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # GET all rooms after delete
+        # Confirm deletion
         response = self.client.get("/api/rooms/")
-        print("\nAll Rooms After Delete Response:")
-        print(response.content.decode())
+        self.assertEqual(len(response.data), 1)
+        self.assertNotIn(room.id, [r["id"] for r in response.data])
