@@ -46,12 +46,7 @@ export default function FindMyBookingPage() {
           placeholder="Enter your email"
         />
         <ReCAPTCHA_v2 setVerified={setVerified}></ReCAPTCHA_v2>
-        <Button
-          variant={"default"}
-          disabled={!verified || !isValidEmail(email)}
-        >
-          Search
-        </Button>
+        <Button disabled={!verified || !isValidEmail(email)}>Search</Button>
       </form>
     </div>
   );
