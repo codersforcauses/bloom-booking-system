@@ -47,7 +47,7 @@ class RoomAPITest(APITestCase):
 
             room = Room.objects.create(
                 name=room_data["name"],
-                img_url="https://example.com/room.jpg",
+                img="https://example.com/room.jpg",
                 location=room_data["location"],
                 capacity=room_data["capacity"],
                 start_datetime=start,

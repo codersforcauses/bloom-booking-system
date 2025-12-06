@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Room, Location, Capacity, Amenties
+from .models import Room, Location, Amenties
 # Register your models here.
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
@@ -8,11 +8,6 @@ class RoomAdmin(admin.ModelAdmin):
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
-    search_fields = ("name",)
-
-@admin.register(Capacity)
-class CapacityAdmin(admin.ModelAdmin):
     list_display = ("id", "name")
     search_fields = ("name",)
 
