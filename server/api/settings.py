@@ -163,6 +163,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Add pagination
 REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'api.pagination.StandardResultsSetPagination',
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',

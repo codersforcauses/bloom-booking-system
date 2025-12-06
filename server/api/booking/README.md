@@ -37,20 +37,32 @@ Backend API for create a booking, list and filter bookings for admin, list one's
 - Access：Admin
 - Query Params: room_id, date, visitor_name (case insensitive, allow partial qurey), visitor_email (case insensitive). Example: ?room_id=1&date=2025-11-03&visitor_name=alice&visitor_email=alice@example.com
 - Sample Response:
-[
-  {
-    "id": 1,
-    "room": { "id": 10, "name": "Meeting Room A" },
-    "visitor_name": "Alice Johnson",
-    "visitor_email": "alice@example.com",
-    "start_datetime": "2025-11-03T10:00:00Z",
-    "end_datetime": "2025-11-03T11:00:00Z",
-    "recurrence_rule": "",
-    "status": "CONFIRMED",
-    "google_event_id": "abc123",
-    "created_at": "2025-10-31T06:10:00Z"
-  }
-]
+{
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results":  [
+      {
+        "id": 1,
+        "room": { "id": 10, "name": "Meeting Room A" },
+        "visitor_name": "Alice Johnson",
+        "visitor_email": "alice@example.com",
+        "start_datetime": "2025-11-03T10:00:00Z",
+        "end_datetime": "2025-11-03T11:00:00Z",
+        "recurrence_rule": "",
+        "status": "CONFIRMED",
+        "google_event_id": "abc123",
+        "created_at": "2025-10-31T06:10:00Z"
+      }
+    ]
+}
+- Empty Response:
+{
+    "count": 0,
+    "next": null,
+    "previous": null,
+    "results": []
+}
 
 3. GET /api/bookings/{id} - for admin
 - Purpose: Retrieve the detail of a booking for admin by id. 
@@ -129,21 +141,7 @@ url: /api/bookings/1?visitor_email=alice@example.com
 - Purpose: search bookings for visitors. Visitor: can only get result by filtering by email (to find bookings).
 - Access：Everyone
 - Query Params: visitor_email. Example:?visitor_email=alice@example.com
-- Sample Response:
-[
-  {
-    "id": 1,
-    "room": { "id": 10, "name": "Meeting Room A" },
-    "visitor_name": "Alice Johnson",
-    "visitor_email": "alice@example.com",
-    "start_datetime": "2025-11-03T10:00:00Z",
-    "end_datetime": "2025-11-03T11:00:00Z",
-    "recurrence_rule": "",
-    "status": "CONFIRMED",
-    "google_event_id": "abc123",
-    "created_at": "2025-10-31T06:10:00Z"
-  }
-]
+- Sample Response: Same as GET /api/bookings
 
 ## Todo:
 - Integrate Google calendar API module into booking creation process to generate a google event id (which can be updated in serializers.BookingSerializer.create)
