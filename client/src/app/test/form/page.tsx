@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import * as yup from "yup";
+import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import { ControlledField, Form } from "@/components/ui/form";
@@ -8,58 +8,58 @@ import InputField from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-const schema = yup.object({
-  firstname: yup.string().required(),
-  lastname: yup.string().required(),
-  middlename: yup.string(),
-  age: yup
+const schema = z.object({
+  firstname: z.string().min(1, "Firstname is required"),
+  lastname: z.string().min(1, "Lastname is required"),
+  middlename: z.string().optional(),
+  age: z
     .string()
-    .required()
-    .matches(/^\d+$/, "Age must be an non-negative integer")
-    .test("positive", "Age must be between 1 and 12", (value) => {
-      if (!value) return false;
-      return Number(value) >= 1 && Number(value) <= 12;
-    }),
+    .min(1, "Age is required")
+    .regex(/^\d+$/, { message: "Age must be a non-negative integer" })
+    .refine(
+      (val) => {
+        const num = Number(val);
+        return num >= 1 && num <= 120;
+      },
+      {
+        message: "Age must be between 1 and 120",
+      },
+    ),
 });
 
-const extendedSchema = yup.object({
-  firstname: yup.string().required(),
-  lastname: yup.string().required(),
-  middlename: yup.string(),
-  age: yup
+const extendedSchema = z.object({
+  firstname: z.string().min(1, "Firstname is required"),
+  lastname: z.string().min(1, "Lastname is required"),
+  middlename: z.string().optional(),
+  age: z
     .string()
-    .required()
-    .matches(/^\d+$/, "Age must be an non-negative integer")
-    .test("positive", "Age must be between 1 and 120", (value) => {
-      if (!value) return false;
-      return Number(value) >= 1 && Number(value) <= 120;
-    }),
-  frequency: yup
-    .string()
-    .required()
-    .oneOf(["daily", "weekly", "monthly"], "Invalid frequency"),
-  amenities: yup
-    .array()
-    .of(
-      yup
-        .string()
-        .oneOf(
-          [
-            "Audio",
-            "Video",
-            "White Board",
-            "HDMI",
-            "Projector",
-            "Speaker Phone",
-          ],
-          "Invalid amenities",
-        ),
+    .min(1, "Age is required")
+    .regex(/^\d+$/, { message: "Age must be a non-negative integer" })
+    .refine(
+      (val) => {
+        const num = Number(val);
+        return num >= 1 && num <= 120;
+      },
+      {
+        message: "Age must be between 1 and 120",
+      },
+    ),
+  frequency: z.enum(["daily", "weekly", "monthly"], {
+    error: () => ({ message: "Invalid frequency" }),
+  }),
+  amenities: z
+    .array(
+      z.enum(
+        ["Audio", "Video", "White Board", "HDMI", "Projector", "Speaker Phone"],
+        {
+          error: () => ({ message: "Invalid amenities" }),
+        },
+      ),
     )
-    .required(),
-  recurrenceDate: yup
-    .string()
-    .oneOf(["Monday", "Tuesday", "Wednesday"], "Invalid date")
-    .required(),
+    .optional(),
+  recurrenceDate: z.enum(["Monday", "Tuesday", "Wednesday"], {
+    error: () => ({ message: "Invalid frequency" }),
+  }),
 });
 
 const FREQUENCIES = [
@@ -160,6 +160,7 @@ export default function TestFormPage() {
                 value={value}
                 onChange={onChange}
                 placeholder="Select frequency"
+                required={true}
               />
             )}
           </ControlledField>
@@ -181,7 +182,9 @@ export default function TestFormPage() {
           <ControlledField<string> name="recurrenceDate">
             {({ value, onChange }) => (
               <>
-                <p className="body-sm-bold">Recurrence Date</p>
+                <p className="body-sm-bold">
+                  Recurrence Date <span className="text-bloom-red">*</span>
+                </p>
                 <RadioGroup
                   value={value}
                   onValueChange={onChange}
