@@ -1,6 +1,6 @@
 // Usage of Form:
 // import { Form, ControlledField } from "@/components/ui/form"; // Note: both are necessary and not default export!
-// <Form schema={yupSchema} // Note: according to the current implimentation, numbers are also string. For an example please refer to /app/test/form/page.tsx
+// <Form schema={zodSchema} // Note: according to the current implimentation, numbers are also string. For an example please refer to /app/test/form/page.tsx
 //       onSubmit={submitHandler} // callback function in the form of (data) => handleSumit(data)
 //       orError={errorHandler} // optional, allows flexibility of error message display,
 //                                  callback function in the form of (errors) => handleError(errors)
@@ -16,7 +16,7 @@
 
 // Usage of ControlledField (wrapper necessary for input validation):
 // <ControlledField<type>      // type must be specified for type checking
-//   name="fieldName"          // fieldName must be aligned with the definition in yup
+//   name="fieldName"          // fieldName must be aligned with the definition in zod
 // >
 //   {({ value, onChange }) => (
 // <InputField           // can be other input-related components
@@ -41,7 +41,7 @@
 // To get example, check /app/test/form/page.tsx
 
 "use client";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { zodResolver } from "@hookform/resolvers/zod";
 import React, { ReactElement, ReactNode } from "react";
 import {
   Controller,
@@ -51,24 +51,26 @@ import {
   useFormContext,
   UseFormReturn,
 } from "react-hook-form";
-import * as yup from "yup";
+import * as z from "zod";
 
 import { cn } from "@/lib/utils";
 
-type FormData<TSchema extends yup.AnyObjectSchema> = yup.InferType<TSchema>;
+type AnyZodObject = z.ZodObject<any>;
 
-// Ensure that form data and the yup schema is of the same type
-type FormProps<TSchema extends yup.AnyObjectSchema> = {
+type FormData<TSchema extends AnyZodObject> = z.infer<TSchema>;
+
+// Ensure that form data and the zod schema is of the same type
+type FormProps<TSchema extends AnyZodObject> = {
   schema: TSchema;
   children: ReactNode | ((methods: UseFormReturn<any>) => ReactNode);
   onSubmit: (data: FormData<TSchema>) => void;
-  onError?: (errors: FieldErrors<FormData<TSchema>>) => void;
+  onError?: (errors: FieldErrors<z.input<TSchema>>) => void;
   className?: string;
 };
 
-// Helper function to make yup invalidation errors to a message paragraph
-function getErrorMessage<TSchema extends yup.AnyObjectSchema>(
-  errors: FieldErrors<FormData<TSchema>>,
+// Helper function to make zod invalidation errors to a message paragraph
+function getErrorMessage<TSchema extends AnyZodObject>(
+  errors: FieldErrors<z.input<TSchema>>,
 ) {
   let returnMessage = "Please fix the errors before submission:\n\n";
   returnMessage += Object.entries(errors)
@@ -80,15 +82,15 @@ function getErrorMessage<TSchema extends yup.AnyObjectSchema>(
   return returnMessage;
 }
 
-const Form = <TSchema extends yup.AnyObjectSchema>({
+const Form = <TSchema extends AnyZodObject>({
   schema,
   children,
   onSubmit,
   onError,
   className,
 }: FormProps<TSchema>) => {
-  const methods = useForm<yup.InferType<TSchema>>({
-    resolver: yupResolver(schema),
+  const methods = useForm<z.input<TSchema>, any, z.output<TSchema>>({
+    resolver: zodResolver(schema),
   });
 
   return (
@@ -113,7 +115,7 @@ const Form = <TSchema extends yup.AnyObjectSchema>({
 
 // To make input validation effective, an extra wrapper is needed for the input field
 type controlledFieldProps<TSchema> = {
-  name: string; // match the field defined in yup
+  name: string; // match the field defined in zod
   children: (props: {
     value: TSchema;
     onChange: (
