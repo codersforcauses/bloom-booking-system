@@ -1,6 +1,6 @@
 "use client";
 
-import { Building,Calendar, ClipboardList, Users } from "lucide-react";
+import { Building, Calendar, ClipboardList, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
