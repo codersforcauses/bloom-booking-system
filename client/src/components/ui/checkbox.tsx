@@ -1,3 +1,19 @@
+// Usage:
+// A single checkbox: use [checked, setChecked] = useState<boolean>(initialValue) to get the checkbox status
+// <CheckboxItem
+//   checked={checked}
+//   onCheckedChange={(checked) => setChecked(checked === true)} // As Radix Output can be true | false | "indeterminate", simple pass setChecked will cause Typescript complaint
+//   // optional props can be passed as in standard html checkbox
+// >
+// {children}   // add label here
+//</CheckboxItem>
+
+// A group of checkbox: use [value, setValue] = useState<string[]>(initialValue) to get the selected value
+// <CheckboxGroup value={value} onValueChange={setValue}>
+//   <CheckboxItem value={value1}>{children}</CheckboxItem>  // value is a necessary field in this case
+//   <CheckboxItem value={value2}>{children}</CheckboxItem>
+// </CheckboxGroup>
+
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import React, { useCallback, useContext } from "react";
 import { FaCheck } from "react-icons/fa";

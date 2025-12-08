@@ -57,7 +57,7 @@ export default function CheckboxTestPage() {
           Current acceptTerms value: {acceptTerms.toString()}
         </p>
         <p className="mt-4 text-center">
-          Current dates message: {JSON.stringify(dates)}
+          Current dates message: {JSON.stringify(dates, null, 1)}
         </p>
       </div>
     </div>
