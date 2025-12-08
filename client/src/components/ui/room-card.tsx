@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { FaMicrophone } from "react-icons/fa";
 import { GrStatusUnknown } from "react-icons/gr";
@@ -6,13 +8,8 @@ import { LuHdmiPort } from "react-icons/lu";
 import { MdPhonelinkRing } from "react-icons/md";
 import { RiArtboardLine } from "react-icons/ri";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
 import { Room } from "@/types/card";
 
@@ -29,12 +26,12 @@ const amenityIcons: Record<string, React.JSX.Element> = {
 };
 
 /**
- * Renders a list of amenities using icons or text.
+ * Renders a list of room amenities using icons or plain text.
  *
  * @param {Object} props
  * @param {string[]} props.amenities List of amenities to display.
  * @param {boolean} [props.hideIcon=false] If true, displays amenities as plain text.
- * @param {string} [props.className] Optional class for styling.
+ * @param {string} [props.className] Optional extra class names for styling.
  *
  * @example
  * <Amenities amenities={["Audio", "HDMI"]} />
@@ -69,10 +66,10 @@ const Amenities = ({
 };
 
 /**
- * User view card for displaying a room with booking option.
+ * Displays a room with details in a label-value grid format.
  *
- * Shows image, title, location and a Book button.
- * Intended for general users who want to view and book rooms.
+ * Shows image, room name, location, seats, amenities and availability.
+ * Intended for general / admin use as an info card.
  *
  * @param {Object} props
  * @param {Room} props.room Room data object.
@@ -84,69 +81,12 @@ const Amenities = ({
  *   location: "Level 2 Block B",
  *   seats: 10,
  *   amenities: ["Audio", "HDMI"],
- *   bookings: 4,
- *   available: true
+ *   available: true,
  * };
  *
- * <UserCard room={room} />
+ * <RoomCard room={room} />
  */
-function UserCard({ room }: { room: Room }) {
-  return (
-    <Card className="w-full overflow-hidden rounded-xl border-black bg-white shadow-md">
-      <div className="relative h-40 w-full">
-        <Image
-          src={room.image}
-          alt={room.title}
-          fill
-          className="object-cover"
-        />
-      </div>
-
-      <CardHeader className="pb-2 pt-4">
-        <CardTitle className="text-[14px] font-bold">{room.title}</CardTitle>
-      </CardHeader>
-
-      <CardContent className="pb-2">
-        <span className="text-[13px] font-semibold text-gray-400">
-          {room.location}
-        </span>
-      </CardContent>
-
-      <CardFooter className="pb-4">
-        <Button className="h-[38px] w-[88px] rounded-[10px] border border-black bg-white py-2 text-black hover:bg-gray-100">
-          Book
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
-
-/**
- * Admin management card for room details.
- *
- * Displays full room information including
- * name, location, seats, amenities and bookings.
- * Includes admin action buttons for editing and removal.
- *
- * Used in admin dashboards to manage rooms.
- *
- * @param {Object} props
- * @param {Room} props.room Room data object.
- *
- * @example
- * const room = {
- *   title: "Studio Room C",
- *   image: "/rooms/c.jpg",
- *   location: "Level 1 Block E",
- *   seats: 20,
- *   amenities: ["White Board", "Audio"],
- *   bookings: 10,
- *   removed: false
- * };
- *
- * <AdminCard room={room} />
- */
-function AdminCard({ room }: { room: Room; hideIcon?: boolean }) {
+function RoomCard({ room }: { room: Room; hideIcon?: boolean }) {
   const roomDetailsGroups = [
     { label: "Room Name", value: room.title },
     { label: "Location", value: room.location },
@@ -155,11 +95,11 @@ function AdminCard({ room }: { room: Room; hideIcon?: boolean }) {
       label: "Amenities",
       value: <Amenities amenities={room.amenities} hideIcon />,
     },
-    { label: "Bookings", value: room.bookings },
+    { label: "Availability", value: room.availablility },
   ];
 
   return (
-    <div className="w-full bg-white shadow-sm">
+    <div className="flex w-full flex-col bg-white shadow-sm">
       <div className="w-full p-4">
         <div className="relative h-40 w-full">
           <Image
@@ -171,78 +111,84 @@ function AdminCard({ room }: { room: Room; hideIcon?: boolean }) {
         </div>
       </div>
 
-      <div className="space-y-4 px-4 pb-4">
+      {/* Info grid ensures perfect alignment */}
+      <div className="grid grid-cols-[7rem_1fr] gap-y-3 px-4 pb-4">
         {roomDetailsGroups.map((item) => (
-          <div key={item.label} className="flex text-[14px] font-medium">
-            <span className="min-w-28 text-gray-400">{item.label}</span>
-            <span className="">{item.value}</span>
+          <div key={item.label} className="contents">
+            <span className="text-[14px] font-medium text-gray-400">
+              {item.label}
+            </span>
+            <span className="text-[14px] font-medium">{item.value}</span>
           </div>
         ))}
-      </div>
-
-      <div className="flex gap-4 px-4 pb-4">
-        <Button className="h-[23px] bg-bloom-orbit px-2 text-[10px] hover:bg-bloom-orbit-light">
-          View Bookings
-        </Button>
-        <Button className="h-[23px] bg-bloom-yellow text-[10px] hover:bg-bloom-yellow-light">
-          Edit
-        </Button>
-        <Button
-          className={cn(
-            "h-[23px] bg-bloom-red text-[10px] hover:bg-bloom-red-light",
-            room.removed && "cursor-not-allowed bg-gray-400 hover:bg-gray-400",
-          )}
-        >
-          {room.removed ? "Removed" : "Remove"}
-        </Button>
       </div>
     </div>
   );
 }
 
+type BookingRoomProps = {
+  room: Room;
+  hideIcon?: boolean;
+  onBook?: () => void;
+};
+
 /**
- * Mobile friendly version of the room card.
+ * User-facing booking card for displaying a room.
  *
- * Designed for small screens with grouped details.
- * Displays status, amenities and a booking button.
+ * Responsive: shows compact card on mobile, detailed card on desktop.
+ * Includes image, title, location, facilities, availability, and a Book button.
  *
  * @param {Object} props
  * @param {Room} props.room Room data object.
+ * @param {boolean} [props.hideIcon=false] Hide icons for amenities if true.
+ * @param {() => void} [props.onBook] Callback when the Book button is clicked.
  *
  * @example
  * const room = {
- *   title: "Training Room D",
- *   image: "/rooms/d.jpg",
- *   location: "Level 4 Block A",
- *   seats: 30,
- *   amenities: ["Sound System", "HDMI"],
- *   bookings: 2,
- *   available: false
+ *   title: "Training Room B",
+ *   image: "/rooms/b.jpg",
+ *   location: "Level 3 Block D",
+ *   seats: 12,
+ *   amenities: ["Audio", "HDMI", "White Board"],
+ *   available: true,
  * };
  *
- * <MobileCard room={room} />
+ * <BookingRoomCard room={room} onBook={() => console.log("Booked!")} />
  */
-function MobileCard({ room }: { room: Room; hideIcon?: boolean }) {
-  const roomDetailsGroups = [
-    [
-      { label: "Title", value: room.title },
-      { label: "Seating Capacity:", value: room.seats },
-    ],
-    [
-      { label: "Location:", value: room.location },
-      { label: "Available", value: room.available },
-    ],
-    [
-      {
-        label: "Facilities:",
-        value: <Amenities amenities={room.amenities} className="pl-2" />,
-      },
-    ],
-  ];
+export function BookingRoomCard({
+  room,
+  hideIcon = false,
+  onBook,
+}: BookingRoomProps) {
+  const isMobile = useIsMobile();
 
-  return (
-    <div className="w-full space-y-4 rounded-lg bg-white px-12 pt-8 shadow-sm">
-      <div className="w-full">
+  if (!isMobile) {
+    // General / desktop version
+    const roomDetailsGroups = [
+      [
+        { label: "Title", value: room.title },
+        { label: "Seating Capacity", value: room.seats },
+      ],
+      [
+        { label: "Location", value: room.location },
+        { label: "Available", value: room.available },
+      ],
+      [
+        {
+          label: "Facilities",
+          value: (
+            <Amenities
+              amenities={room.amenities || []}
+              hideIcon={hideIcon}
+              className="pl-2"
+            />
+          ),
+        },
+      ],
+    ];
+
+    return (
+      <div className="w-full space-y-4 rounded-lg bg-white px-12 pt-8 shadow-sm">
         <div className="relative h-40 w-full">
           <Image
             src={room.image}
@@ -251,53 +197,197 @@ function MobileCard({ room }: { room: Room; hideIcon?: boolean }) {
             className="object-cover"
           />
         </div>
+
+        <div className="space-y-4">
+          {roomDetailsGroups.map((group, i) => (
+            <div
+              key={i}
+              className="flex justify-between gap-1 text-[10px] font-medium"
+            >
+              {group.map((item) => (
+                <div key={item.label} className="flex items-center gap-1">
+                  {item.label === "Title" ? (
+                    <span className="text-[14px]">{item.value}</span>
+                  ) : item.label === "Available" ? (
+                    <span
+                      className={cn(
+                        item.value ? "text-green-500" : "text-bloom-red",
+                      )}
+                    >
+                      {item.value ? "Available" : "Not Available"}
+                    </span>
+                  ) : (
+                    <>
+                      <span>{item.label}</span>
+                      <span className="text-gray-400">{item.value}</span>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex pb-4">
+          <Button
+            disabled={!room.available}
+            variant={room.available ? "default" : "outline"}
+            className={cn(
+              "h-[30px] w-[79px] text-[10px] font-bold",
+              room.available
+                ? "bg-bloom-orbit text-white hover:bg-bloom-orbit-light"
+                : "cursor-not-allowed border-bloom-orbit text-bloom-orbit hover:bg-white",
+            )}
+            onClick={onBook}
+          >
+            {room.available ? "Book" : "Booked"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Tight version
+  return (
+    <Card className="flex w-full flex-col overflow-hidden rounded-xl border-black bg-white shadow-md">
+      <div className="relative h-40 w-full">
+        <Image
+          src={room.image}
+          alt={room.title}
+          fill
+          className="object-cover"
+        />
       </div>
 
-      <div className="space-y-4">
-        {roomDetailsGroups.map((group, i) => (
+      <div className="flex flex-col gap-1 px-4 py-3">
+        <span className="text-[14px] font-bold">{room.title}</span>
+        <span className="text-[13px] font-semibold text-gray-400">
+          {room.location}
+        </span>
+      </div>
+
+      <div className="mt-auto flex justify-start px-4 pb-4">
+        <Button
+          className="h-[38px] w-[88px] rounded-[10px] border border-black bg-white py-2 text-black hover:bg-gray-100"
+          onClick={onBook}
+        >
+          {room.available ? "Book" : "Booked"}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+type AdminRoomCardProps = {
+  room: Room;
+  hideIcon?: boolean;
+  onView?: () => void;
+  onEdit?: () => void;
+  onRemove?: () => void;
+};
+
+/**
+ * Admin card for managing room details.
+ *
+ * Displays full room info: name, location, seats, amenities, and bookings.
+ * Includes admin action buttons: View Bookings, Edit, Remove.
+ * Supports disabling the Remove button if room is already removed.
+ *
+ * @param {Object} props
+ * @param {Room} props.room Room data object.
+ * @param {boolean} [props.hideIcon=false] Hide amenity icons if true.
+ * @param {() => void} [props.onView] Callback for View Bookings button.
+ * @param {() => void} [props.onEdit] Callback for Edit button.
+ * @param {() => void} [props.onRemove] Callback for Remove button.
+ *
+ * @example
+ * const room = {
+ *   title: "Studio Room C",
+ *   image: "/rooms/c.jpg",
+ *   location: "Level 1 Block E",
+ *   seats: 20,
+ *   amenities: ["White Board", "Audio"],
+ *   bookings: 10,
+ *   removed: false,
+ * };
+ *
+ * <AdminRoomCard
+ *   room={room}
+ *   onView={() => console.log("View")}
+ *   onEdit={() => console.log("Edit")}
+ *   onRemove={() => console.log("Remove")}
+ * />
+ */
+function AdminRoomCard({
+  room,
+  hideIcon,
+  onView,
+  onEdit,
+  onRemove,
+}: AdminRoomCardProps) {
+  const roomDetails = [
+    { label: "Room Name", value: room.title },
+    { label: "Location", value: room.location },
+    { label: "No of Seats", value: room.seats },
+    {
+      label: "Amenities",
+      value: <Amenities amenities={room.amenities} hideIcon={hideIcon} />,
+    },
+    { label: "Bookings", value: room.bookings },
+  ];
+
+  return (
+    <div className="flex w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm">
+      {/* Room Image */}
+      <div className="relative h-40 w-full">
+        <Image
+          src={room.image}
+          alt={room.title}
+          fill
+          className="object-cover"
+        />
+      </div>
+
+      {/* Room Details */}
+      <div className="space-y-2 px-4 py-4">
+        {roomDetails.map((item) => (
           <div
-            key={i}
-            className="flex justify-between gap-1 text-[10px] font-medium"
+            key={item.label}
+            className="grid grid-cols-[6rem_1fr] gap-x-2 text-[14px] font-medium"
           >
-            {group.map((item) => (
-              <div key={item.label} className="flex items-center gap-1">
-                {item.label === "Title" ? (
-                  <span className="text-[14px]">{item.value}</span>
-                ) : item.label === "Available" ? (
-                  <span
-                    className={cn(
-                      item.value ? "text-green-500" : "text-bloom-red",
-                    )}
-                  >
-                    {item.value ? "Available" : "Not Available"}
-                  </span>
-                ) : (
-                  <>
-                    <span>{item.label}</span>
-                    <span className="text-gray-400">{item.value}</span>
-                  </>
-                )}
-              </div>
-            ))}
+            <span className="text-gray-400">{item.label}</span>
+            <span>{item.value}</span>
           </div>
         ))}
       </div>
 
-      <div className="flex pb-4">
+      {/* Action Buttons */}
+      <div className="mt-auto flex gap-4 px-4 pb-4">
         <Button
-          variant={room.available ? "default" : "outline"}
-          className={cn(
-            "h-[30px] w-[79px] text-[10px] font-bold",
-            room.available
-              ? "bg-bloom-orbit text-white hover:bg-bloom-orbit-light"
-              : "cursor-not-allowed border-bloom-orbit text-bloom-orbit hover:bg-white",
-          )}
+          className="h-[23px] bg-bloom-orbit px-2 text-[10px] hover:bg-bloom-orbit-light"
+          onClick={onView}
         >
-          {room.available ? "Book" : "Booked"}
+          View Bookings
+        </Button>
+        <Button
+          className="h-[23px] bg-bloom-yellow text-[10px] hover:bg-bloom-yellow-light"
+          onClick={onEdit}
+        >
+          Edit
+        </Button>
+        <Button
+          className={cn(
+            "h-[23px] bg-bloom-red text-[10px] hover:bg-bloom-red-light",
+            room.removed && "cursor-not-allowed bg-gray-400 hover:bg-gray-400",
+          )}
+          onClick={onRemove}
+          disabled={room.removed}
+        >
+          {room.removed ? "Removed" : "Remove"}
         </Button>
       </div>
     </div>
   );
 }
 
-export { AdminCard, MobileCard, UserCard };
+export { AdminRoomCard, RoomCard };
