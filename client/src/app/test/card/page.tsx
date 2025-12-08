@@ -1,14 +1,24 @@
-import { AdminCard, MobileCard, UserCard } from "@/components/ui/room-card";
+"use client";
+
+import {
+  AdminRoomCard,
+  BookingRoomCard,
+  RoomCard,
+} from "@/components/ui/room-card";
 import { roomsMock } from "@/types/card";
 
 export default function RoomsList() {
   return (
     <div className="w-full rounded-xl bg-gray-100 p-6">
-      <h2 className="mb-4 text-xl font-semibold">User Meeting Rooms Display</h2>
+      <h2 className="mb-4 text-xl font-semibold">Booking Rooms Display</h2>
 
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-6 lg:grid-cols-3">
         {roomsMock.map((room) => (
-          <UserCard key={room.id} room={room} />
+          <BookingRoomCard
+            key={room.id}
+            room={room}
+            onBook={() => alert("Book")}
+          />
         ))}
       </div>
 
@@ -18,20 +28,24 @@ export default function RoomsList() {
         Admin Meeting Rooms Display
       </h2>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {roomsMock.map((room) => (
-          <AdminCard key={room.id} room={room} />
+          <AdminRoomCard
+            key={room.id}
+            room={room}
+            onView={() => alert("View")}
+            onEdit={() => alert("Edit")}
+            onRemove={() => alert("Remove")}
+          />
         ))}
       </div>
       <div className="my-10 border-t border-gray-300"></div>
 
-      <h2 className="mb-4 text-xl font-semibold">
-        Meeting Rooms Display (Mobile)
-      </h2>
+      <h2 className="mb-4 text-xl font-semibold">General Rooms Display</h2>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
         {roomsMock.map((room) => (
-          <MobileCard key={room.id} room={room} />
+          <RoomCard key={room.id} room={room} />
         ))}
       </div>
     </div>
