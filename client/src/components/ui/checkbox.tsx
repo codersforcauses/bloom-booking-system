@@ -1,5 +1,5 @@
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
-import React, { useCallback,useContext } from "react";
+import React, { useCallback, useContext } from "react";
 import { FaCheck } from "react-icons/fa";
 
 import { cn } from "@/lib/utils";
@@ -33,7 +33,11 @@ const CheckboxGroup = React.forwardRef<HTMLDivElement, CheckboxGroupProps>(
       <CheckboxGroupContext.Provider
         value={{ value, onChange: onItemValueChange }}
       >
-        <div ref={ref} className={cn("flex gap-2", className)} {...props}>
+        <div
+          ref={ref}
+          className={cn("flex flex-wrap gap-2", className)}
+          {...props}
+        >
           {children}
         </div>
       </CheckboxGroupContext.Provider>
