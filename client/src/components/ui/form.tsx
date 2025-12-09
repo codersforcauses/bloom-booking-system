@@ -104,27 +104,25 @@ const Form = <TSchema extends AnyZodObject>({
   });
 
   return (
-    <>
-      <FormProvider {...methods}>
-        <form
-          onSubmit={methods.handleSubmit(onSubmit, (errors) => {
-            if (onError) onError(errors);
-            else alert(getErrorMessage(errors));
-          })}
-          className={cn(
-            "flex w-full flex-col space-y-3 rounded-md border border-[hsl(var(--border))] bg-background px-8 py-8",
-            className,
-          )}
-        >
-          {typeof children === "function" ? children(methods) : children}
-        </form>
-      </FormProvider>
-    </>
+    <FormProvider {...methods}>
+      <form
+        onSubmit={methods.handleSubmit(onSubmit, (errors) => {
+          if (onError) onError(errors);
+          else alert(getErrorMessage(errors));
+        })}
+        className={cn(
+          "flex w-full flex-col space-y-3 rounded-md border border-[hsl(var(--border))] bg-background px-8 py-8",
+          className,
+        )}
+      >
+        {typeof children === "function" ? children(methods) : children}
+      </form>
+    </FormProvider>
   );
 };
 
 // To make input validation effective, an extra wrapper is needed for the input field
-type controlledFieldProps<TSchema> = {
+type ControlledFieldProps<TSchema> = {
   name: string; // match the field defined in zod
   children: (props: {
     value: TSchema;
@@ -141,7 +139,7 @@ type controlledFieldProps<TSchema> = {
 const ControlledField = <TSchema,>({
   name,
   children,
-}: controlledFieldProps<TSchema>) => {
+}: ControlledFieldProps<TSchema>) => {
   const { control } = useFormContext();
   return (
     <Controller
