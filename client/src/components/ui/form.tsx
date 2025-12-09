@@ -1,8 +1,8 @@
 // Usage of Form:
 // import { Form, ControlledField } from "@/components/ui/form"; // Note: both are necessary and not default export!
-// <Form schema={zodSchema} // Note: according to the current implimentation, numbers are also string. For an example please refer to /app/test/form/page.tsx
+// <Form schema={schema} // Note: according to the current implementation, numbers are also string. For an example please refer to /app/test/form/page.tsx
 //       onSubmit={submitHandler} // callback function in the form of (data) => handleSumit(data)
-//       orError={errorHandler} // optional, allows flexibility of error message display,
+//       onError={errorHandler} // optional, allows flexibility of error message display,
 //                                  callback function in the form of (errors) => handleError(errors)
 //                                  example structure of errors:
 //                                  {
