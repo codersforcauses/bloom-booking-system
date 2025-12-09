@@ -107,7 +107,8 @@ const CheckboxItem = React.forwardRef<
     const isGrouped = !!value && !!context;
     const isChecked = isGrouped ? context.value.includes(value) : checked;
     const handleCheckedChange = isGrouped
-      ? (checked: boolean) => context.onChange(value, checked)
+      ? (checked: CheckboxPrimitive.CheckedState) =>
+          context.onChange(value, checked === true)
       : onCheckedChange;
 
     return (
