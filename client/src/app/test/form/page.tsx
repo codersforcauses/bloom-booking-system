@@ -27,23 +27,7 @@ const schema = z.object({
     ),
 });
 
-const extendedSchema = z.object({
-  firstname: z.string().min(1, "Firstname is required"),
-  lastname: z.string().min(1, "Lastname is required"),
-  middlename: z.string().optional(),
-  age: z
-    .string()
-    .min(1, "Age is required")
-    .regex(/^\d+$/, { message: "Age must be a non-negative integer" })
-    .refine(
-      (val) => {
-        const num = Number(val);
-        return num >= 1 && num <= 120;
-      },
-      {
-        message: "Age must be between 1 and 120",
-      },
-    ),
+const extendedSchema = schema.extend({
   frequency: z.enum(["daily", "weekly", "monthly"], {
     error: () => ({ message: "Invalid frequency" }),
   }),
@@ -58,7 +42,7 @@ const extendedSchema = z.object({
     )
     .optional(),
   recurrenceDate: z.enum(["Monday", "Tuesday", "Wednesday"], {
-    error: () => ({ message: "Invalid frequency" }),
+    error: () => ({ message: "Invalid recurrence date" }),
   }),
 });
 
