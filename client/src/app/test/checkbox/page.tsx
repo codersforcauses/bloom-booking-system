@@ -3,7 +3,6 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { CheckboxGroup, CheckboxItem } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 
 const DATES = [
   "Monday",
@@ -38,14 +37,18 @@ export default function CheckboxTestPage() {
             checked={acceptTerms}
             onCheckedChange={(checked) => setAcceptTerms(checked === true)} // Radix Output can be true | false | "indeterminate"
           >
-            <Label htmlFor="acceptTerms"> Accept terms and conditions. </Label>
+            <p> Accept terms and conditions. </p>
           </CheckboxItem>
           {/* a checkbox group */}
           <p className="title mb-3 mt-5">A checkbox group</p>
-          <CheckboxGroup value={dates} onValueChange={setDates}>
+          <CheckboxGroup
+            value={dates}
+            onValueChange={setDates}
+            className="grid-cols-2"
+          >
             {DATES.map((date) => (
               <CheckboxItem key={date} value={date} id={date}>
-                <Label htmlFor={date}> {date} </Label>
+                <p> {date} </p>
               </CheckboxItem>
             ))}
           </CheckboxGroup>
