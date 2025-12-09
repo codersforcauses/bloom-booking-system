@@ -1,44 +1,54 @@
-// Usage of Form:
-// import { Form, ControlledField } from "@/components/ui/form"; // Note: both are necessary and not default export!
-// <Form schema={schema} // Note: according to the current implementation, numbers are also string. For an example please refer to /app/test/form/page.tsx
-//       onSubmit={submitHandler} // callback function in the form of (data) => handleSumit(data)
-//       onError={errorHandler} // optional, allows flexibility of error message display,
-//                                  callback function in the form of (errors) => handleError(errors)
-//                                  example structure of errors:
-//                                  {
-//                                    name: { message: "name is a required field" },
-//                                    age: { message: "age is a required field" }
-//                                  }
-//        className="customFormClassName" // optional
-// >
-// {children} // free to add any contents here, but using ControlledField for input is a must
-// </Form>
-
-// Usage of ControlledField (wrapper necessary for input validation):
-// <ControlledField<type>      // type must be specified for type checking
-//   name="fieldName"          // fieldName must be aligned with the definition in zod
-// >
-//   {({ value, onChange }) => (
-// <InputField           // can be other input-related components
-//   kind="text"
-//   label="Name"
-//   name="name"
-//   value={value}       // pass value
-//   onChange={onChange}   // pass onChange
-//   placeholder="Enter your name here..."
-// />
-//   )}
-// </ControlledField>
-
-// Error Handling:
-// Since input validation is not inbuilt in InputField and Textarea,
-// the component offers three ways of error handling
-// 1. Default behaviour: when no extra error handling logic is added,
-//    an alert will come up to show error messages of all fields to users
-// 2. onError function as error handler
-// 3. wraps the children to   {(methods) => (<>{children}</>)}
-//    then get errors by methods.formState.errors or check validity of form data by methods.formState.isValid
-// To get example, check /app/test/form/page.tsx
+/**
+ * Usage of Form:
+ *
+ * ```tsx
+ * import { Form, ControlledField } from "@/components/ui/form";
+ *
+ * <Form
+ *   schema={schema} // Note: according to the current implementation, numbers are also string.
+ *                   // For an example please refer to /app/test/form/page.tsx
+ *   onSubmit={submitHandler} // callback function in the form of (data) => handleSubmit(data)
+ *   onError={errorHandler}   // optional, allows flexibility of error message display,
+ *                            // callback function in the form of (errors) => handleError(errors)
+ *                            // example structure of errors:
+ *                            // {
+ *                            //   name: { message: "name is a required field" },
+ *                            //   age: { message: "age is a required field" }
+ *                            // }
+ *   className="customFormClassName" // optional
+ * >
+ *   {children} // free to add any contents here, but using ControlledField for input is a must
+ * </Form>
+ * ```
+ *
+ * Usage of ControlledField (wrapper necessary for input validation):
+ *
+ * ```tsx
+ * <ControlledField<type>      // type must be specified for type checking
+ *   name="fieldName"          // fieldName must be aligned with the definition in zod
+ * >
+ *   {({ value, onChange }) => (
+ *     <InputField             // can be other input-related components
+ *       kind="text"
+ *       label="Name"
+ *       name="name"
+ *       value={value}         // pass value
+ *       onChange={onChange}   // pass onChange (onValueChange in some components)
+ *       placeholder="Enter your name here..."
+ *     />
+ *   )}
+ * </ControlledField>
+ * ```
+ *
+ * Error Handling:
+ * - Default behaviour: when no extra error handling logic is added,
+ *   an alert will come up to show error messages of all fields to users
+ * - `onError` function as error handler
+ * - Wraps the children: `{(methods) => (<>{children}</>)}`
+ *   then get errors by `methods.formState.errors` or check validity of form data by `methods.formState.isValid`
+ *
+ * To see an example, check /app/test/form/page.tsx.
+ */
 
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
