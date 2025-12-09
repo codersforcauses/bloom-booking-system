@@ -1,18 +1,25 @@
-// Usage:
-// A single checkbox: use [checked, setChecked] = useState<boolean>(initialValue) to get the checkbox status
-// <CheckboxItem
-//   checked={checked}
-//   onCheckedChange={(checked) => setChecked(checked === true)} // As Radix Output can be true | false | "indeterminate", simple pass setChecked will cause Typescript complaint
-//   // optional props can be passed as in standard html checkbox
-// >
-// {children}   // add label here
-//</CheckboxItem>
-
-// A group of checkbox: use [value, setValue] = useState<string[]>(initialValue) to get the selected value
-// <CheckboxGroup value={value} onValueChange={setValue}>
-//   <CheckboxItem value={value1}>{children}</CheckboxItem>  // value is a necessary field in this case
-//   <CheckboxItem value={value2}>{children}</CheckboxItem>
-// </CheckboxGroup>
+/**
+ * Usage:
+ *
+ * A single checkbox: use `[checked, setChecked] = useState<boolean>(initialValue)` to get the checkbox status
+ * ```tsx
+ * <CheckboxItem
+ *   checked={checked}
+ *   onCheckedChange={(checked) => setChecked(checked === true)} // As Radix Output can be true | false | "indeterminate", simple pass setChecked will cause Typescript complaint
+ *   // optional props can be passed as in standard html checkbox
+ * >
+ *   {children}   // add label here
+ * </CheckboxItem>
+ * ```
+ *
+ * A group of checkbox: use `[value, setValue] = useState<string[]>(initialValue)` to get the selected value
+ * ```tsx
+ * <CheckboxGroup value={value} onValueChange={setValue}>
+ *   <CheckboxItem value={value1}>{children}</CheckboxItem>  // value is a necessary field in this case
+ *   <CheckboxItem value={value2}>{children}</CheckboxItem>
+ * </CheckboxGroup>
+ * ```
+ */
 
 "use client";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
@@ -28,6 +35,9 @@ type CheckboxGroupContextValue = {
 const CheckboxGroupContext =
   React.createContext<CheckboxGroupContextValue | null>(null);
 
+/**
+ * CheckboxGroup component for wrapping multiple CheckboxItem components and rendering a checkbox group.
+ */
 interface CheckboxGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string[];
   onValueChange: (value: string[]) => void;
@@ -60,12 +70,15 @@ const CheckboxGroup = React.forwardRef<HTMLDivElement, CheckboxGroupProps>(
 
 CheckboxGroup.displayName = "CheckboxGroup";
 
+/**
+ * CheckboxItem component for rendering a single checkbox.
+ * Can be used standalone or within a CheckboxGroup.
+ */
 interface CheckboxItemProps
   extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> {
   value?: string;
 }
 
-// checkbox item
 const CheckboxItem = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
   CheckboxItemProps
