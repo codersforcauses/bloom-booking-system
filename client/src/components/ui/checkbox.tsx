@@ -14,6 +14,7 @@
 //   <CheckboxItem value={value2}>{children}</CheckboxItem>
 // </CheckboxGroup>
 
+"use client";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import React, { useCallback, useContext } from "react";
 import { FaCheck } from "react-icons/fa";

@@ -22,7 +22,7 @@ export default function CheckboxTestPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     alert(
-      `Submitted data:\nacceptCondition: ${acceptTerms.toString()}\ndates: ${JSON.stringify(dates)}`,
+      `Submitted data:\nacceptTerms: ${acceptTerms.toString()}\ndates: ${JSON.stringify(dates)}`,
     );
   };
 
