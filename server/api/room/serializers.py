@@ -1,31 +1,23 @@
 from rest_framework import serializers
-from .models import Room, Amenties
+from .models import Room, Amenities, Location
 
 
 class AmenitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Amenties
+        model = Amenities
         fields = ["id", "name"]
+        read_only_fields = ['id']
 
-# 2 different serialiser because api requirements want more or less details depending on request type
-class RoomSerializer(serializers.ModelSerializer):
-    location = serializers.StringRelatedField(read_only=True)
-    amenities = AmenitySerializer(many=True, read_only=True)
 
+class LocationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Room
-        fields = [
-            "id",
-            "name",
-            "img",
-            "location",
-            "capacity",
-            "amenities",
-        ]
+        model = Location
+        fields = ["id", "name"]
+        read_only_fields = ['id']
 
 
-class RoomListSerializer(serializers.ModelSerializer):
-    location = serializers.StringRelatedField(read_only=True)
+class RoomSerializer(serializers.ModelSerializer):
+    location = LocationSerializer(read_only=True)
     amenities = AmenitySerializer(many=True, read_only=True)
 
     class Meta:
@@ -40,7 +32,6 @@ class RoomListSerializer(serializers.ModelSerializer):
             "start_datetime",
             "end_datetime",
             "recurrence_rule",
-            "created_at",
-            "updated_at",
+            "is_active",
         ]
-
+        read_only_fields = ['id', 'created_at', 'updated_at']

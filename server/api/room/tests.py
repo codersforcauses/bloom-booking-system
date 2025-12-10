@@ -1,14 +1,16 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
-from .models import Room, Location, Amenties
+from .models import Room, Location, Amenities
 from django.utils import timezone
 import json
+
 
 class RoomAPITest(APITestCase):
     def setUp(self):
         # Admin user
-        self.admin = User.objects.create_superuser("admin", "admin@test.com", "pass")
+        self.admin = User.objects.create_superuser(
+            "admin", "admin@test.com", "pass")
         self.client.login(username="admin", password="pass")
 
         # Locations
@@ -16,17 +18,19 @@ class RoomAPITest(APITestCase):
         self.loc3 = Location.objects.create(name="Building C")
 
         # Amenities
-        self.amenity1 = Amenties.objects.create(name="Projector")
-        self.amenity2 = Amenties.objects.create(name="Whiteboard")
-        self.amenity4 = Amenties.objects.create(name="House")
+        self.amenity1 = Amenities.objects.create(name="Projector")
+        self.amenity2 = Amenities.objects.create(name="Whiteboard")
+        self.amenity4 = Amenities.objects.create(name="House")
 
         # Rooms
         self.room1 = Room.objects.create(
             name="Conference Room 1",
             location=self.loc1,
             capacity=10,
-            start_datetime=timezone.make_aware(timezone.datetime(2025, 10, 1, 9, 0)),
-            end_datetime=timezone.make_aware(timezone.datetime(2025, 10, 1, 18, 0)),
+            start_datetime=timezone.make_aware(
+                timezone.datetime(2025, 10, 1, 9, 0)),
+            end_datetime=timezone.make_aware(
+                timezone.datetime(2025, 10, 1, 18, 0)),
             recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE,"
         )
         self.room1.amenities.set([self.amenity1, self.amenity2])
@@ -35,8 +39,10 @@ class RoomAPITest(APITestCase):
             name="Meeting Room A",
             location=self.loc3,
             capacity=5,
-            start_datetime=timezone.make_aware(timezone.datetime(2025, 11, 1, 10, 0)),
-            end_datetime=timezone.make_aware(timezone.datetime(2025, 11, 1, 17, 0)),
+            start_datetime=timezone.make_aware(
+                timezone.datetime(2025, 11, 1, 10, 0)),
+            end_datetime=timezone.make_aware(
+                timezone.datetime(2025, 11, 1, 17, 0)),
             recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR"
         )
         self.room2.amenities.set([self.amenity4])
@@ -61,9 +67,9 @@ class RoomAPITest(APITestCase):
         response = self.client.get(f"/api/rooms/?location={loc_id}")
         print("\nFilter by Location Response:")
         print(json.dumps(response.data, indent=4))
-      
 
     # -------- RETRIEVE TEST --------
+
     def test_retrieve_room(self):
         room = Room.objects.first()
         response = self.client.get(f"/api/rooms/{room.id}/")
@@ -76,8 +82,8 @@ class RoomAPITest(APITestCase):
     def test_update_room(self):
         room = Room.objects.first()
         response = self.client.patch(
-            f"/api/rooms/{room.id}/", 
-            {"name": "Updated Room"}, 
+            f"/api/rooms/{room.id}/",
+            {"name": "Updated Room"},
             format="json"
         )
         print("\nUpdate Room Response:")

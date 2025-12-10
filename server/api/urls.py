@@ -16,6 +16,8 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path, include
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -27,14 +29,15 @@ from drf_spectacular.views import (
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/healthcheck/", include(("api.healthcheck.urls"))),
-<<<<<<< HEAD
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("swagger/", SpectacularSwaggerView.as_view(url_name="schema"),
          name="swagger-ui"),
     path("redoc/", SpectacularRedocView.as_view(url_name="schema"),
          name="redoc"),
     path("api/users/", include(("api.user.urls"))),
-=======
     path("api/rooms/", include(("api.room.urls"))),
->>>>>>> 49af123 (add Tests & First Draft of Api)
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
