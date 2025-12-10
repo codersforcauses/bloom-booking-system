@@ -1,7 +1,8 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
+from rest_framework.exceptions import MethodNotAllowed
 from .models import Room
-from .serializers import RoomSerializer, RoomListSerializer
+from .serializers import RoomSerializer
 
 
 # Viewset is library that provides CRUD operations for api
@@ -16,14 +17,11 @@ class RoomViewSet(viewsets.ModelViewSet):
     serializer_class = RoomSerializer
 
     def get_permissions(self):
-        if self.action in ["create", "update", "destroy"]:
-            return [permissions.IsAdminUser()]
+        if self.action in ["create", "update"]:
+            return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
-    # 2 different serialiser because api requirements want more or less details depending on request type
     def get_serializer_class(self):
-        if self.action == "retrieve":
-            return RoomListSerializer
         return RoomSerializer
 
     def get_queryset(self):
@@ -33,28 +31,25 @@ class RoomViewSet(viewsets.ModelViewSet):
         if name := params.get("name"):
             qs = qs.filter(name__icontains=name)
 
-        if loc := params.get("location_id"):
-            qs = qs.filter(location_id=loc)
+        if location_name := params.get("location"):
+            qs = qs.filter(location__name__icontains=location_name)
 
-        if cap := params.get("capacity_id"):
-            qs = qs.filter(capacity_id=cap)
+        if cap := params.get("capacity"):
+            qs = qs.filter(capacity__gte=cap)
+
+        if not self.request.user.is_authenticated:
+            qs = qs.filter(is_active=True)
 
         return qs
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({
-            "id": instance.id,
-            "name": instance.name,
-            "amenities": serializer.data.get("amenities", []),
-            "updated_at": instance.updated_at
-        })
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response({"message": "Room deleted successfully"})
+        raise MethodNotAllowed("DELETE")
