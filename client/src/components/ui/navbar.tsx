@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { HiOutlineUser } from "react-icons/hi";
 
 import { cn } from "@/lib/utils";
 
@@ -53,7 +54,9 @@ export default function Navbar() {
             <Button variant="link">Find my booking</Button>
           </Link>
           <Link href="/about" className="hover:text-primary">
-            <Button variant="login">Admin login</Button>
+            <Button variant="login">
+            <HiOutlineUser className="h-5 w-5" />
+              Admin login</Button>
           </Link>
         </div>
       </div>
@@ -61,18 +64,16 @@ export default function Navbar() {
       {/* mobile hamburger */}
       {open && (
         <div className="flex flex-col space-y-2 px-4 pb-4 md:hidden">
-          <Link href="/" onClick={() => setOpen(false)} className="py-2">
-            Home
+          <Link href="/" className="hover:text-primary">
+            <Button variant="outline">Book room</Button>
           </Link>
-          <Link
-            href="/bookings"
-            onClick={() => setOpen(false)}
-            className="py-2"
-          >
-            Bookings
+          <Link href="/bookings" className="hover:text-primary">
+            <Button variant="link">Find my booking</Button>
           </Link>
-          <Link href="/about" onClick={() => setOpen(false)} className="py-2">
-            About
+          <Link href="/about" className="hover:text-primary">
+            <Button variant="login">
+            <HiOutlineUser className="h-5 w-5" />
+              Admin login</Button>
           </Link>
         </div>
       )}
