@@ -1,17 +1,19 @@
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .models import Room, Location, Amenities
 from django.utils import timezone
 import json
 
+User = get_user_model()
+
 
 class RoomAPITest(APITestCase):
     def setUp(self):
-        # Admin user
-        self.admin = User.objects.create_superuser(
-            "admin", "admin@test.com", "pass")
-        self.client.login(username="admin", password="pass")
+        # abc user
+        self.abc = User.objects.create_superuser(
+            "abc", "abc@test.com", "pass")
+        self.client.login(username="abc", password="pass")
 
         # Locations
         self.loc1 = Location.objects.create(name="Building A")
@@ -31,7 +33,8 @@ class RoomAPITest(APITestCase):
                 timezone.datetime(2025, 10, 1, 9, 0)),
             end_datetime=timezone.make_aware(
                 timezone.datetime(2025, 10, 1, 18, 0)),
-            recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE,"
+            recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE,",
+            is_active=True
         )
         self.room1.amenities.set([self.amenity1, self.amenity2])
 
@@ -43,33 +46,50 @@ class RoomAPITest(APITestCase):
                 timezone.datetime(2025, 11, 1, 10, 0)),
             end_datetime=timezone.make_aware(
                 timezone.datetime(2025, 11, 1, 17, 0)),
-            recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR"
+            recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR",
+            is_active=False  # Inactive room for unauthenticated test
         )
         self.room2.amenities.set([self.amenity4])
 
     # -------- LIST & FILTER TESTS --------
-    def test_list_all_rooms(self):
+    def test_list_all_rooms_authenticated(self):
+        client = APIClient()
+        client.force_authenticate(user=self.abc)
+        response = client.get("/api/rooms/")
+        print("\nAll Rooms (Authenticated) Response:")
+        print(json.dumps(response.data, indent=4))
+        print("Is authenticated:", response.wsgi_request.user.is_authenticated)
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 2)
+
+    def test_list_only_active_rooms_unauthenticated(self):
+        self.client.logout()
         response = self.client.get("/api/rooms/")
-        print("\nAll Rooms Response:")
+        print("\nAll Rooms (Unauthenticated) Response:")
         print(json.dumps(response.data, indent=4))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        # Only room1 is active
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["id"], self.room1.id)
 
     def test_filter_rooms_by_name(self):
-        response = self.client.get("/api/rooms/?name=Meeting Room A")
+        response = self.client.get("/api/rooms/?name=Conference Room 1")
         print("\nFilter by Name Response:")
         print(json.dumps(response.data, indent=4))
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["name"], "Meeting Room A")
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"]
+                         [0]["name"], "Conference Room 1")
 
-    def test_filter_rooms_by_location(self):
-        loc_id = self.loc1.id
-        response = self.client.get(f"/api/rooms/?location={loc_id}")
-        print("\nFilter by Location Response:")
+    def test_filter_rooms_by_location_name(self):
+        response = self.client.get("/api/rooms/?location=Building A")
+        print("\nFilter by Location Name Response:")
         print(json.dumps(response.data, indent=4))
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"]
+                         [0]["location"]["id"], self.loc1.id)
 
     # -------- RETRIEVE TEST --------
-
     def test_retrieve_room(self):
         room = Room.objects.first()
         response = self.client.get(f"/api/rooms/{room.id}/")
@@ -95,15 +115,11 @@ class RoomAPITest(APITestCase):
         response = self.client.get(f"/api/rooms/{room.id}/")
         self.assertEqual(response.data["name"], "Updated Room")
 
-    # -------- DELETE TEST --------
-    def test_delete_room(self):
+    # -------- DELETE TEST (should not be allowed) --------
+    def test_delete_room_not_allowed(self):
         room = Room.objects.first()
         response = self.client.delete(f"/api/rooms/{room.id}/")
         print("\nDelete Room Response:")
         print(response.content.decode())
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # Confirm deletion
-        response = self.client.get("/api/rooms/")
-        self.assertEqual(len(response.data), 1)
-        self.assertNotIn(room.id, [r["id"] for r in response.data])
+        self.assertEqual(response.status_code,
+                         status.HTTP_405_METHOD_NOT_ALLOWED)
