@@ -24,7 +24,7 @@ class Room(models.Model):
     name = models.CharField(max_length=32, blank=False)
     img = models.ImageField(upload_to='room_images/', blank=True, null=True)
     location = models.ForeignKey(
-        Location, on_delete=models.CASCADE, blank=False)
+        Location, on_delete=models.PROTECT, blank=False)
     capacity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     amenities = models.ManyToManyField(Amenities, blank=True)
     is_active = models.BooleanField(default=True)
