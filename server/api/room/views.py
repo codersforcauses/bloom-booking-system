@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.pagination import PageNumberPagination
 from .models import Room
 from .serializers import RoomSerializer
 
@@ -12,9 +13,14 @@ from .serializers import RoomSerializer
 # per issue thing:
 # Update has custom response with id name updated_at
 # Delete has custom response message
+class RoomPagination(PageNumberPagination):
+    page_size = 10  # Change as needed
+
+
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
+    pagination_class = RoomPagination
 
     def get_permissions(self):
         if self.action in ["create", "update"]:

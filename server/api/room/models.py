@@ -22,7 +22,7 @@ class Amenities(models.Model):
 class Room(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=32, blank=False)
-    img = models.ImageField(upload_to='room_images/')
+    img = models.ImageField(upload_to='room_images/', blank=True, null=True)
     location = models.ForeignKey(
         Location, on_delete=models.CASCADE, blank=False)
     capacity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
