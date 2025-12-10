@@ -100,8 +100,10 @@ class RoomAPITest(APITestCase):
 
     # -------- UPDATE TEST --------
     def test_update_room(self):
+        client = APIClient()
+        client.force_authenticate(user=self.abc)
         room = Room.objects.first()
-        response = self.client.patch(
+        response = client.patch(
             f"/api/rooms/{room.id}/",
             {"name": "Updated Room"},
             format="json"
@@ -117,8 +119,10 @@ class RoomAPITest(APITestCase):
 
     # -------- DELETE TEST (should not be allowed) --------
     def test_delete_room_not_allowed(self):
+        client = APIClient()
+        client.force_authenticate(user=self.abc)
         room = Room.objects.first()
-        response = self.client.delete(f"/api/rooms/{room.id}/")
+        response = client.delete(f"/api/rooms/{room.id}/")
         print("\nDelete Room Response:")
         print(response.content.decode())
         self.assertEqual(response.status_code,
