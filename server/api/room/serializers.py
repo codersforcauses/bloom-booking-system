@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Room, Amenities, Location
 
 
-class AmenitySerializer(serializers.ModelSerializer):
+class AmenitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Amenities
         fields = ["id", "name"]
@@ -18,7 +18,7 @@ class LocationSerializer(serializers.ModelSerializer):
 
 class RoomSerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
-    amenities = AmenitySerializer(many=True, read_only=True)
+    amenities = AmenitiesSerializer(many=True, read_only=True)
 
     class Meta:
         model = Room

@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from .models import Room
-from .serializers import RoomSerializer
+from .models import Room, Location, Amenities
+from .serializers import RoomSerializer, LocationSerializer, AmenitiesSerializer
 
 
 # Viewset is library that provides CRUD operations for api
@@ -23,7 +23,7 @@ class RoomViewSet(viewsets.ModelViewSet):
     pagination_class = RoomPagination
 
     def get_permissions(self):
-        if self.action in ["create", "update"]:
+        if self.action in ["create", "update", "partial_update", "destroy"]:
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
@@ -59,3 +59,23 @@ class RoomViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         raise MethodNotAllowed("DELETE")
+
+
+class LocationViewSet(viewsets.ModelViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
+
+
+class AmenitiesViewSet(viewsets.ModelViewSet):
+    queryset = Amenities.objects.all()
+    serializer_class = AmenitiesSerializer
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
