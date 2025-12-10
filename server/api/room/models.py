@@ -7,6 +7,9 @@ class Location(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=64, blank=False)
 
+    class Meta:
+        ordering = ['id']
+
     def __str__(self):
         return self.name
 
@@ -14,6 +17,9 @@ class Location(models.Model):
 class Amenities(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=32, blank=False)
+
+    class Meta:
+        ordering = ['id']
 
     def __str__(self):
         return self.name
