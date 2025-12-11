@@ -17,8 +17,13 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class RoomSerializer(serializers.ModelSerializer):
-    location = LocationSerializer(read_only=True)
-    amenities = AmenitiesSerializer(many=True, read_only=True)
+    location = LocationSerializer(source='location_id', read_only=True)
+    amenities = AmenitiesSerializer(
+        many=True, source='amenities_id', read_only=True)
+    location_id = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(), write_only=True)
+    amenities_id = serializers.PrimaryKeyRelatedField(
+        queryset=Amenities.objects.all(), many=True, write_only=True)
 
     class Meta:
         model = Room
@@ -27,11 +32,24 @@ class RoomSerializer(serializers.ModelSerializer):
             "name",
             "img",
             "location",
+            "location_id",
             "capacity",
             "amenities",
+            "amenities_id",
             "start_datetime",
             "end_datetime",
             "recurrence_rule",
             "is_active",
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        start = data.get('start_datetime') or getattr(
+            self.instance, 'start_datetime', None)
+        end = data.get('end_datetime') or getattr(
+            self.instance, 'end_datetime', None)
+        if start and end and end <= start:
+            raise serializers.ValidationError({
+                'end_datetime': 'End datetime must be after start datetime.'
+            })
+        return data
