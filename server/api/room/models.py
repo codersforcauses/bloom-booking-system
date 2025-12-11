@@ -13,7 +13,7 @@ class Location(models.Model):
         return self.name
 
 
-class Amenities(models.Model):
+class Amenity(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=32, blank=False)
 
@@ -28,10 +28,10 @@ class Room(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=32, blank=False)
     img = models.ImageField(upload_to='room_images/', blank=True, null=True)
-    location_id = models.ForeignKey(
+    location = models.ForeignKey(
         Location, on_delete=models.PROTECT, blank=False)
     capacity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    amenities_id = models.ManyToManyField(Amenities, blank=True)
+    amenities = models.ManyToManyField(Amenity, blank=True)
     is_active = models.BooleanField(default=True)
     start_datetime = models.DateTimeField(blank=False)
     end_datetime = models.DateTimeField(blank=False)

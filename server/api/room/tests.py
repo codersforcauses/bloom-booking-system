@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from .models import Room, Location, Amenities
+from .models import Room, Location, Amenity
 from django.utils import timezone
 
 User = get_user_model()
@@ -19,14 +19,14 @@ class RoomAPITest(APITestCase):
         self.loc3 = Location.objects.create(name="Building C")
 
         # Amenities
-        self.amenity1 = Amenities.objects.create(name="Projector")
-        self.amenity2 = Amenities.objects.create(name="Whiteboard")
-        self.amenity4 = Amenities.objects.create(name="House")
+        self.amenity1 = Amenity.objects.create(name="Projector")
+        self.amenity2 = Amenity.objects.create(name="Whiteboard")
+        self.amenity4 = Amenity.objects.create(name="House")
 
         # Rooms
         self.room1 = Room.objects.create(
             name="Conference Room 1",
-            location_id=self.loc1,
+            location=self.loc1,
             capacity=10,
             start_datetime=timezone.make_aware(
                 timezone.datetime(2025, 10, 1, 9, 0)),
@@ -35,11 +35,11 @@ class RoomAPITest(APITestCase):
             recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE",
             is_active=True
         )
-        self.room1.amenities_id.set([self.amenity1, self.amenity2])
+        self.room1.amenities.set([self.amenity1, self.amenity2])
 
         self.room2 = Room.objects.create(
             name="Meeting Room A",
-            location_id=self.loc3,
+            location=self.loc3,
             capacity=5,
             start_datetime=timezone.make_aware(
                 timezone.datetime(2025, 11, 1, 10, 0)),
@@ -48,7 +48,7 @@ class RoomAPITest(APITestCase):
             recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR",
             is_active=False  # Inactive room for unauthenticated test
         )
-        self.room2.amenities_id.set([self.amenity4])
+        self.room2.amenities.set([self.amenity4])
 
     # -------- LIST & FILTER TESTS --------
     def test_list_all_rooms_authenticated(self):
