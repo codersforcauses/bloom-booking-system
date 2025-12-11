@@ -52,7 +52,7 @@ Returns details for a single room.
 ```json
 {
   "name": "Conference Room",
-  "location_id": 1,
+  "location": 1,
   "capacity": 20,
   "amenities_id": [1, 2],
   "start_datetime": "2025-12-11T09:00:00Z",
@@ -83,8 +83,10 @@ Returns details for a single room.
 ## Notes
 
 - Unauthenticated users only see rooms where `is_active=true`.
+- A room cannot be deleted but you can change its `is_active`
 - Filtering by multiple amenities returns rooms that have **all** specified amenities.
 - Validation: `end_datetime` must be after `start_datetime`.
+- Validation: `recurrence_rule` must start with FREQ= and contain valid frequency
 
 ---
 
