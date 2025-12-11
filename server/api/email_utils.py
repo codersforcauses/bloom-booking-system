@@ -4,11 +4,27 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.templatetags.static import static
 
 
 # Template paths under api/templates/emails
 BOOKING_CONFIRMED_TEMPLATE = "emails/booking_confirmed.html"
 BOOKING_CANCELLED_TEMPLATE = "emails/booking_cancelled.html"
+
+
+def get_bloom_logo_url() -> str:
+    """
+    URL for the Bloom logo used in emails.
+
+    Uses BLOOM_LOGO_URL from settings if present, otherwise falls
+    back to the static path (useful for local/dev).
+    """
+    logo_url = getattr(settings, "BLOOM_LOGO_URL", None)
+    if logo_url:
+        return logo_url
+
+    # Fallback – relative static path; fine for local / console email previews
+    return static("images/bloom_logo.png")
 
 
 def send_simple_email(
@@ -69,12 +85,15 @@ def send_booking_confirmed_email(
     Expects `context` to match the variables used in
     emails/booking_confirmed.html.
     """
+    ctx = dict(context or {})
+    ctx.setdefault("bloom_logo_url", get_bloom_logo_url())
+
     return send_simple_email(
         subject=subject,
         message=None,
         recipients=recipients,
         html_template=BOOKING_CONFIRMED_TEMPLATE,
-        context=context,
+        context=ctx,
         fail_silently=fail_silently,
     )
 
@@ -91,11 +110,14 @@ def send_booking_cancelled_email(
     Expects `context` to match the variables used in
     emails/booking_cancelled.html.
     """
+    ctx = dict(context or {})
+    ctx.setdefault("bloom_logo_url", get_bloom_logo_url())
+
     return send_simple_email(
         subject=subject,
         message=None,
         recipients=recipients,
         html_template=BOOKING_CANCELLED_TEMPLATE,
-        context=context,
+        context=ctx,
         fail_silently=fail_silently,
     )
