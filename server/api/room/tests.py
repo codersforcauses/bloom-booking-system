@@ -3,7 +3,6 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 from .models import Room, Location, Amenities
 from django.utils import timezone
-import json
 
 User = get_user_model()
 
@@ -27,20 +26,20 @@ class RoomAPITest(APITestCase):
         # Rooms
         self.room1 = Room.objects.create(
             name="Conference Room 1",
-            location=self.loc1,
+            location_id=self.loc1,
             capacity=10,
             start_datetime=timezone.make_aware(
                 timezone.datetime(2025, 10, 1, 9, 0)),
             end_datetime=timezone.make_aware(
                 timezone.datetime(2025, 10, 1, 18, 0)),
-            recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE,",
+            recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE",
             is_active=True
         )
-        self.room1.amenities.set([self.amenity1, self.amenity2])
+        self.room1.amenities_id.set([self.amenity1, self.amenity2])
 
         self.room2 = Room.objects.create(
             name="Meeting Room A",
-            location=self.loc3,
+            location_id=self.loc3,
             capacity=5,
             start_datetime=timezone.make_aware(
                 timezone.datetime(2025, 11, 1, 10, 0)),
@@ -49,7 +48,7 @@ class RoomAPITest(APITestCase):
             recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR",
             is_active=False  # Inactive room for unauthenticated test
         )
-        self.room2.amenities.set([self.amenity4])
+        self.room2.amenities_id.set([self.amenity4])
 
     # -------- LIST & FILTER TESTS --------
     def test_list_all_rooms_authenticated(self):
@@ -57,7 +56,7 @@ class RoomAPITest(APITestCase):
         client.force_authenticate(user=self.abc)
         response = client.get("/api/rooms/")
         print("\nAll Rooms (Authenticated) Response:")
-        print(json.dumps(response.data, indent=4))
+
         print("Is authenticated:", response.wsgi_request.user.is_authenticated)
         self.assertTrue(response.wsgi_request.user.is_authenticated)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -67,7 +66,7 @@ class RoomAPITest(APITestCase):
         self.client.logout()
         response = self.client.get("/api/rooms/")
         print("\nAll Rooms (Unauthenticated) Response:")
-        print(json.dumps(response.data, indent=4))
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Only room1 is active
         self.assertEqual(len(response.data["results"]), 1)
@@ -76,15 +75,15 @@ class RoomAPITest(APITestCase):
     def test_filter_rooms_by_name(self):
         response = self.client.get("/api/rooms/?name=Conference Room 1")
         print("\nFilter by Name Response:")
-        print(json.dumps(response.data, indent=4))
+
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"]
                          [0]["name"], "Conference Room 1")
 
     def test_filter_rooms_by_location_name(self):
         response = self.client.get("/api/rooms/?location=Building A")
-        print("\nFilter by Location Name Response:")
-        print(json.dumps(response.data, indent=4))
+        print("\nFilter by location Name Response:")
+
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"]
                          [0]["location"]["id"], self.loc1.id)
@@ -94,7 +93,7 @@ class RoomAPITest(APITestCase):
         room = Room.objects.first()
         response = self.client.get(f"/api/rooms/{room.id}/")
         print("\nRetrieve Room Response:")
-        print(json.dumps(response.data, indent=4))
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], room.id)
 

@@ -5,7 +5,6 @@ from rest_framework.pagination import PageNumberPagination
 from .models import Room, Location, Amenities
 from .serializers import RoomSerializer, LocationSerializer, AmenitiesSerializer
 
-
 # Viewset is library that provides CRUD operations for api
 # Admin have create update delete permissions everyone can read
 # get request can filter by name, location_id, capacity_id for get
@@ -13,6 +12,8 @@ from .serializers import RoomSerializer, LocationSerializer, AmenitiesSerializer
 # per issue thing:
 # Update has custom response with id name updated_at
 # Delete has custom response message
+
+
 class RoomPagination(PageNumberPagination):
     page_size = 10  # Change as needed
 
@@ -38,10 +39,27 @@ class RoomViewSet(viewsets.ModelViewSet):
             qs = qs.filter(name__icontains=name)
 
         if location_name := params.get("location"):
-            qs = qs.filter(location__name__icontains=location_name)
+            qs = qs.filter(location_id__name__icontains=location_name)
 
-        if cap := params.get("capacity"):
-            qs = qs.filter(capacity__gte=cap)
+        if min_cap := params.get("min_capacity"):
+            qs = qs.filter(capacity__gte=min_cap)
+
+        if max_cap := params.get("max_capacity"):
+            qs = qs.filter(capacity__lte=max_cap)
+
+        if min_datetime := params.get("min_datetime"):
+            qs = qs.filter(start_datetime__gte=min_datetime)
+
+        if max_datetime := params.get("max_datetime"):
+            qs = qs.filter(end_datetime__lte=max_datetime)
+
+        # Filter by amenity name (case-insensitive, supports multiple names comma-separated)
+        if amenity_names := params.get("amenity"):
+            names = [n.strip() for n in amenity_names.split(",") if n.strip()]
+            if names:
+                for n in names:
+                    qs = qs.filter(amenities_id__name__iexact=n)
+                qs = qs.distinct()
 
         if not self.request.user.is_authenticated:
             qs = qs.filter(is_active=True)
