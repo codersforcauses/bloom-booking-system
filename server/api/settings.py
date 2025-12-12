@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "api.healthcheck",
     "storages",
     "api.user",
+    "api.room",
 ]
 
 MIDDLEWARE = [
@@ -166,6 +167,8 @@ STATIC_URL = "/static/"
 # STATIC_ROOT is where the static files get copied to when "collectstatic" is run.
 STATIC_ROOT = "static_files"
 
+MEDIA_ROOT = BASE_DIR / "media"
+
 # This is where to _find_ static files when 'collectstatic' is run.
 # These files are then copied to the STATIC_ROOT location.
 STATICFILES_DIRS = ("static",)
@@ -178,6 +181,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
 }
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
