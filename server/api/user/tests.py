@@ -29,6 +29,52 @@ class CustomUserModelTests(TestCase):
         self.assertEqual(user.username, 'modeluser')
         self.assertEqual(user.email, 'model@example.com')
 
+    def test_password_is_hashed(self):
+        user = CustomUser.objects.create_user(
+            username='hashuser',
+            email='hash@example.com', password='pass123'
+        )
+        self.assertNotEqual(user.password, 'pass123')
+        self.assertTrue(user.check_password('pass123'))
+
+    def test_unique_username_constraint(self):
+        CustomUser.objects.create_user(
+            username='uniqueuser', email='unique@example.com', password='pw'
+        )
+        # creating another user with same username should raise IntegrityError
+        with self.assertRaises(IntegrityError):
+            CustomUser.objects.create_user(
+                username='uniqueuser', email='another@example.com', password='pw'
+            )
+
+    def test_user_creation_without_email(self):
+        # email is complulsory, so user creation should be unsuccessful
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_user(
+                username='noemailuser', email=None, password='pw'
+            )
+
+    def test_user_creation_with_empty_email(self):
+        # creating user with empty email should raise ValueError
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_user(
+                username='noemailuser', email='', password='pw'
+            )
+
+    def test_user_creation_with_invalid_email(self):
+        # creating user with invalid email format should raise ValueError
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_user(
+                username='user', email='invalidemail', password='pw'
+            )
+
+    def test_user_creation_empty_username(self):
+        # creating user with empty username should raise ValueError
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_user(
+                username='', email='sample@sample.com', password='pw'
+            )
+
     def test_unique_email_constraint(self):
         CustomUser.objects.create_user(
             username='first', email='dup@example.com', password='pw'
