@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
-from api.utils.pagination import StandardResultsSetPagination
 from rest_framework import viewsets
 from rest_framework.decorators import action
 
@@ -26,7 +25,6 @@ class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.select_related("room")   # for better performance
     filter_backends = [DjangoFilterBackend]
     filterset_class = ListBookingFilter
-    pagination_class = StandardResultsSetPagination
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
     # for put and delete methods, use BookingSerializer for customization
