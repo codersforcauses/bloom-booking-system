@@ -295,3 +295,8 @@ dist
 pyrightconfig.json
 
 opt/
+
+# google api 
+server/api/booking/google_calendar/google_calendar_service.json
+
+server/media/
