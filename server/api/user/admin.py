@@ -80,6 +80,7 @@ class CustomUserAdmin(UserAdmin):
                     "get_updated_at", "is_staff", "is_active")
     list_display_links = ("username",)  # Make username clickable for editing
     search_fields = ("username", "email")
+    list_filter = ("is_staff", "is_active")
 
     def get_updated_at(self, obj):
         return obj.updated_at
