@@ -17,7 +17,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary hover:border-b-2 border-black decoration-2 rounded-none transition-all ease-in-out duration-50",
         login:
-          "flex gap-2 items-centre hover:bg-bloom-yellow rounded-none bg-slate-200",
+          "flex gap-2 items-center hover:bg-bloom-yellow rounded-none bg-slate-200",
         outline: "border border-2 border-black hover:bg-bloom-blue-light",
         confirm: "bg-bloom-blue hover:bg-bloom-blue-light",
         warning: "bg-bloom-red text-white hover:bg-bloom-red-light",

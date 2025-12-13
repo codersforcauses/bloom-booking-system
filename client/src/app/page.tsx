@@ -20,7 +20,9 @@ export default function Home() {
         "flex min-h-screen flex-col items-center gap-4 p-24 font-montserrat",
       )}
     >
-      <Button variant="login" onClick={() => setClicked(true)}>
+      <Button variant="login" onClick={() => setClicked(true)}
+        className="flex items-center gap-2">
+          <HiOutlineUser className="h-5 w-5" />
         Ping
       </Button>
       <p>
