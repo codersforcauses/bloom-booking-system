@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from pathlib import Path
-
+from datetime import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -50,10 +50,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_extensions",
     "rest_framework",
+    "rest_framework_simplejwt",
     "drf_spectacular",
     "corsheaders",
     "api.healthcheck",
     "storages",
+    "api.user",
+    "api.room",
 ]
 
 MIDDLEWARE = [
@@ -93,6 +96,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "api.wsgi.application"
 
+# JWT Configuration
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "UPDATE_LAST_LOGIN": False,
+
+    "SIGNING_KEY": SECRET_KEY,
+    "ALGORITHM": "HS256",
+    "TOKEN_OBTAIN_SERIALIZER": "server.api.user.serializers.CustomTokenObtainPairSerializer",
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -131,9 +147,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en-au"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = 'Australia/Perth'
 
 USE_I18N = True
 
@@ -151,6 +167,8 @@ STATIC_URL = "/static/"
 # STATIC_ROOT is where the static files get copied to when "collectstatic" is run.
 STATIC_ROOT = "static_files"
 
+MEDIA_ROOT = BASE_DIR / "media"
+
 # This is where to _find_ static files when 'collectstatic' is run.
 # These files are then copied to the STATIC_ROOT location.
 STATICFILES_DIRS = ("static",)
@@ -162,6 +180,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
 }
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -222,3 +243,5 @@ else:
         },
     }
     MEDIA_URL = "/media/"
+
+AUTH_USER_MODEL = 'api_user.CustomUser'
