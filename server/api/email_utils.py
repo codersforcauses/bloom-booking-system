@@ -19,6 +19,29 @@ Usage:
 - Pass booking-specific data via the `context` dictionary
 - Shared layout and branding (e.g. Bloom logo) are injected automatically
 
+Expected context structure:
+
+Booking confirmed email (`send_booking_confirmed_email`):
+context = {
+    "room_name": str,          # required
+    "start_datetime": datetime,         # required
+    "end_datetime": datetime,           # required
+    "visitor_name": str,       # required
+    "location_name": str,      # required
+    "manage_url": str | None,  # optional
+}
+
+Booking cancelled email (`send_booking_cancelled_email`):
+context = {
+    "room_name": str,          # required
+    "start_datetime": datetime,         # required
+    "end_datetime": datetime,           # required
+    "book_room_url": str | None,  # optional
+}
+
+Shared variables (injected automatically):
+- bloom_logo_url: str
+
 Templates:
 - emails/base_booking_email.html (shared layout)
 - emails/booking_confirmed.html
