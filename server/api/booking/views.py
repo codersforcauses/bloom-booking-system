@@ -83,8 +83,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         cancel_reason = request.data.get('cancel_reason')
         if visitor_email and visitor_email != instance.visitor_email:
             raise ValidationError({
-                "status": "error",
-                "message": "Visitor email is incorrect."
+                "detail": "Visitor email is incorrect."
                 })
 
         data = {
@@ -106,8 +105,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         if not visitor_email:
             raise ValidationError({
-                "status": "error",
-                "message": "visitor_email is required"
+                "detail": "visitor_email is required"
             })
 
         queryset = self.queryset.filter(visitor_email__iexact=visitor_email)
