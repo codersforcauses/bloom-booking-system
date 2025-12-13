@@ -9,7 +9,6 @@ import { MdPhonelinkRing } from "react-icons/md";
 import { RiArtboardLine } from "react-icons/ri";
 
 import { Card } from "@/components/ui/card";
-import { useIsMobile } from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
 import { Room } from "@/types/card";
 
@@ -155,99 +154,8 @@ type BookingRoomProps = {
  *
  * <BookingRoomCard room={room} onBook={() => console.log("Booked!")} />
  */
-export function BookingRoomCard({
-  room,
-  hideIcon = false,
-  onBook,
-}: BookingRoomProps) {
-  const isMobile = useIsMobile();
-
-  if (!isMobile) {
-    // General / desktop version
-    const roomDetailsGroups = [
-      [
-        { label: "Title", value: room.title },
-        { label: "Seating Capacity", value: room.seats },
-      ],
-      [
-        { label: "Location", value: room.location },
-        { label: "Available", value: room.available },
-      ],
-      [
-        {
-          label: "Facilities",
-          value: (
-            <Amenities
-              amenities={room.amenities || []}
-              hideIcon={hideIcon}
-              className="pl-2"
-            />
-          ),
-        },
-      ],
-    ];
-
-    return (
-      <div className="w-full space-y-4 rounded-lg bg-white px-12 pt-8 shadow-sm">
-        <div className="relative h-40 w-full">
-          <Image
-            src={room.image}
-            alt={room.title}
-            fill
-            className="object-cover"
-          />
-        </div>
-
-        <div className="space-y-4">
-          {roomDetailsGroups.map((group, i) => (
-            <div
-              key={i}
-              className="flex justify-between gap-1 text-[10px] font-medium"
-            >
-              {group.map((item) => (
-                <div key={item.label} className="flex items-center gap-1">
-                  {item.label === "Title" ? (
-                    <span className="text-[14px]">{item.value}</span>
-                  ) : item.label === "Available" ? (
-                    <span
-                      className={cn(
-                        item.value ? "text-green-500" : "text-bloom-red",
-                      )}
-                    >
-                      {item.value ? "Available" : "Not Available"}
-                    </span>
-                  ) : (
-                    <>
-                      <span>{item.label}</span>
-                      <span className="text-gray-400">{item.value}</span>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex pb-4">
-          <Button
-            disabled={!room.available}
-            variant={room.available ? "default" : "outline"}
-            className={cn(
-              "h-[30px] w-[79px] text-[10px] font-bold",
-              room.available
-                ? "bg-bloom-orbit text-white hover:bg-bloom-orbit-light"
-                : "cursor-not-allowed border-bloom-orbit text-bloom-orbit hover:bg-white",
-            )}
-            onClick={onBook}
-          >
-            {room.available ? "Book" : "Booked"}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Tight version
+export function BookingRoomCard({ room, onBook }: BookingRoomProps) {
+  // Default: User card view
   return (
     <Card className="flex w-full flex-col overflow-hidden rounded-xl border-black bg-white shadow-md">
       <div className="relative h-40 w-full">

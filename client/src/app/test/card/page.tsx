@@ -12,7 +12,7 @@ export default function RoomsList() {
     <div className="w-full rounded-xl bg-gray-100 p-6">
       <h2 className="mb-4 text-xl font-semibold">Booking Rooms Display</h2>
 
-      <div className="grid grid-cols-2 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {roomsMock.map((room) => (
           <BookingRoomCard
             key={room.id}
