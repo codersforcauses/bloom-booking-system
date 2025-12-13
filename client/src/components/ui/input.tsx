@@ -92,6 +92,8 @@ type TimeSelectFieldProps = BaseFieldProps & {
   onChange: (value: string) => void;
 };
 
+// THIS IS A PLACEHOLDER
+// i will redo this once the booking model is merged into main.
 // 08:00 → 17:00 in 30-minute steps
 const TIME_OPTIONS_30_MIN: string[] = (() => {
   const times: string[] = [];
