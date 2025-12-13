@@ -11,6 +11,20 @@ from django.templatetags.static import static
 BOOKING_CONFIRMED_TEMPLATE = "emails/booking_confirmed.html"
 BOOKING_CANCELLED_TEMPLATE = "emails/booking_cancelled.html"
 
+"""
+Email utilities for booking notifications.
+
+Usage:
+- Call `send_booking_confirmed_email` or `send_booking_cancelled_email`
+- Pass booking-specific data via the `context` dictionary
+- Shared layout and branding (e.g. Bloom logo) are injected automatically
+
+Templates:
+- emails/base_booking_email.html (shared layout)
+- emails/booking_confirmed.html
+- emails/booking_cancelled.html
+"""
+
 
 def get_bloom_logo_url() -> str:
     """
