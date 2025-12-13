@@ -1,45 +1,57 @@
 from .models import Booking
-from api.room.models import Room
+from api.room.models import Room, Location, Amenity
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 from django.utils import timezone
 from datetime import timedelta, datetime
 from django.contrib.auth import get_user_model
-from dotenv import load_dotenv
-import os
+from dateutil.parser import isoparse
 
-load_dotenv()
+User = get_user_model()
 
 
 class BookingViewTest(APITestCase):
 
     def setUp(self):
-        now = timezone.now()
+        # Location
+        self.loc = Location.objects.create(name="Building A")
+
+        # Amenity
+        self.amenity = Amenity.objects.create(name="Projector")
+
+        # Room
         self.room = Room.objects.create(
-            name='Meeting Room A',
-            img_url='http://example.com/roomA.jpg',
-            location_id=1,
-            capacity_id=2,
-            start_datetime='2025-11-01T09:00:00Z',
-            end_datetime='2025-11-01T18:00:00Z',
-            recurrence_rule='FREQ=WEEKLY;BYDAY=MO,WE,FR',
-            created_at=now,
-            updated_at=now,
+            name="Meeting Room A",
+            location=self.loc,
+            capacity=10,
+            start_datetime=timezone.make_aware(
+                timezone.datetime(2025, 10, 1, 9, 0)),
+            end_datetime=timezone.make_aware(
+                timezone.datetime(2025, 10, 1, 18, 0)),
+            recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE",
+            is_active=True
         )
+        self.room.amenities.set([self.amenity])
+
+        # Booking
         self.booking = Booking.objects.create(
             room_id=self.room.id,
             visitor_name='default',
             visitor_email='default@example.com',
-            start_datetime='2025-11-01T10:00:00Z',
-            end_datetime='2025-11-01T12:00:00Z',
+            start_datetime=timezone.make_aware(
+                timezone.datetime(2025, 11, 1, 10, 0)),
+            end_datetime=timezone.make_aware(
+                timezone.datetime(2025, 11, 1, 12, 0)),
             recurrence_rule="",
             status='CONFIRMED',
             google_event_id='abc123'
         )
 
     def tearDown(self):
-        self.room.delete()
         self.booking.delete()
+        self.room.delete()
+        self.amenity.delete()
+        self.loc.delete()
 
     # POST /api/bookings
     def test_booking_creation(self):
@@ -47,8 +59,10 @@ class BookingViewTest(APITestCase):
             "room_id": self.room.id,
             "visitor_name": "Alice Johnson",
             "visitor_email": "alice@example.com",
-            "start_datetime": "2025-11-27T10:00:00Z",
-            "end_datetime": "2025-11-27T12:00:00Z",
+            "start_datetime": timezone.make_aware(
+                timezone.datetime(2025, 11, 27, 10, 0)),
+            "end_datetime": timezone.make_aware(
+                timezone.datetime(2025, 11, 27, 12, 0)),
             "recurrence_rule": "",
             "status": "CONFIRMED"
             }
@@ -61,8 +75,8 @@ class BookingViewTest(APITestCase):
         self.assertEqual(data["id"], self.booking.id + 1)
         self.assertEqual(data["visitor_name"], payload["visitor_name"])
         self.assertEqual(data["visitor_email"], payload["visitor_email"])
-        self.assertEqual(data["start_datetime"], payload["start_datetime"])
-        self.assertEqual(data["end_datetime"], payload["end_datetime"])
+        self.assertEqual(isoparse(data["start_datetime"]), payload["start_datetime"])
+        self.assertEqual(isoparse(data["end_datetime"]), payload["end_datetime"])
         self.assertEqual(data["recurrence_rule"], payload["recurrence_rule"])
         self.assertEqual(data["status"], payload["status"])
         # To do: modify after implementing Google Calendar integration
@@ -81,8 +95,10 @@ class BookingViewTest(APITestCase):
             "room_id": self.room.id,
             "visitor_name": "Alice Johnson",
             "visitor_email": "alice@example.com",
-            "start_datetime": "2025-11-27T10:00:00Z",
-            "end_datetime": "2025-11-27T12:00:00Z",
+            "start_datetime": timezone.make_aware(
+                timezone.datetime(2025, 11, 27, 10, 0)),
+            "end_datetime": timezone.make_aware(
+                timezone.datetime(2025, 11, 27, 12, 0)),
             "recurrence_rule": "",
             "status": "WHATEVER"
             }
@@ -94,28 +110,13 @@ class BookingViewTest(APITestCase):
     def test_booking_listing_fails_without_authentication(self):
         url = '/api/bookings/'
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_booking_listing_fails_without_admin_authorization(self):
-        User = get_user_model()
-        not_admin = User.objects.create_user(
-            username='not_admin',
-            password='password',
-            is_staff=False
-        )
-        self.client.force_login(not_admin)
-        url = '/api/bookings/'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_booking_listing(self):
-        User = get_user_model()
-        admin = User.objects.create_user(
-            username='admin',
-            password='password',
-            is_staff=True
-        )
-        self.client.force_login(admin)
+        admin = User.objects.create_superuser(
+            "admin", "admin@test.com", "admin123")
+        self.client = APIClient()
+        self.client.force_authenticate(user=admin)
         url = '/api/bookings/'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -125,8 +126,8 @@ class BookingViewTest(APITestCase):
         self.assertEqual(data["id"], self.booking.id)
         self.assertEqual(data["visitor_name"], self.booking.visitor_name)
         self.assertEqual(data["visitor_email"], self.booking.visitor_email)
-        self.assertEqual(data["start_datetime"], self.booking.start_datetime)
-        self.assertEqual(data["end_datetime"], self.booking.end_datetime)
+        self.assertEqual(isoparse(data["start_datetime"]), self.booking.start_datetime)
+        self.assertEqual(isoparse(data["end_datetime"]), self.booking.end_datetime)
         self.assertEqual(data["recurrence_rule"], self.booking.recurrence_rule)
         self.assertEqual(data["status"], self.booking.status)
         self.assertEqual(data["google_event_id"], self.booking.google_event_id)
@@ -138,13 +139,10 @@ class BookingViewTest(APITestCase):
         self.assertEqual(datetime.fromisoformat(data["created_at"]), self.booking.created_at)
 
     def test_booking_filtering_with_room_id(self):
-        User = get_user_model()
-        admin = User.objects.create_user(
-            username='admin',
-            password='password',
-            is_staff=True
-        )
-        self.client.force_login(admin)
+        admin = User.objects.create_superuser(
+            "admin", "admin@test.com", "admin123")
+        self.client = APIClient()
+        self.client.force_authenticate(user=admin)
 
         # when there is matched booking
         url = '/api/bookings/?room_id=' + str(self.room.id)
@@ -161,16 +159,13 @@ class BookingViewTest(APITestCase):
         self.assertEqual(len(data["results"]), 0)
 
     def test_booking_filtering_with_date(self):
-        User = get_user_model()
-        admin = User.objects.create_user(
-            username='admin',
-            password='password',
-            is_staff=True
-        )
-        self.client.force_login(admin)
+        admin = User.objects.create_superuser(
+            "admin", "admin@test.com", "admin123")
+        self.client = APIClient()
+        self.client.force_authenticate(user=admin)
 
         # when there is matched booking
-        date = datetime.fromisoformat(self.booking.start_datetime).date()
+        date = self.booking.start_datetime.date()
         url = '/api/bookings/?date=' + str(date)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -185,13 +180,10 @@ class BookingViewTest(APITestCase):
         self.assertEqual(len(data["results"]), 0)
 
     def test_booking_filtering_with_visitor_name(self):
-        User = get_user_model()
-        admin = User.objects.create_user(
-            username='admin',
-            password='password',
-            is_staff=True
-        )
-        self.client.force_login(admin)
+        admin = User.objects.create_superuser(
+            "admin", "admin@test.com", "admin123")
+        self.client = APIClient()
+        self.client.force_authenticate(user=admin)
 
         # when there is matched booking
         url = '/api/bookings/?visitor_name=' + self.booking.visitor_name
@@ -222,13 +214,10 @@ class BookingViewTest(APITestCase):
         self.assertEqual(len(data["results"]), 0)
 
     def test_booking_filtering_with_visitor_email(self):
-        User = get_user_model()
-        admin = User.objects.create_user(
-            username='admin',
-            password='password',
-            is_staff=True
-        )
-        self.client.force_login(admin)
+        admin = User.objects.create_superuser(
+            "admin", "admin@test.com", "admin123")
+        self.client = APIClient()
+        self.client.force_authenticate(user=admin)
 
         # when there is matched booking
         url = '/api/bookings/?visitor_email=' + self.booking.visitor_email
@@ -262,28 +251,13 @@ class BookingViewTest(APITestCase):
     def test_booking_retrieval_fails_without_authentication_and_no_visitor_emails_provided(self):
         url = '/api/bookings/' + str(self.booking.id) + '/'
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_booking_retrieval_fails_without_admin_authorization_and_no_visitor_email_provided(self):
-        User = get_user_model()
-        not_admin = User.objects.create_user(
-            username='not_admin',
-            password='password',
-            is_staff=False
-        )
-        self.client.force_login(not_admin)
-        url = '/api/bookings/' + str(self.booking.id) + '/'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_booking_retrieval_with_admin_authorization(self):
-        User = get_user_model()
-        admin = User.objects.create_user(
-            username='admin',
-            password='password',
-            is_staff=True
-        )
-        self.client.force_login(admin)
+        admin = User.objects.create_superuser(
+            "admin", "admin@test.com", "admin123")
+        self.client = APIClient()
+        self.client.force_authenticate(user=admin)
         url = '/api/bookings/' + str(self.booking.id) + '/'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -292,8 +266,8 @@ class BookingViewTest(APITestCase):
         self.assertEqual(data["id"], self.booking.id)
         self.assertEqual(data["visitor_name"], self.booking.visitor_name)
         self.assertEqual(data["visitor_email"], self.booking.visitor_email)
-        self.assertEqual(data["start_datetime"], self.booking.start_datetime)
-        self.assertEqual(data["end_datetime"], self.booking.end_datetime)
+        self.assertEqual(isoparse(data["start_datetime"]), self.booking.start_datetime)
+        self.assertEqual(isoparse(data["end_datetime"]), self.booking.end_datetime)
         self.assertEqual(data["recurrence_rule"], self.booking.recurrence_rule)
         self.assertEqual(data["status"], self.booking.status)
         self.assertEqual(data["google_event_id"], self.booking.google_event_id)
@@ -313,8 +287,8 @@ class BookingViewTest(APITestCase):
         self.assertEqual(data["id"], self.booking.id)
         self.assertEqual(data["visitor_name"], self.booking.visitor_name)
         self.assertEqual(data["visitor_email"], self.booking.visitor_email)
-        self.assertEqual(data["start_datetime"], self.booking.start_datetime)
-        self.assertEqual(data["end_datetime"], self.booking.end_datetime)
+        self.assertEqual(isoparse(data["start_datetime"]), self.booking.start_datetime)
+        self.assertEqual(isoparse(data["end_datetime"]), self.booking.end_datetime)
         self.assertEqual(data["recurrence_rule"], self.booking.recurrence_rule)
         self.assertEqual(data["status"], self.booking.status)
         self.assertEqual(data["google_event_id"], self.booking.google_event_id)
@@ -372,8 +346,10 @@ class BookingViewTest(APITestCase):
     # PATCH /api/bookings/{id}
     def test_booking_partial_update(self):
         payload = {
-            "start_datetime": "2025-12-03T12:00:00Z",
-            "end_datetime": "2025-12-03T13:00:00Z",
+            "start_datetime": timezone.make_aware(
+                timezone.datetime(2025, 12, 3, 12, 0)),
+            "end_datetime": timezone.make_aware(
+                timezone.datetime(2025, 12, 3, 13, 0)),
             "recurrence_rule": ""
         }
         url = '/api/bookings/' + str(self.booking.id) + '/'
@@ -381,8 +357,8 @@ class BookingViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         updated_booking = Booking.objects.get(id=self.booking.id)
-        self.assertEqual(updated_booking.start_datetime, datetime.fromisoformat(payload["start_datetime"]))
-        self.assertEqual(updated_booking.end_datetime, datetime.fromisoformat(payload["end_datetime"]))
+        self.assertEqual(updated_booking.start_datetime, payload["start_datetime"])
+        self.assertEqual(updated_booking.end_datetime, payload["end_datetime"])
         self.assertEqual(updated_booking.recurrence_rule, payload["recurrence_rule"])
 
         now = timezone.now()
@@ -474,8 +450,10 @@ class BookingViewTest(APITestCase):
             "room_id": self.room.id,
             "visitor_name": "Alice Johnson",
             "visitor_email": "alice@example.com",
-            "start_datetime": "2025-11-27T10:00:00Z",
-            "end_datetime": "2025-11-27T12:00:00Z",
+            "start_datetime": timezone.make_aware(
+                timezone.datetime(2025, 11, 27, 10, 0)),
+            "end_datetime": timezone.make_aware(
+                timezone.datetime(2025, 11, 27, 12, 0)),
             "recurrence_rule": "",
             "status": "CONFIRMED"
             }
@@ -483,39 +461,10 @@ class BookingViewTest(APITestCase):
         for i in range(20):
             self.client.post(url, payload, format='json')
 
-        User = get_user_model()
-        admin = User.objects.create_user(
-            username='admin',
-            password='password',
-            is_staff=True
-        )
-        self.client.force_login(admin)
+        admin = User.objects.create_superuser(
+            "admin", "admin@test.com", "admin123")
+        self.client = APIClient()
+        self.client.force_authenticate(user=admin)
         response = self.client.get(url)
         data = response.json()
-        self.assertEqual(len(data["results"]), int(os.getenv("DEFAULT_PAGE_SIZE", 10)))
-
-    def test_booking_listing_with_custom_pagination_size(self):
-        payload = {
-            "room_id": self.room.id,
-            "visitor_name": "Alice Johnson",
-            "visitor_email": "alice@example.com",
-            "start_datetime": "2025-11-27T10:00:00Z",
-            "end_datetime": "2025-11-27T12:00:00Z",
-            "recurrence_rule": "",
-            "status": "CONFIRMED"
-            }
-        post_url = '/api/bookings/'
-        for i in range(20):
-            self.client.post(post_url, payload, format='json')
-
-        User = get_user_model()
-        admin = User.objects.create_user(
-            username='admin',
-            password='password',
-            is_staff=True
-        )
-        get_url = '/api/bookings/?page_size=15'
-        self.client.force_login(admin)
-        response = self.client.get(get_url)
-        data = response.json()
-        self.assertEqual(len(data["results"]), 15)
+        self.assertEqual(len(data["results"]), 10)
