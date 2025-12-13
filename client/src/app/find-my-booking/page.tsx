@@ -34,14 +34,14 @@ export default function FindMyBookingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))]">
+    <div className="mx-auto flex h-screen flex-col items-center justify-center space-y-6 bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))]">
       <form
-        className="flex flex-col flex-wrap items-center justify-center gap-8"
+        className="flex flex-col items-center justify-center gap-8"
         action={searchBookings}
       >
         <h2 className="title mb-2">Enter your email</h2>
         <InputField
-          className="w-full"
+          className="w-[90vw] md:w-[50vw]"
           kind="text"
           label=""
           name="email"
