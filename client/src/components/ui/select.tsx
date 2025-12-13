@@ -55,7 +55,16 @@ const SelectContent = React.forwardRef<
         )}
         {...props}
       >
-        <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
+        <SelectPrimitive.Viewport
+          className={cn(
+            "p-1",
+            "max-h-48 overflow-y-auto",
+            position === "popper" &&
+              "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
+          )}
+        >
+          {children}
+        </SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   );
