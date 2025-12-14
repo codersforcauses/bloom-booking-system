@@ -246,6 +246,21 @@ class BookingViewTest(APITestCase):
         data = response.json()
         self.assertEqual(len(data["results"]), 0)
 
+    def test_booking_filtering_with_visitor_email_and_without_authentication(self):
+        # when there is matched booking
+        url = '/api/bookings/?visitor_email=' + self.booking.visitor_email
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data["results"]), 1)
+
+        # when there is no matched booking
+        url = '/api/bookings/?visitor_email=' + 'whatever@example.com'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data["results"]), 0)
+
     # GET /api/bookings/{id}
     def test_booking_retrieval_fails_without_authentication_and_no_visitor_emails_in_params(self):
         url = '/api/bookings/' + str(self.booking.id) + '/'

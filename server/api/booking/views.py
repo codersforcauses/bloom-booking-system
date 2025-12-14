@@ -39,12 +39,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         return BookingSerializer
 
     def get_permissions(self):
-        # GET /api/bookings/ (admin only)
-        if self.action == "list":
-            return [permissions.IsAuthenticated()]
-
-        # GET /bookings/{id}/ (when no visitor_email provided, admin only)
-        if self.action == "retrieve":
+        # GET /api/bookings/ and GET /bookings/{id}/ (when no visitor_email provided, admin only)
+        if self.action == "retrieve" or self.action == "list":
             visitor_email = self.request.query_params.get("visitor_email")
             if not visitor_email:
                 return [permissions.IsAuthenticated()]
