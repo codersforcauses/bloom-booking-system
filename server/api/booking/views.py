@@ -7,6 +7,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from .google_calendar.events import create_event, update_event, delete_event
+from googleapiclient.errors import HttpError
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # For admin to filter booking in /api/bookings
@@ -59,6 +64,26 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    # custom create logic to integrate Google calendar api
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        booking = serializer.save()
+
+        event_data = self._build_event_data(booking)
+        try:
+            created_event = create_event(event_data)
+            booking.google_event_id = created_event["id"]
+            booking.save(update_fields=["google_event_id"])
+        except HttpError as error:
+            logger.error(f"Google Calendar creation fails: {error}")
+        except Exception as error:
+            logger.error(
+                f"Unexpected error while creating Google Calendar event: {error}"
+            )
+
+        return Response(serializer.data, status=201)
+
     # custom PATCH (including both booking update and deletion)
     def partial_update(self, request, *args, **kwargs):
         partial = True
@@ -67,7 +92,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         # If cancel_reason is provided (cancel_reason is not NULL / "" / composed of spaces), it will be booking deletion action
         visitor_email = request.data.get('visitor_email')
         cancel_reason = request.data.get('cancel_reason')
-        if cancel_reason and cancel_reason.strip() != "":
+        if cancel_reason and cancel_reason.strip():
             if visitor_email and visitor_email != instance.visitor_email:
                 raise ValidationError({
                     "detail": "Visitor email is incorrect."
@@ -77,18 +102,41 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "cancel_reason": cancel_reason,
                 "status": "CANCELLED"
             }
+            serializer = self.get_serializer(instance, data=data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            booking = serializer.save()
+
+            # for deletion action, delete google_event_id
+            if booking.google_event_id:
+                try:
+                    delete_event(instance.google_event_id)
+                except HttpError as error:
+                    logger.error(f"Google Calendar deletion fails: {error}")
+                except Exception as error:
+                    logger.error(f"Unexpected error while deleting Google Calendar event: {error}")
+            booking.google_event_id = ""
+            booking.save(update_fields=["google_event_id"])
+
             response_fields = ('id', 'status', 'cancel_reason', 'updated_at')
 
         # else, it is partial update
         else:
-            data = request.data
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            booking = serializer.save()
+
+            if booking.google_event_id:
+                event_data = self._build_event_data(booking)
+                try:
+                    update_event(booking.google_event_id, event_data)
+                except HttpError as error:
+                    logger.error(f"Google Calendar update fails: {error}")
+                except Exception as error:
+                    logger.error(f"Unexpected error while updating Google Calendar event: {error}")
+
             response_fields = ('id', 'status', 'updated_at')
 
-        serializer = self.get_serializer(instance, data=data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        response_serializer = BookingSerializer(instance, fields=response_fields)
+        response_serializer = BookingSerializer(booking, fields=response_fields)
         return Response(response_serializer.data)
 
     # custom search
@@ -106,3 +154,19 @@ class BookingViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(queryset)
         serializer = BookingListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
+
+    # helper method for google calendar data construction
+    def _build_event_data(self, booking):
+        return {
+            "summary": f"Booking of {booking.room.name} - {booking.visitor_name}",
+            "description": "Booking confirmed",
+            "start": {
+                "dateTime": booking.start_datetime.isoformat(),
+                "timeZone": "Australia/Perth",
+            },
+            "end": {
+                "dateTime": booking.end_datetime.isoformat(),
+                "timeZone": "Australia/Perth",
+            },
+            "recurrence": [f"RRULE:{booking.recurrence_rule}"] if booking.recurrence_rule else []
+        }
