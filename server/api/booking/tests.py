@@ -412,6 +412,42 @@ class BookingViewTest(APITestCase):
 
         self.assertTrue(Booking.objects.filter(id=data["id"]).exists())
 
+    # PUT /api/bookings/{id} - for booking update
+    def test_booking_update_using_PUT(self):
+        payload = {
+            "start_datetime": timezone.make_aware(
+                timezone.datetime(2025, 12, 3, 12, 0)),
+            "end_datetime": timezone.make_aware(
+                timezone.datetime(2025, 12, 3, 13, 0)),
+            "recurrence_rule": ""
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=' + self.booking.visitor_email
+        response = self.client.put(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        updated_booking = Booking.objects.get(id=self.booking.id)
+        self.assertEqual(updated_booking.start_datetime, payload["start_datetime"])
+        self.assertEqual(updated_booking.end_datetime, payload["end_datetime"])
+        self.assertEqual(updated_booking.recurrence_rule, payload["recurrence_rule"])
+
+        now = timezone.now()
+        data = response.json()
+        self.assertEqual(data["id"], self.booking.id)
+        self.assertEqual(data["status"], self.booking.status)
+        self.assertAlmostEqual(datetime.fromisoformat(data["updated_at"]), now, delta=timedelta(seconds=10))
+
+        self.assertNotIn("visitor_name", data)
+        self.assertNotIn("visitor_email", data)
+        self.assertNotIn("start_datetime", data)
+        self.assertNotIn("end_datetime", data)
+        self.assertNotIn("recurrence_rule", data)
+        self.assertNotIn("google_event_id", data)
+        self.assertNotIn("room", data)
+        self.assertNotIn("cancel_reason", data)
+        self.assertNotIn("created_at", data)
+
+        self.assertTrue(Booking.objects.filter(id=data["id"]).exists())
+
     def test_booking_deletion_fails_with_unmatched_email_in_body(self):
         payload = {
             "visitor_email": "whatever@email.com",

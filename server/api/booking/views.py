@@ -30,7 +30,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.select_related("room")   # for better performance
     filter_backends = [DjangoFilterBackend]
     filterset_class = ListBookingFilter
-    http_method_names = ["get", "post", "patch"]        # PUT and DELETE is forbiddened
+    http_method_names = ["get", "post", "put", "patch"]        # PUT and DELETE is forbiddened
 
     # for put and delete methods, use BookingSerializer for customization
     def get_serializer_class(self):
@@ -93,13 +93,37 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=201)
 
+    # helper function for update booking
+    def _perform_update(self, request, instance):
+        cancel_reason = request.data.get('cancel_reason')
+        status = request.data.get('status')
+        if status == "CANCELLED" and not cancel_reason:
+            raise ValidationError({
+                "detail": "Cancel reason is necessary to cancel a booking."
+                })
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        booking = serializer.save()
+
+        if booking.google_event_id:
+            event_data = self._build_event_data(booking)
+            try:
+                update_event(booking.google_event_id, event_data)
+            except HttpError as error:
+                logger.error(f"Google Calendar update fails: {error}")
+            except Exception as error:
+                logger.error(f"Unexpected error while updating Google Calendar event: {error}")
+
+        response_serializer = BookingSerializer(booking, fields=('id', 'status', 'updated_at'))
+        return Response(response_serializer.data)
+
     # custom PATCH (including both booking update and deletion)
     def partial_update(self, request, *args, **kwargs):
-        partial = True
         instance = self.get_object()
-        visitor_email = request.data.get('visitor_email')
 
         # If cancel_reason is provided (cancel_reason is not NULL / "" / composed of spaces), it will be booking deletion action
+        visitor_email = request.data.get('visitor_email')
         cancel_reason = request.data.get('cancel_reason')
         if cancel_reason and cancel_reason.strip():
             if visitor_email and visitor_email != instance.visitor_email:
@@ -111,7 +135,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "cancel_reason": cancel_reason,
                 "status": "CANCELLED"
             }
-            serializer = self.get_serializer(instance, data=data, partial=partial)
+            serializer = self.get_serializer(instance, data=data, partial=True)
             serializer.is_valid(raise_exception=True)
             booking = serializer.save()
 
@@ -126,33 +150,16 @@ class BookingViewSet(viewsets.ModelViewSet):
             booking.google_event_id = None
             booking.save(update_fields=["google_event_id"])
 
-            response_fields = ('id', 'status', 'cancel_reason', 'updated_at')
+            response_serializer = BookingSerializer(booking, fields=('id', 'status', 'cancel_reason', 'updated_at'))
+            return Response(response_serializer.data)
 
         # else, it is partial update
-        else:
-            status = request.data.get('status')
-            if status == "CANCELLED" and not cancel_reason:
-                raise ValidationError({
-                    "detail": "Cancel reason is necessary to cancel a booking."
-                    })
+        return self._perform_update(request, instance)
 
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
-            serializer.is_valid(raise_exception=True)
-            booking = serializer.save()
-
-            if booking.google_event_id:
-                event_data = self._build_event_data(booking)
-                try:
-                    update_event(booking.google_event_id, event_data)
-                except HttpError as error:
-                    logger.error(f"Google Calendar update fails: {error}")
-                except Exception as error:
-                    logger.error(f"Unexpected error while updating Google Calendar event: {error}")
-
-            response_fields = ('id', 'status', 'updated_at')
-
-        response_serializer = BookingSerializer(booking, fields=response_fields)
-        return Response(response_serializer.data)
+    # custom PUT (partial update as well)
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        return self._perform_update(request, instance)
 
     # custom search
     @action(detail=False, methods=["get"], url_path="search")
