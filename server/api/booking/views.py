@@ -36,13 +36,13 @@ class BookingViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         # GET /api/bookings/ (admin only)
         if self.action == "list":
-            return [permissions.IsAdminUser()]
+            return [permissions.IsAuthenticated()]
 
         # GET /bookings/{id}/ (when no visitor_email provided, admin only)
         if self.action == "retrieve":
             visitor_email = self.request.query_params.get("visitor_email")
             if not visitor_email:
-                return [permissions.IsAdminUser()]
+                return [permissions.IsAuthenticated()]
             return [permissions.AllowAny()]
 
         # POST/PUT/PATCH/DELETE (everyone)
