@@ -18,7 +18,7 @@ class Booking(models.Model):
     end_datetime = models.DateTimeField()
     recurrence_rule = models.CharField(max_length=100, blank=True)       # return "" when there is no recurrence rule
     status = models.CharField(max_length=9, choices=STATUS_CHOICES)
-    google_event_id = models.CharField(max_length=100, blank=True, null=True)
+    google_event_id = models.CharField(max_length=100, blank=True)
     cancel_reason = models.TextField(blank=True)                         # return "" when it is not cancelled
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
