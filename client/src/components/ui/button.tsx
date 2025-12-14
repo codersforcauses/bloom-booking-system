@@ -5,15 +5,15 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-normal ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap text-sm font-normal ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
+        confirm: "bg-bloom-blue hover:bg-bloom-blue-light rounded-lg",
+        outline: "border border-black hover:bg-bloom-blue-light rounded-lg",
+        warning: "bg-bloom-red text-white hover:bg-bloom-red-light rounded-lg",
         login: "items-center hover:bg-bloom-yellow rounded-none bg-bloom-gray",
-        outline: "border border-2 border-black hover:bg-bloom-blue-light",
-        confirm: "bg-bloom-blue hover:bg-bloom-blue-light",
-        warning: "bg-bloom-red text-white hover:bg-bloom-red-light",
-        booking: "bg-bloom-orbit text-white hover:bg-bloom-orbit-light",
+        text: "border-b border-transparent hover:border-b hover:border-black",
       },
       size: {
         default: "h-10 px-4 py-2",

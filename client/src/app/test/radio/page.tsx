@@ -62,7 +62,6 @@ export default function RadioTestPage() {
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   disabled={mode !== "on"}
-                  className=""
                 />
               </div>
             </div>
