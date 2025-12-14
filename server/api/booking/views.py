@@ -55,12 +55,21 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Booking.objects.select_related("room")
+        visitor_email = self.request.query_params.get('visitor_email')
 
-        # GET /bookings/{id}/ (when visitor_email provided, send the booking detail only if visitor_email and id match)
+        # GET /bookings/{id}/:
+        # when visitor_email provided, send the booking detail only if visitor_email and id match
         if self.action == "retrieve":
-            visitor_email = self.request.query_params.get('visitor_email')
             if visitor_email:
                 queryset = queryset.filter(visitor_email__iexact=visitor_email)
+
+        # PATCh /bookings/{id}:
+        # when visitor_email is not provided as a parameter, raise an 400 error;
+        # if it is provided but does not match the booking, raise an 404 NOT FOUND error (so the user cannot guess whether the booking exists or not);
+        if self.action == "partial_update":
+            if not visitor_email:
+                raise ValidationError({"detail": "Visitor email is required."})
+            queryset = queryset.filter(visitor_email__iexact=visitor_email)
 
         return queryset
 
@@ -88,9 +97,9 @@ class BookingViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         partial = True
         instance = self.get_object()
+        visitor_email = request.data.get('visitor_email')
 
         # If cancel_reason is provided (cancel_reason is not NULL / "" / composed of spaces), it will be booking deletion action
-        visitor_email = request.data.get('visitor_email')
         cancel_reason = request.data.get('cancel_reason')
         if cancel_reason and cancel_reason.strip():
             if visitor_email and visitor_email != instance.visitor_email:
@@ -121,6 +130,12 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         # else, it is partial update
         else:
+            status = request.data.get('status')
+            if status == "CANCELLED" and not cancel_reason:
+                raise ValidationError({
+                    "detail": "Cancel reason is necessary to cancel a booking."
+                    })
+
             serializer = self.get_serializer(instance, data=request.data, partial=partial)
             serializer.is_valid(raise_exception=True)
             booking = serializer.save()
