@@ -123,7 +123,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                     logger.error(f"Google Calendar deletion fails: {error}")
                 except Exception as error:
                     logger.error(f"Unexpected error while deleting Google Calendar event: {error}")
-            booking.google_event_id = ""
+            booking.google_event_id = None
             booking.save(update_fields=["google_event_id"])
 
             response_fields = ('id', 'status', 'cancel_reason', 'updated_at')
