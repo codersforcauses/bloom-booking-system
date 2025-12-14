@@ -24,16 +24,6 @@ GET http://localhost:8000/api/bookings/?page_size=1&visitor_name=jack
 ### pagination next page
 GET http://localhost:8000/api/bookings/?page=2&page_size=1&visitor_name=jack
 
-### update a booking 
-PUT http://localhost:8000/api/bookings/2/
-Content-Type: application/json
-
-{
-  "start_datetime": "2025-12-04T14:00:00Z",
-  "end_datetime": "2025-12-04T16:00:00Z",
-  "recurrence_rule": ""
-}
-
 ### update a booking (PATCH)
 PATCH http://localhost:8000/api/bookings/1/
 Content-Type: application/json
@@ -44,8 +34,8 @@ Content-Type: application/json
   "recurrence_rule": ""
 }
 
-### delete a booking
-DELETE http://localhost:8000/api/bookings/3/
+### delete a booking (PATCH)
+PATCH http://localhost:8000/api/bookings/1/
 Content-Type: application/json
 
 {
@@ -54,7 +44,7 @@ Content-Type: application/json
 }
 
 ### delete a booking with wrong visitor_email
-DELETE http://localhost:8000/api/bookings/3/
+PATCH http://localhost:8000/api/bookings/1/
 Content-Type: application/json
 
 {
