@@ -1,4 +1,4 @@
-import Breadcrumb from "@/components/ui/breadcrumb";
+import Breadcrumb from "@/components/breadcrumb";
 
 export default function TestPage() {
   return (

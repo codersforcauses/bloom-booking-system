@@ -4,7 +4,7 @@
 "use client";
 import React from "react";
 
-import InputField from "@/components/ui/input";
+import InputField from "@/components/input";
 
 const AMENITIES = [
   "Audio",
