@@ -25,7 +25,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.select_related("room")   # for better performance
     filter_backends = [DjangoFilterBackend]
     filterset_class = ListBookingFilter
-    http_method_names = ["get", "post", "put", "patch", "delete"]
+    http_method_names = ["get", "post", "patch"]        # PUT and DELETE is forbiddened
 
     # for put and delete methods, use BookingSerializer for customization
     def get_serializer_class(self):
@@ -59,43 +59,36 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    # custom PUT
-    def update(self, request, *args, **kwargs):
-        partial = True      # allow partial update
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        response_serializer = BookingSerializer(instance, fields=('id', 'status', 'updated_at'))
-        return Response(response_serializer.data)
-
-    # custom PATCH
+    # custom PATCH (including both booking update and deletion)
     def partial_update(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-    # custom DELETE
-    def destroy(self, request, *args, **kwargs):
         partial = True
         instance = self.get_object()
 
+        # If cancel_reason is provided (cancel_reason is not NULL / "" / composed of spaces), it will be booking deletion action
         visitor_email = request.data.get('visitor_email')
         cancel_reason = request.data.get('cancel_reason')
-        if visitor_email and visitor_email != instance.visitor_email:
-            raise ValidationError({
-                "detail": "Visitor email is incorrect."
-                })
+        if cancel_reason and cancel_reason.strip() != "":
+            if visitor_email and visitor_email != instance.visitor_email:
+                raise ValidationError({
+                    "detail": "Visitor email is incorrect."
+                    })
 
-        data = {
-            "cancel_reason": cancel_reason,
-            "status": "CANCELLED"
-        }
+            data = {
+                "cancel_reason": cancel_reason,
+                "status": "CANCELLED"
+            }
+            response_fields = ('id', 'status', 'cancel_reason', 'updated_at')
+
+        # else, it is partial update
+        else:
+            data = request.data
+            response_fields = ('id', 'status', 'updated_at')
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        response_serializer = BookingSerializer(instance, fields=('id', 'status', "cancel_reason", 'updated_at'))
+        response_serializer = BookingSerializer(instance, fields=response_fields)
         return Response(response_serializer.data)
 
     # custom search
