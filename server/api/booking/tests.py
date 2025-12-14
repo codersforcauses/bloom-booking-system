@@ -247,12 +247,12 @@ class BookingViewTest(APITestCase):
         self.assertEqual(len(data["results"]), 0)
 
     # GET /api/bookings/{id}
-    def test_booking_retrieval_fails_without_authentication_and_no_visitor_emails_provided(self):
+    def test_booking_retrieval_fails_without_authentication_and_no_visitor_emails_in_params(self):
         url = '/api/bookings/' + str(self.booking.id) + '/'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_booking_retrieval_with_admin_authorization(self):
+    def test_booking_retrieval_with_authentication(self):
         admin = User.objects.create_superuser(
             "admin", "admin@test.com", "admin123")
         self.client = APIClient()
@@ -277,7 +277,7 @@ class BookingViewTest(APITestCase):
         self.assertNotIn("updated_at", data)
         self.assertEqual(datetime.fromisoformat(data["created_at"]), self.booking.created_at)
 
-    def test_booking_retrieval_with_visitor_email(self):
+    def test_booking_retrieval_with_visitor_email_in_params(self):
         url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=' + self.booking.visitor_email
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -298,7 +298,7 @@ class BookingViewTest(APITestCase):
         self.assertNotIn("updated_at", data)
         self.assertEqual(datetime.fromisoformat(data["created_at"]), self.booking.created_at)
 
-    def test_booking_retrieval_fails_as_not_found_with_unmatched_visitor_email(self):
+    def test_booking_retrieval_fails_as_not_found_with_unmatched_visitor_email_in_params(self):
         url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=whatever@example.com'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -309,7 +309,7 @@ class BookingViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     # PATCH /api/bookings/{id} - for booking update
-    def test_booking_partial_update(self):
+    def test_booking_update(self):
         payload = {
             "start_datetime": timezone.make_aware(
                 timezone.datetime(2025, 12, 3, 12, 0)),
@@ -344,6 +344,46 @@ class BookingViewTest(APITestCase):
 
         self.assertTrue(Booking.objects.filter(id=data["id"]).exists())
 
+    def test_booking_update_fails_with_status_cancelled_but_without_cancel_reason(self):
+        payload = {
+            "status": "CANCELLED",
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=' + self.booking.visitor_email
+        response = self.client.patch(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_booking_update_fails_with_visitor_email_change(self):
+        payload = {
+            "visitor_email": "whatever@example.com",
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=' + self.booking.visitor_email
+        response = self.client.patch(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_booking_update_fails_without_visitor_email_in_params(self):
+        payload = {
+            "start_datetime": timezone.make_aware(
+                timezone.datetime(2025, 12, 3, 12, 0)),
+            "end_datetime": timezone.make_aware(
+                timezone.datetime(2025, 12, 3, 13, 0)),
+            "recurrence_rule": ""
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/'
+        response = self.client.patch(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_booking_update_fails_with_unmatched_visitor_email_in_params(self):
+        payload = {
+            "start_datetime": timezone.make_aware(
+                timezone.datetime(2025, 12, 3, 12, 0)),
+            "end_datetime": timezone.make_aware(
+                timezone.datetime(2025, 12, 3, 13, 0)),
+            "recurrence_rule": ""
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=whatever@example.com'
+        response = self.client.patch(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     # PATCH /api/bookings/{id} - for booking deletion
     def test_booking_deletion(self):
         payload = {
@@ -372,7 +412,7 @@ class BookingViewTest(APITestCase):
 
         self.assertTrue(Booking.objects.filter(id=data["id"]).exists())
 
-    def test_booking_deletion_fails_with_unmatched_email(self):
+    def test_booking_deletion_fails_with_unmatched_email_in_body(self):
         payload = {
             "visitor_email": "whatever@email.com",
             "cancel_reason": "Meeting postponed"
@@ -380,6 +420,24 @@ class BookingViewTest(APITestCase):
         url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=' + self.booking.visitor_email
         response = self.client.patch(url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_booking_deletion_fails_without_visitor_email_in_params(self):
+        payload = {
+            "visitor_email": self.booking.visitor_email,
+            "cancel_reason": "Meeting postponed"
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/'
+        response = self.client.patch(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_booking_deletion_fails_with_unmatched_visitor_email_in_params(self):
+        payload = {
+            "visitor_email": self.booking.visitor_email,
+            "cancel_reason": "Meeting postponed"
+        }
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=whatever@example.com'
+        response = self.client.patch(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     # GET/api/bookings/search
     def test_booking_search(self):
@@ -404,7 +462,7 @@ class BookingViewTest(APITestCase):
         data = response.json()
         self.assertEqual(len(data["results"]), 0)
 
-    def test_booking_search_fails_with_no_email(self):
+    def test_booking_search_fails_without_visitor_email_in_params(self):
         # when there is matched booking
         url = '/api/bookings/search/'
         response = self.client.get(url)
