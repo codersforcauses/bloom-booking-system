@@ -1,0 +1,68 @@
+### create a new booking
+POST http://localhost:8000/api/bookings/
+Content-Type: application/json
+
+{
+  "room_id": 1,
+  "visitor_name": "Bob Johnson",
+  "visitor_email": "bob@example.com",
+  "start_datetime": "2025-12-07T10:00:00Z",
+  "end_datetime": "2025-12-07T11:00:00Z",
+  "recurrence_rule": "",
+  "status": "CONFIRMED"
+}
+
+### get all (filtered) bookings (needs admin access)
+GET http://localhost:8000/api/bookings/
+
+### filter
+GET http://localhost:8000/api/bookings/?visitor_email=bob@example.com
+
+### pagination
+GET http://localhost:8000/api/bookings/?page_size=1&visitor_name=jack
+
+### pagination next page
+GET http://localhost:8000/api/bookings/?page=2&page_size=1&visitor_name=jack
+
+### update a booking (PATCH)
+PATCH http://localhost:8000/api/bookings/1/?visitor_email=bob@example.com
+Content-Type: application/json
+
+{
+  "start_datetime": "2025-12-08T14:00:00Z",
+  "end_datetime": "2025-12-08T16:00:00Z",
+  "recurrence_rule": ""
+}
+
+### delete a booking (PATCH)
+PATCH http://localhost:8000/api/bookings/1/?visitor_email=bob@example.com
+Content-Type: application/json
+
+{
+  "visitor_email": "bob@example.com",
+  "cancel_reason": "Meeting postponed"
+}
+
+### delete a booking with wrong visitor_email
+PATCH http://localhost:8000/api/bookings/1/?visitor_email=bob@example.com
+Content-Type: application/json
+
+{
+  "visitor_email": "alice@example.com",
+  "cancel_reason": "Meeting postponed"
+}
+
+### get a booking without visitor_email (needs admin access)
+GET http://localhost:8000/api/bookings/2/
+
+### get a booking with visitor_email
+GET http://localhost:8000/api/bookings/2?visitor_email=jack@example.com
+
+### get a booking with wrong visitor_email
+GET http://localhost:8000/api/bookings/2?visitor_email=bob@example.com
+
+### search bookings without visitor_email
+GET http://localhost:8000/api/bookings/search
+
+### search bookings with visitor_email
+GET http://localhost:8000/api/bookings/search?visitor_email=bob@example.com
