@@ -25,7 +25,7 @@ GET http://localhost:8000/api/bookings/?page_size=1&visitor_name=jack
 GET http://localhost:8000/api/bookings/?page=2&page_size=1&visitor_name=jack
 
 ### update a booking (PATCH)
-PATCH http://localhost:8000/api/bookings/1/
+PATCH http://localhost:8000/api/bookings/1/?visitor_email=bob@example.com
 Content-Type: application/json
 
 {
@@ -35,7 +35,7 @@ Content-Type: application/json
 }
 
 ### delete a booking (PATCH)
-PATCH http://localhost:8000/api/bookings/1/
+PATCH http://localhost:8000/api/bookings/1/?visitor_email=bob@example.com
 Content-Type: application/json
 
 {
@@ -44,7 +44,7 @@ Content-Type: application/json
 }
 
 ### delete a booking with wrong visitor_email
-PATCH http://localhost:8000/api/bookings/1/
+PATCH http://localhost:8000/api/bookings/1/?visitor_email=bob@example.com
 Content-Type: application/json
 
 {

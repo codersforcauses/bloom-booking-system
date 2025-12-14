@@ -317,7 +317,7 @@ class BookingViewTest(APITestCase):
                 timezone.datetime(2025, 12, 3, 13, 0)),
             "recurrence_rule": ""
         }
-        url = '/api/bookings/' + str(self.booking.id) + '/'
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=' + self.booking.visitor_email
         response = self.client.patch(url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -350,7 +350,7 @@ class BookingViewTest(APITestCase):
             "visitor_email": self.booking.visitor_email,
             "cancel_reason": "Meeting postponed"
         }
-        url = '/api/bookings/' + str(self.booking.id) + '/'
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=' + self.booking.visitor_email
         response = self.client.patch(url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -377,7 +377,7 @@ class BookingViewTest(APITestCase):
             "visitor_email": "whatever@email.com",
             "cancel_reason": "Meeting postponed"
         }
-        url = '/api/bookings/' + str(self.booking.id) + '/'
+        url = '/api/bookings/' + str(self.booking.id) + '/?visitor_email=' + self.booking.visitor_email
         response = self.client.patch(url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

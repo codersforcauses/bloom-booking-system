@@ -37,6 +37,12 @@ class BookingSerializer(DynamicFieldsModelSerializer):
         fields = '__all__'
         read_only_fields = ['google_event_id']      # google_event_id cannot be set from clients
 
+    # visitor emial is not editable in a serializer level
+    def validate_visitor_email(self, value):
+        if self.instance and value != self.instance.visitor_email:
+            raise serializers.ValidationError("Visitor email is not editable.")
+        return value
+
 
 # though dynamic fields are supported, define a separate serializer for list view for reusability
 class BookingListSerializer(BookingSerializer):
