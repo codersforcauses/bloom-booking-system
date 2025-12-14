@@ -9,9 +9,9 @@ interface ReCAPTCHAV2Props {
 
 // v2 - I'm not a robot checkbox
 // NEXT_PUBLIC_RECAPTCHA_SITE_KEY in .env (not syncronized in git) obtained from https://www.google.com/recaptcha/admin/create
-// Usage: By initialising [verified, setVerified] in the parent component and passing setVerified into ReCAPTCHA_v2,
-//        the parent component can obtain and utilise the verification status of ReCAPTCHA_v2
-const ReCAPTCHA_v2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
+// Usage: By initialising [verified, setVerified] in the parent component and passing setVerified into ReCAPTCHAV2,
+//        the parent component can obtain and utilise the verification status of ReCAPTCHAV2
+const ReCAPTCHAV2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const handleCaptchaSubmission = async (token: string | null) => {
@@ -58,4 +58,4 @@ const ReCAPTCHA_v2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
   );
 };
 
-export default ReCAPTCHA_v2;
+export default ReCAPTCHAV2;
