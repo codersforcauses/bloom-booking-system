@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -13,8 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-
-import { Button } from "./button";
 
 /**
  * AlertDialog component with a loading spinner, success icon, and customized button.
@@ -94,7 +93,7 @@ function AlertDialog({
 
         {/* To remove in future: demo button to simulate async work */}
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={() => {
             setIsPending(true);
             // simulate async work
