@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 
+import { CheckboxGroup, CheckboxItem } from "@/components/checkbox-group";
 import { Button } from "@/components/ui/button";
-import { CheckboxGroup, CheckboxItem } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const DATES = [
   "Monday",
@@ -31,14 +32,12 @@ export default function CheckboxTestPage() {
         <form onSubmit={handleSubmit} className="w-full rounded-md border p-4">
           {/* a single checkbox */}
           <p className="title mb-3">A single checkbox</p>
-          <CheckboxItem
-            id="acceptTerms"
-            name="acceptTerms"
+          <Checkbox
             checked={acceptTerms}
             onCheckedChange={(checked) => setAcceptTerms(checked === true)} // Radix Output can be true | false | "indeterminate"
           >
             <p> Accept terms and conditions. </p>
-          </CheckboxItem>
+          </Checkbox>
           {/* a checkbox group */}
           <p className="title mb-3 mt-5">A checkbox group</p>
           <CheckboxGroup
