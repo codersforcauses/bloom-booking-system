@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 
+import Textarea from "@/components/textarea";
 import { Button } from "@/components/ui/button";
-import Textarea from "@/components/ui/textarea";
 
 export default function TextareaTestPage() {
   const [message, setMessage] = useState("");
