@@ -23,6 +23,14 @@ const clearTokens = () => {
   localStorage.removeItem("refreshToken");
 };
 
+// -----If access token in memory-----
+// let accessToken: string | null = null;
+
+// const getAccessToken = () => accessToken;
+// const setAccessToken = (newAccessToken: string) => { accessToken = newAccessToken; };
+// const clearAccessToken = () => { accessToken = null; };
+// ------------------------------------
+
 // Handle concurrent API calls to refresh tokens
 let isRefreshing = false;
 let toBeRefreshedQueue: {
@@ -97,6 +105,10 @@ api.interceptors.response.use(
         refresh: refreshToken,
       });
 
+      // -----If refresh token is http only cookie-----
+      // const res = await axios.post(`${BACKEND_URL}/users/refresh/`, {}, { withCredentials: true });
+      // ----------------------------------------------
+
       const newAccessToken = res.data.access;
       if (!newAccessToken) throw new Error("No access token returned");
 
@@ -133,6 +145,11 @@ api.interceptors.response.use(
 
 const logout = () => {
   clearTokens();
+
+  // -----If refresh token is http only cookie-----
+  // await axios.post(`${BACKEND_URL}/users/logout/`, {}, { withCredentials: true });
+  // ----------------------------------------------
+
   window.location.href = "/login";
 };
 
