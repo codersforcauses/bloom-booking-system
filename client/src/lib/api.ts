@@ -3,33 +3,38 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-const api = axios.create({ baseURL: BACKEND_URL });
+const api = axios.create({ baseURL: BACKEND_URL, withCredentials: true });
 
-// If access token & refresh token in localStorage
-const getAccessToken = () =>
-  typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+// -----If access token & refresh token in localStorage-----
+// const api = axios.create({ baseURL: BACKEND_URL });
 
-const setAccessToken = (accessToken: string) =>
-  typeof window !== "undefined"
-    ? localStorage.setItem("accessToken", accessToken)
-    : null;
+// const getAccessToken = () =>
+//   typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
-const getRefreshToken = () =>
-  typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
+// const setAccessToken = (accessToken: string) =>
+//   typeof window !== "undefined"
+//     ? localStorage.setItem("accessToken", accessToken)
+//     : null;
 
-const clearTokens = () => {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-};
+// const getRefreshToken = () =>
+//   typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
+
+// const clearTokens = () => {
+//   if (typeof window === "undefined") return;
+//   localStorage.removeItem("accessToken");
+//   localStorage.removeItem("refreshToken");
+// };
 
 // -----If access token in memory-----
-// let accessToken: string | null = null;
+let accessToken: string | null = null;
 
-// const getAccessToken = () => accessToken;
-// const setAccessToken = (newAccessToken: string) => { accessToken = newAccessToken; };
-// const clearAccessToken = () => { accessToken = null; };
-// ------------------------------------
+const getAccessToken = () => accessToken;
+const setAccessToken = (newAccessToken: string) => {
+  accessToken = newAccessToken;
+};
+const clearAccessToken = () => {
+  accessToken = null;
+};
 
 // Handle concurrent API calls to refresh tokens
 let isRefreshing = false;
@@ -97,17 +102,22 @@ api.interceptors.response.use(
 
     // Send refresh request
     try {
-      const refreshToken = getRefreshToken();
-      if (!refreshToken) throw new Error("No refresh token");
+      // -----If access token & refresh token in localStorage-----
+      // const refreshToken = getRefreshToken();
+      // if (!refreshToken) throw new Error("No refresh token");
 
       // IMPORTANT: use axios here to avoid interceptor loops
-      const res = await axios.post(`${BACKEND_URL}/users/refresh/`, {
-        refresh: refreshToken,
-      });
+      // const res = await axios.post(`${BACKEND_URL}/users/refresh/`, {
+      //   refresh: refreshToken,
+      // });
 
       // -----If refresh token is http only cookie-----
-      // const res = await axios.post(`${BACKEND_URL}/users/refresh/`, {}, { withCredentials: true });
-      // ----------------------------------------------
+      // IMPORTANT: use axios here to avoid interceptor loops
+      const res = await axios.post(
+        `${BACKEND_URL}/users/refresh/`,
+        {},
+        { withCredentials: true },
+      );
 
       const newAccessToken = res.data.access;
       if (!newAccessToken) throw new Error("No access token returned");
@@ -143,14 +153,16 @@ api.interceptors.response.use(
   },
 );
 
-const logout = () => {
-  clearTokens();
+const logout = async () => {
+  // -----If access token & refresh token in localStorage-----
+  // clearTokens();
 
   // -----If refresh token is http only cookie-----
-  // await axios.post(`${BACKEND_URL}/users/logout/`, {}, { withCredentials: true });
-  // ----------------------------------------------
-
-  window.location.href = "/login";
+  clearAccessToken();
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
 };
 
 export default api;
+export { setAccessToken };
