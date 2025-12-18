@@ -16,13 +16,13 @@ const api = axios.create({ baseURL: BACKEND_URL });
 const getAccessToken = () =>
   typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
-const setAccessToken = (accessToken: string) =>
-  typeof window !== "undefined"
-    ? localStorage.setItem("accessToken", accessToken)
-    : null;
+// const setAccessToken = (accessToken: string) =>
+//   typeof window !== "undefined"
+//     ? localStorage.setItem("accessToken", accessToken)
+//     : null;
 
-const getRefreshToken = () =>
-  typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
+// const getRefreshToken = () =>
+//   typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
 
 const clearTokens = () => {
   if (typeof window === "undefined") return;
