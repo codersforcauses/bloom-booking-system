@@ -2,16 +2,13 @@
 import React from "react";
 import * as z from "zod";
 
+import { ControlledField, Form, FormMethodsType } from "@/components/form";
 import { Button } from "@/components/ui/button";
-import { ControlledField, Form } from "@/components/ui/form";
 import InputField from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-const schema = z.object({
-  firstname: z.string().min(1, "Firstname is required"),
-  lastname: z.string().min(1, "Lastname is required"),
-  middlename: z.string().optional(),
+const ageSchema = z.object({
   age: z
     .string()
     .min(1, "Age is required")
@@ -25,6 +22,12 @@ const schema = z.object({
         message: "Age must be between 1 and 120",
       },
     ),
+});
+
+const schema = ageSchema.extend({
+  firstname: z.string().min(1, "Firstname is required"),
+  lastname: z.string().min(1, "Lastname is required"),
+  middlename: z.string().optional(),
 });
 
 const extendedSchema = schema.extend({
@@ -63,6 +66,13 @@ const AMENITIES = [
   "Projector",
   "Speaker Phone",
 ];
+
+const handleSubmit = (
+  data: z.infer<typeof ageSchema>,
+  methods?: FormMethodsType<typeof data>,
+) => {
+  methods?.setError("root", { message: "Custom API error message" });
+};
 
 export default function TestFormPage() {
   return (
@@ -295,10 +305,11 @@ export default function TestFormPage() {
         </Form>
       </div>
 
-      {/* get errors from FormProvider */}
+      {/* Check validity via methods.formState.isValid and display inline error */}
       <div className="mx-auto w-full max-w-xl px-10 py-10">
         <p className="title text-center">
-          Form 3 (get errors from FormProvider)
+          Form 3 (Check validity via methods.formState.isValid and display
+          inline error)
         </p>
         <Form
           schema={schema}
@@ -312,58 +323,68 @@ export default function TestFormPage() {
             <>
               <div className="flex flex-row gap-3">
                 <ControlledField<string> name="firstname">
-                  {({ value, onChange }) => (
-                    <InputField
-                      kind="text"
-                      label="First Name"
-                      name="firstname"
-                      value={value}
-                      onChange={onChange}
-                      placeholder="First Name"
-                      required={true}
-                    />
+                  {({ value, onChange, error }) => (
+                    <div className="flex flex-col">
+                      <InputField
+                        kind="text"
+                        label="First Name"
+                        name="firstname"
+                        value={value}
+                        onChange={onChange}
+                        placeholder="First Name"
+                        required={true}
+                      />
+                      {error ? <p className="text-red-500">{error}</p> : null}
+                    </div>
                   )}
                 </ControlledField>
 
                 <ControlledField<string> name="middlename">
-                  {({ value, onChange }) => (
-                    <InputField
-                      kind="text"
-                      label="Middle Name"
-                      name="middlename"
-                      value={value}
-                      onChange={onChange}
-                      placeholder="Middle Name"
-                    />
+                  {({ value, onChange, error }) => (
+                    <div className="flex flex-col">
+                      <InputField
+                        kind="text"
+                        label="Middle Name"
+                        name="middlename"
+                        value={value}
+                        onChange={onChange}
+                        placeholder="Middle Name"
+                      />
+                      {error ? <p className="text-red-500">{error}</p> : null}
+                    </div>
                   )}
                 </ControlledField>
 
                 <ControlledField<string> name="lastname">
-                  {({ value, onChange }) => (
-                    <InputField
-                      kind="text"
-                      label="Last Name"
-                      name="lastname"
-                      value={value}
-                      onChange={onChange}
-                      placeholder="Last Name"
-                      required={true}
-                    />
+                  {({ value, onChange, error }) => (
+                    <div className="flex flex-col">
+                      <InputField
+                        kind="text"
+                        label="Last Name"
+                        name="lastname"
+                        value={value}
+                        onChange={onChange}
+                        placeholder="Last Name"
+                      />
+                      {error ? <p className="text-red-500">{error}</p> : null}
+                    </div>
                   )}
                 </ControlledField>
               </div>
 
               <ControlledField<string> name="age">
-                {({ value, onChange }) => (
-                  <InputField
-                    kind="number"
-                    label="Age"
-                    name="age"
-                    value={value}
-                    onChange={onChange}
-                    placeholder="Age"
-                    required={true}
-                  />
+                {({ value, onChange, error }) => (
+                  <div className="flex flex-col">
+                    <InputField
+                      kind="number"
+                      label="Age"
+                      name="age"
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Age"
+                    />
+                    {error ? <p className="text-red-500">{error}</p> : null}
+                  </div>
                 )}
               </ControlledField>
 
@@ -381,7 +402,64 @@ export default function TestFormPage() {
                 <Button
                   type="submit"
                   variant="confirm"
-                  disabled={!methods.formState.isValid} // better than methods.formState.errors as errors will be empty at the beginning
+                  disabled={!methods.formState.isValid} // Check validity of the form in general
+                >
+                  Okay
+                </Button>
+              </div>
+            </>
+          )}
+        </Form>
+      </div>
+
+      {/* Mock API error */}
+      <div className="mx-auto w-full max-w-xl px-10 py-10">
+        <p className="title text-center">Form 4 (Mock API error)</p>
+        <Form
+          schema={ageSchema}
+          onSubmit={handleSubmit}
+          onError={(errors) => alert("errors:\n" + JSON.stringify(errors))}
+          className="bg-background"
+        >
+          {(methods) => (
+            <>
+              <ControlledField<string> name="age">
+                {({ value, onChange, error }) => (
+                  <div className="flex flex-col">
+                    <InputField
+                      kind="number"
+                      label="Age"
+                      name="age"
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Age"
+                    />
+                    {error ? <p className="text-red-500">{error}</p> : null}
+                  </div>
+                )}
+              </ControlledField>
+
+              {methods.formState.errors?.root?.message ? (
+                <p className="text-red-500">
+                  {methods.formState.errors?.root?.message}
+                </p>
+              ) : null}
+
+              {/* Button */}
+              <div className="ml-auto space-x-3 space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    alert(JSON.stringify("Cancel button triggered"))
+                  }
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="confirm"
+                  disabled={!methods.formState.isValid}
                 >
                   Okay
                 </Button>
