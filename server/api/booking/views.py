@@ -121,8 +121,12 @@ class BookingViewSet(viewsets.ModelViewSet):
     # custom PATCH (including both booking update and deletion)
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
-
         visitor_email = request.data.get('visitor_email')
+        if not visitor_email:
+            raise ValidationError({
+                "detail": "Visitor email is required."
+            })
+
         cancel_reason = request.data.get('cancel_reason')
         if cancel_reason and cancel_reason.strip():
             if visitor_email and visitor_email != instance.visitor_email:
