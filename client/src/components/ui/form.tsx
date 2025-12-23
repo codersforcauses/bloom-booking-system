@@ -23,6 +23,9 @@ type FormFieldContextValue<
   name: TName;
 };
 
+/**
+ * Helper: create context to share name within each field
+ */
 const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue,
 );
@@ -31,6 +34,9 @@ type FormItemContextValue = {
   id: string;
 };
 
+/**
+ * Helper: create context to share id within each field
+ */
 const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue,
 );
@@ -39,6 +45,16 @@ type FormProps<T extends FieldValues> = {
   form: UseFormReturn<T>;
 } & React.ComponentProps<"form">;
 
+/**
+ * Write `<Form></Form>` to use the form component to group a form
+ * Use the form props to pass zod schema, set default values, etc.
+ * ```
+ * const form = useForm<z.infer<typeof schema>>({
+ *  resolver: zodResolver(schema),  // pass zod schema
+ *  mode: "onChange",               // validate the form each time values change
+ * });
+ * ```
+ */
 const FormComponent = React.forwardRef<HTMLFormElement, FormProps<FieldValues>>(
   ({ form, className, children, ...props }, ref) => {
     return (
@@ -59,6 +75,26 @@ const FormComponent = React.forwardRef<HTMLFormElement, FormProps<FieldValues>>(
 );
 FormComponent.displayName = "Form";
 
+/**
+ * Wrapper to wrap each form field. Example:
+ * ```
+ *    <FormField
+ *      name="firstname"  // field name
+ *      control={form.control}  // to let react hook form manage the state
+ *      render={({ field }) => (
+ *        <FormItem>
+ *          <FormControl>
+ *            <InputField
+ *              // other fields
+ *              value={field.value}  // pass field.value for react hook form management
+ *              onChange={field.onChange}   // pass field.onChange for react hook form management
+ *            />
+ *           </FormControl>
+ *           <FormMessage />
+ *        </FormItem>
+ *      )}
+ * ```
+ */
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -72,7 +108,9 @@ const FormField = <
   );
 };
 
-// custom hook
+/**
+ * Custom hook to get states and other infos within a FormField
+ */
 const useFormCustom = () => {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
@@ -92,13 +130,13 @@ const useFormCustom = () => {
     formItemId: `${id}-form-item`,
     formDescriptionId: `${id}-form-item-description`,
     formMessageId: `${id}-form-item-message`,
-    // field-level state
     ...fieldState,
-    // form-level state
-    formState,
   };
 };
 
+/**
+ * Wrapper to wrap each field's rendering components
+ */
 const FormItem = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
   ({ className, ...props }, ref) => {
     const id = React.useId();
@@ -117,6 +155,10 @@ const FormItem = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
 );
 FormItem.displayName = "FormItem";
 
+/**
+ * Optional if label is not included in input field
+ * If FormLabel is use, FormControl must be used to wrap the children to let label control the children
+ */
 const FormLabel = React.forwardRef<
   HTMLLabelElement,
   React.ComponentProps<typeof Label> & { required?: boolean }
@@ -135,6 +177,9 @@ const FormLabel = React.forwardRef<
 });
 FormLabel.displayName = "FormLabel";
 
+/**
+ * Wrapper to used with FormLabel and provide accessibility info
+ */
 const FormControl = React.forwardRef<
   HTMLElement,
   React.ComponentProps<typeof Slot>
@@ -158,6 +203,9 @@ const FormControl = React.forwardRef<
 });
 FormControl.displayName = "FormControl";
 
+/**
+ * Optional if you want to render messages (e.g., error message)
+ */
 const FormMessage = React.forwardRef<
   HTMLParagraphElement,
   React.ComponentProps<"p">
@@ -181,6 +229,7 @@ const FormMessage = React.forwardRef<
 });
 FormMessage.displayName = "FormMessage";
 
+// to avoid type issues
 export const Form = FormComponent as <T extends FieldValues>(
   props: FormProps<T> & { ref?: React.Ref<HTMLFormElement> },
 ) => React.ReactElement;
