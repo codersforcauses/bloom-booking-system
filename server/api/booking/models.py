@@ -16,10 +16,13 @@ class Booking(models.Model):
     visitor_email = models.CharField(max_length=100)
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
-    recurrence_rule = models.CharField(max_length=100, blank=True)       # return "" when there is no recurrence rule
-    status = models.CharField(max_length=9, choices=STATUS_CHOICES)
+    # return "" when there is no recurrence rule
+    recurrence_rule = models.CharField(max_length=100, blank=True)
+    status = models.CharField(
+        max_length=9, choices=STATUS_CHOICES, default="CONFIRMED")
     google_event_id = models.CharField(max_length=100, blank=True)
-    cancel_reason = models.TextField(blank=True)                         # return "" when it is not cancelled
+    # return "" when it is not cancelled
+    cancel_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
