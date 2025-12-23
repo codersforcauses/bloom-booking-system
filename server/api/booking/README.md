@@ -1,25 +1,29 @@
 # Booking API Documentation
 
 ## Introduction
-Backend API for create a booking, list and filter bookings for admin, list one's bookings for users, update a booking and cancel a booking. 
+
+Backend API for creating bookings, listing and filtering bookings for admin, retrieving bookings for users, updating bookings and canceling bookings with Google Calendar integration.
 
 ## Endpoints
-1. POST /api/bookings
-- Purpose: Create a new booking for a room.
-- Access：Everyone
-- Sample Request Body (with google_event_id to be removed after google calendar integration):
-{
+
+### 1. POST /api/bookings/
+
+- **Purpose**: Create a new booking for a room with Google Calendar integration.
+- **Access**: Everyone
+- **Request Body**:
+  ```json
+  {
     "room_id": 1,
     "visitor_name": "Alice Johnson",
     "visitor_email": "alice@example.com",
     "start_datetime": "2025-11-03T10:00:00Z",
     "end_datetime": "2025-11-03T11:00:00Z",
-    "recurrence_rule": "",
-    "status": "CONFIRMED",
-    "google_event_id": "abc123",
-}
-- Sample Response:
-{
+    "recurrence_rule": ""
+  }
+  ```
+- **Success Response** (201 Created):
+  ```json
+  {
     "id": 1,
     "room": { "id": 10, "name": "Meeting Room A" },
     "visitor_name": "Alice Johnson",
@@ -28,20 +32,34 @@ Backend API for create a booking, list and filter bookings for admin, list one's
     "end_datetime": "2025-11-03T11:00:00Z",
     "recurrence_rule": "",
     "status": "CONFIRMED",
-    "google_event_id": "abc123",
+    "google_event_id": "abc123xyz",
     "created_at": "2025-10-31T06:10:00Z"
-}
+  }
+  ```
+- **Error Response** (500 Internal Server Error):
+  ```json
+  {
+    "detail": "Failed to create Google Calendar event. Error: [error details]"
+  }
+  ```
 
-2. GET /api/bookings
-- Purpose: Get all bookings for admin. Allow admins to optionally filter by visitor name, email, room name or date.
-- Access：Admin
-- Query Params: room_id, date, visitor_name (case insensitive, allow partial qurey), visitor_email (case insensitive). Example: ?room_id=1&date=2025-11-03&visitor_name=alice&visitor_email=alice@example.com
-- Sample Response:
-{
+### 2. GET /api/bookings/
+
+- **Purpose**: Get all bookings for admin with optional filtering.
+- **Access**: Admin (authenticated users)
+- **Query Parameters**:
+  - `room_id` (number): Filter by room ID
+  - `date` (YYYY-MM-DD): Filter by booking date
+  - `visitor_name` (string): Case-insensitive partial match
+  - `visitor_email` (string): Case-insensitive exact match
+- **Example**: `?room_id=1&date=2025-11-03&visitor_name=alice&visitor_email=alice@example.com`
+- **Success Response** (200 OK):
+  ```json
+  {
     "count": 1,
     "next": null,
     "previous": null,
-    "results":  [
+    "results": [
       {
         "id": 1,
         "room": { "id": 10, "name": "Meeting Room A" },
@@ -51,25 +69,29 @@ Backend API for create a booking, list and filter bookings for admin, list one's
         "end_datetime": "2025-11-03T11:00:00Z",
         "recurrence_rule": "",
         "status": "CONFIRMED",
-        "google_event_id": "abc123",
+        "google_event_id": "abc123xyz",
         "created_at": "2025-10-31T06:10:00Z"
       }
     ]
-}
-- Empty Response:
-{
-    "count": 0,
-    "next": null,
-    "previous": null,
-    "results": []
-}
+  }
+  ```
 
-3. GET /api/bookings/{id} - for admin
-- Purpose: Retrieve the detail of a booking for admin by id. 
-- Access: Admin
-- Sample Response:
-url: /api/bookings/1
-[
+### 3. GET /api/bookings/ (with visitor_email)
+
+- **Purpose**: Get all bookings for a specific visitor.
+- **Access**: Everyone (when `visitor_email` query parameter is provided)
+- **Query Parameters**:
+  - `visitor_email` (required): Case-insensitive exact match
+- **Example**: `?visitor_email=alice@example.com`
+- **Success Response**: Same format as admin endpoint above
+
+### 4. GET /api/bookings/{id}/ (Admin)
+
+- **Purpose**: Retrieve a specific booking by ID for admin.
+- **Access**: Admin (authenticated users)
+- **URL**: `/api/bookings/1/`
+- **Success Response** (200 OK):
+  ```json
   {
     "id": 1,
     "room": { "id": 10, "name": "Meeting Room A" },
@@ -79,69 +101,102 @@ url: /api/bookings/1
     "end_datetime": "2025-11-03T11:00:00Z",
     "recurrence_rule": "",
     "status": "CONFIRMED",
-    "google_event_id": "abc123",
+    "google_event_id": "abc123xyz",
     "created_at": "2025-10-31T06:10:00Z"
   }
-]
+  ```
 
-4. GET /api/bookings/bookings/{id} - for everyone
-- Purpose: Retrieve the detail of a booking by id and visitor_email. When the id and visitor_email do not match to a single object, return 404 Not Found Error. 
-- Access：Everyone
-- Query Params: visitor_email. Example:?visitor_email=alice@example.com
-- Sample Response:
-url: /api/bookings/1?visitor_email=alice@example.com
-[
+### 5. GET /api/bookings/{id}/ (Visitor)
+
+- **Purpose**: Retrieve a specific booking by ID and visitor email.
+- **Access**: Everyone (with visitor_email verification)
+- **Query Parameters**:
+  - `visitor_email` (required): Must match the booking's visitor email
+- **URL**: `/api/bookings/1/?visitor_email=alice@example.com`
+- **Success Response** (200 OK): Same format as admin endpoint
+- **Error Response** (404 Not Found): When ID and visitor_email don't match
+
+### 6. PATCH /api/bookings/{id}/ (Update)
+
+- **Purpose**: Update (reschedule) a booking with Google Calendar sync.
+- **Access**: Everyone (visitor_email verification required)
+- **Request Body**:
+  ```json
+  {
+    "visitor_email": "alice@example.com",
+    "start_datetime": "2025-11-03T12:00:00Z",
+    "end_datetime": "2025-11-03T13:00:00Z",
+    "recurrence_rule": ""
+  }
+  ```
+- **Success Response** (200 OK):
+  ```json
   {
     "id": 1,
-    "room": { "id": 10, "name": "Meeting Room A" },
-    "visitor_name": "Alice Johnson",
-    "visitor_email": "alice@example.com",
-    "start_datetime": "2025-11-03T10:00:00Z",
-    "end_datetime": "2025-11-03T11:00:00Z",
-    "recurrence_rule": "",
     "status": "CONFIRMED",
-    "google_event_id": "abc123",
-    "created_at": "2025-10-31T06:10:00Z"
+    "updated_at": "2025-10-31T06:20:00Z"
   }
-]
+  ```
+- **Error Response** (400 Bad Request):
+  ```json
+  {
+    "detail": "Visitor email is required."
+  }
+  ```
 
-5. PUT /api/bookings/{id}
-- Purpose: Update (reschedule) a booking
-- Access：Everyone
-- Sample Request Body:
-{
-  "start_datetime": "2025-11-03T12:00:00Z",
-  "end_datetime": "2025-11-03T13:00:00Z"
-  "recurrence_rule": "",
-}
-- Sample Response:
-{
-  "id": 1,
-  "status": "CONFIRMED",
-  "updated_at": "2025-10-31T06:20:00Z"
-}
+### 7. PATCH /api/bookings/{id}/ (Cancel)
 
-6. DELETE /api/bookings/{id}
-- Purpose: Cancel a booking
-- Access：Everyone
-- Sample Request Body (when no visitor_email or visitor_email is unmatched, users get 400 Bad Request):
-{
-  "visitor_email": "alice@example.com",
-  "cancel_reason": "Meeting postponed"
-}
-- Sample Response:
-{
-  "id": 55,
-  "status": "CANCELLED",
-  "cancel_reason": "Meeting postponed",
-  "updated_at": "2025-10-31T06:25:00Z"
-}
+- **Purpose**: Cancel a booking and delete from Google Calendar.
+- **Access**: Everyone (visitor_email verification required)
+- **Request Body**:
+  ```json
+  {
+    "visitor_email": "alice@example.com",
+    "cancel_reason": "Meeting postponed"
+  }
+  ```
+- **Success Response** (200 OK):
+  ```json
+  {
+    "id": 1,
+    "status": "CANCELLED",
+    "cancel_reason": "Meeting postponed",
+    "updated_at": "2025-10-31T06:25:00Z"
+  }
+  ```
+- **Error Responses**:
+  - **400 Bad Request**: `{"detail": "Visitor email is incorrect."}`
+  - **404 Not Found**: When booking doesn't exist or visitor_email doesn't match
 
-7. GET /api/bookings/search
-- Purpose: search bookings for visitors. Visitor: can only get result by filtering by email (to find bookings).
-- Access：Everyone
-- Query Params: visitor_email. Example:?visitor_email=alice@example.com
-- Sample Response: Same as GET /api/bookings
+## Important Notes
 
-## Todo:
-- Integrate Google calendar API module into booking creation process to generate a google event id (which can be updated in serializers.BookingSerializer.create)
+### HTTP Methods
+
+- **Supported**: `GET`, `POST`, `PATCH`
+- **Not Supported**: `PUT`, `DELETE` (returns 405 Method Not Allowed)
+
+### Google Calendar Integration
+
+- **Create**: Automatically creates Google Calendar event and stores `google_event_id`
+- **Update**: Syncs changes to Google Calendar event
+- **Cancel**: Deletes Google Calendar event and clears `google_event_id`
+
+### Security
+
+- **Admin Access**: Requires authentication for unfiltered listing and retrieval
+- **Visitor Access**: Requires `visitor_email` parameter for access control
+- **Update/Cancel**: Validates `visitor_email` matches booking owner
+- **Privacy**: Returns 404 instead of 403 to prevent information disclosure
+
+### Error Handling
+
+- **Validation Errors**: Return 400 Bad Request with field-specific errors
+- **Google Calendar Errors**: Return 500 Internal Server Error with error details
+- **Authentication Errors**: Return 401 Unauthorized
+- **Permission Errors**: Return 404 Not Found (for privacy)
+
+### Data Validation
+
+- `end_datetime` must be greater than `start_datetime`
+- `cancel_reason` is required when status is "CANCELLED"
+- Email format validation on `visitor_email`

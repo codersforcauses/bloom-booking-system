@@ -35,13 +35,32 @@ class BookingSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Booking
         fields = '__all__'
-        read_only_fields = ['google_event_id']      # google_event_id cannot be set from clients
+        # google_event_id cannot be set from clients
+        read_only_fields = ['google_event_id']
 
     # visitor emial is not editable in a serializer level
     def validate_visitor_email(self, value):
         if self.instance and value != self.instance.visitor_email:
             raise serializers.ValidationError("Visitor email is not editable.")
         return value
+
+    def validate(self, data):
+        """Validate that end_datetime is greater than start_datetime."""
+        start_datetime = data.get('start_datetime')
+        end_datetime = data.get('end_datetime')
+
+        # For updates, get existing values if not provided
+        if self.instance:
+            start_datetime = start_datetime or self.instance.start_datetime
+            end_datetime = end_datetime or self.instance.end_datetime
+
+        if start_datetime and end_datetime:
+            if end_datetime <= start_datetime:
+                raise serializers.ValidationError({
+                    'end_datetime': 'End datetime must be greater than start datetime.'
+                })
+
+        return data
 
 
 # though dynamic fields are supported, define a separate serializer for list view for reusability
