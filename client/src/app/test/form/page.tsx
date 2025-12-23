@@ -1,14 +1,42 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { ControlledField, Form, FormMethodsType } from "@/components/form";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  useFormCustom,
+} from "@/components/ui/form";
 import InputField from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-const ageSchema = z.object({
+const FREQUENCIES = [
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Monthly", value: "monthly" },
+];
+
+const AMENITIES = [
+  "Audio",
+  "Video",
+  "White Board",
+  "HDMI",
+  "Projector",
+  "Speaker Phone",
+];
+
+const schema = z.object({
+  firstname: z.string().min(1, "Firstname is required"),
+  lastname: z.string().min(1, "Lastname is required"),
+  middlename: z.string().optional(),
   age: z
     .string()
     .min(1, "Age is required")
@@ -22,26 +50,12 @@ const ageSchema = z.object({
         message: "Age must be between 1 and 120",
       },
     ),
-});
-
-const schema = ageSchema.extend({
-  firstname: z.string().min(1, "Firstname is required"),
-  lastname: z.string().min(1, "Lastname is required"),
-  middlename: z.string().optional(),
-});
-
-const extendedSchema = schema.extend({
   frequency: z.enum(["daily", "weekly", "monthly"], {
     error: () => ({ message: "Invalid frequency" }),
   }),
   amenities: z
     .array(
-      z.enum(
-        ["Audio", "Video", "White Board", "HDMI", "Projector", "Speaker Phone"],
-        {
-          error: () => ({ message: "Invalid amenities" }),
-        },
-      ),
+      z.enum(AMENITIES, { error: () => ({ message: "Invalid amenities" }) }),
     )
     .optional(),
   recurrenceDate: z.enum(["Monday", "Tuesday", "Wednesday"], {
@@ -49,139 +63,163 @@ const extendedSchema = schema.extend({
   }),
 });
 
-const FREQUENCIES = [
-  { label: "Daily", value: "daily" },
-  { label: "Weekly", value: "weekly" },
-  {
-    label: "Monthly",
-    value: "monthly",
-  },
-];
-
-const AMENITIES = [
-  "Audio",
-  "Video",
-  "White Board",
-  "HDMI",
-  "Projector",
-  "Speaker Phone",
-];
-
-const handleSubmit = (
-  data: z.infer<typeof ageSchema>,
-  methods?: FormMethodsType<typeof data>,
-) => {
-  methods?.setError("root", { message: "Custom API error message" });
-};
-
 export default function TestFormPage() {
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    mode: "onChange",
+  });
+
   return (
-    <>
-      {/* Default error handling */}
-      <div className="mx-auto w-full max-w-xl px-10 py-10">
-        <p className="title text-center">Form 1 (default error handling)</p>
-        <Form
-          schema={extendedSchema}
-          onSubmit={(data) => {
-            alert("submitted data:\n" + JSON.stringify(data));
-          }}
-          // onError={(errors) => alert("errors:\n"+JSON.stringify(errors))}
-        >
-          <div className="flex flex-row gap-3">
-            <ControlledField<string> name="firstname">
-              {({ value, onChange }) => (
+    <div className="mx-auto w-full max-w-xl px-10 py-10">
+      <Form
+        form={form}
+        onSubmit={form.handleSubmit((data) => {
+          alert("submitted data:\n" + JSON.stringify(data));
+        })}
+      >
+        <div className="flex flex-row gap-3">
+          <FormField
+            name="firstname"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <InputField
+                    kind="text"
+                    label="First Name"
+                    name="firstname"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    placeholder="First Name"
+                    required={true}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="middlename"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <InputField
+                    kind="text"
+                    label="Middle Name"
+                    name="middlename"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    placeholder="Middle Name"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="lastname"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <InputField
+                    kind="text"
+                    label="Last Name"
+                    name="lastname"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    placeholder="Last Name"
+                    required={true}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          name="age"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
                 <InputField
-                  kind="text"
-                  label="First Name"
-                  name="firstname"
-                  value={value}
-                  onChange={onChange}
-                  placeholder="First Name"
+                  kind="number"
+                  label="Age"
+                  name="age"
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="Age"
                   required={true}
                 />
-              )}
-            </ControlledField>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            <ControlledField<string> name="middlename">
-              {({ value, onChange }) => (
+        {/* Frequency */}
+        <FormField
+          name="frequency"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
                 <InputField
-                  kind="text"
-                  label="Middle Name"
-                  name="middlename"
-                  value={value}
-                  onChange={onChange}
-                  placeholder="Middle Name"
-                />
-              )}
-            </ControlledField>
-
-            <ControlledField<string> name="lastname">
-              {({ value, onChange }) => (
-                <InputField
-                  kind="text"
-                  label="Last Name"
-                  name="lastname"
-                  value={value}
-                  onChange={onChange}
-                  placeholder="Last Name"
+                  kind="select"
+                  label="Frequency"
+                  name="frequency"
+                  options={FREQUENCIES}
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="Select frequency"
                   required={true}
                 />
-              )}
-            </ControlledField>
-          </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <ControlledField<string> name="age">
-            {({ value, onChange }) => (
-              <InputField
-                kind="number"
-                label="Age"
-                name="age"
-                value={value}
-                onChange={onChange}
-                placeholder="Age"
-                required={true}
-              />
-            )}
-          </ControlledField>
+        {/* Amenities (badges / multiselect) */}
+        <FormField
+          name="amenities"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <InputField
+                  kind="badge"
+                  label="Amenities"
+                  name="amenities"
+                  options={AMENITIES}
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  placeholder="Select Amenities"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <ControlledField<string> name="frequency">
-            {({ value, onChange }) => (
-              <InputField
-                kind="select"
-                label="Frequency"
-                name="frequency"
-                options={FREQUENCIES}
-                value={value}
-                onChange={onChange}
-                placeholder="Select frequency"
-                required={true}
-              />
-            )}
-          </ControlledField>
-
-          <ControlledField<string[]> name="amenities">
-            {({ value, onChange }) => (
-              <InputField
-                kind="badge"
-                label="Amenities"
-                name="amenities"
-                options={AMENITIES}
-                value={value}
-                onChange={onChange}
-                placeholder="Select Amenities"
-              />
-            )}
-          </ControlledField>
-
-          <ControlledField<string> name="recurrenceDate">
-            {({ value, onChange }) => (
-              <>
-                <p className="body-sm-bold">
-                  Recurrence Date <span className="text-bloom-red">*</span>
-                </p>
+        {/* Recurrence Date (Radio Group) */}
+        <FormField
+          name="recurrenceDate"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-bold">
+                Recurrence Date <span className="text-red-600">*</span>
+              </FormLabel>
+              <FormControl>
                 <RadioGroup
-                  value={value}
-                  onValueChange={onChange}
+                  value={field.value}
+                  onValueChange={field.onChange}
                   className="flex space-x-4"
                 >
                   <div className="space-x-2">
@@ -199,275 +237,30 @@ export default function TestFormPage() {
                     <Label htmlFor="Wednesday">Wednesday</Label>
                   </div>
                 </RadioGroup>
-              </>
-            )}
-          </ControlledField>
-
-          {/* Button */}
-          <div className="ml-auto space-x-3 space-y-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => alert(JSON.stringify("Cancel button triggered"))}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="confirm">
-              Okay
-            </Button>
-          </div>
-        </Form>
-      </div>
-
-      {/* onError function */}
-      <div className="mx-auto w-full max-w-xl px-10 py-10">
-        <p className="title text-center">
-          Form 2 (customized onError function)
-        </p>
-        <Form
-          schema={schema}
-          onSubmit={(data) => {
-            alert("submitted data:\n" + JSON.stringify(data));
-          }}
-          onError={(errors) => alert("errors:\n" + JSON.stringify(errors))}
-          className="bg-background"
-        >
-          <div className="flex flex-row gap-3">
-            <ControlledField<string> name="firstname">
-              {({ value, onChange }) => (
-                <InputField
-                  kind="text"
-                  label="First Name"
-                  name="firstname"
-                  value={value}
-                  onChange={onChange}
-                  placeholder="First Name"
-                  required={true}
-                />
-              )}
-            </ControlledField>
-
-            <ControlledField<string> name="middlename">
-              {({ value, onChange }) => (
-                <InputField
-                  kind="text"
-                  label="Middle Name"
-                  name="middlename"
-                  value={value}
-                  onChange={onChange}
-                  placeholder="Middle Name"
-                />
-              )}
-            </ControlledField>
-
-            <ControlledField<string> name="lastname">
-              {({ value, onChange }) => (
-                <InputField
-                  kind="text"
-                  label="Last Name"
-                  name="lastname"
-                  value={value}
-                  onChange={onChange}
-                  placeholder="Last Name"
-                  required={true}
-                />
-              )}
-            </ControlledField>
-          </div>
-
-          <ControlledField<string> name="age">
-            {({ value, onChange }) => (
-              <InputField
-                kind="number"
-                label="Age"
-                name="age"
-                value={value}
-                onChange={onChange}
-                placeholder="Age"
-                required={true}
-              />
-            )}
-          </ControlledField>
-
-          {/* Button */}
-          <div className="ml-auto space-x-3 space-y-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => alert(JSON.stringify("Cancel button triggered"))}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="confirm">
-              Okay
-            </Button>
-          </div>
-        </Form>
-      </div>
-
-      {/* Check validity via methods.formState.isValid and display inline error */}
-      <div className="mx-auto w-full max-w-xl px-10 py-10">
-        <p className="title text-center">
-          Form 3 (Check validity via methods.formState.isValid and display
-          inline error)
-        </p>
-        <Form
-          schema={schema}
-          onSubmit={(data) => {
-            alert("submitted data:\n" + JSON.stringify(data));
-          }}
-          onError={(errors) => alert("errors:\n" + JSON.stringify(errors))}
-          className="bg-background"
-        >
-          {(methods) => (
-            <>
-              <div className="flex flex-row gap-3">
-                <ControlledField<string> name="firstname">
-                  {({ value, onChange, error }) => (
-                    <div className="flex flex-col">
-                      <InputField
-                        kind="text"
-                        label="First Name"
-                        name="firstname"
-                        value={value}
-                        onChange={onChange}
-                        placeholder="First Name"
-                        required={true}
-                      />
-                      {error ? <p className="text-red-500">{error}</p> : null}
-                    </div>
-                  )}
-                </ControlledField>
-
-                <ControlledField<string> name="middlename">
-                  {({ value, onChange, error }) => (
-                    <div className="flex flex-col">
-                      <InputField
-                        kind="text"
-                        label="Middle Name"
-                        name="middlename"
-                        value={value}
-                        onChange={onChange}
-                        placeholder="Middle Name"
-                      />
-                      {error ? <p className="text-red-500">{error}</p> : null}
-                    </div>
-                  )}
-                </ControlledField>
-
-                <ControlledField<string> name="lastname">
-                  {({ value, onChange, error }) => (
-                    <div className="flex flex-col">
-                      <InputField
-                        kind="text"
-                        label="Last Name"
-                        name="lastname"
-                        value={value}
-                        onChange={onChange}
-                        placeholder="Last Name"
-                      />
-                      {error ? <p className="text-red-500">{error}</p> : null}
-                    </div>
-                  )}
-                </ControlledField>
-              </div>
-
-              <ControlledField<string> name="age">
-                {({ value, onChange, error }) => (
-                  <div className="flex flex-col">
-                    <InputField
-                      kind="number"
-                      label="Age"
-                      name="age"
-                      value={value}
-                      onChange={onChange}
-                      placeholder="Age"
-                    />
-                    {error ? <p className="text-red-500">{error}</p> : null}
-                  </div>
-                )}
-              </ControlledField>
-
-              {/* Button */}
-              <div className="ml-auto space-x-3 space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    alert(JSON.stringify("Cancel button triggered"))
-                  }
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="confirm"
-                  disabled={!methods.formState.isValid} // Check validity of the form in general
-                >
-                  Okay
-                </Button>
-              </div>
-            </>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </Form>
-      </div>
+        />
 
-      {/* Mock API error */}
-      <div className="mx-auto w-full max-w-xl px-10 py-10">
-        <p className="title text-center">Form 4 (Mock API error)</p>
-        <Form
-          schema={ageSchema}
-          onSubmit={handleSubmit}
-          onError={(errors) => alert("errors:\n" + JSON.stringify(errors))}
-          className="bg-background"
-        >
-          {(methods) => (
-            <>
-              <ControlledField<string> name="age">
-                {({ value, onChange, error }) => (
-                  <div className="flex flex-col">
-                    <InputField
-                      kind="number"
-                      label="Age"
-                      name="age"
-                      value={value}
-                      onChange={onChange}
-                      placeholder="Age"
-                    />
-                    {error ? <p className="text-red-500">{error}</p> : null}
-                  </div>
-                )}
-              </ControlledField>
-
-              {methods.formState.errors?.root?.message ? (
-                <p className="text-red-500">
-                  {methods.formState.errors?.root?.message}
-                </p>
-              ) : null}
-
-              {/* Button */}
-              <div className="ml-auto space-x-3 space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    alert(JSON.stringify("Cancel button triggered"))
-                  }
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="confirm"
-                  disabled={!methods.formState.isValid}
-                >
-                  Okay
-                </Button>
-              </div>
-            </>
-          )}
-        </Form>
-      </div>
-    </>
+        {/* Buttons */}
+        <div className="ml-auto space-x-3 space-y-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => alert(JSON.stringify("Cancel button triggered"))}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="confirm"
+            disabled={!form.formState.isValid}
+          >
+            Okay
+          </Button>
+        </div>
+      </Form>
+    </div>
   );
 }
