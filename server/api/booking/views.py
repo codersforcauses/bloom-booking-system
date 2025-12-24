@@ -4,6 +4,7 @@ from .serializers import BookingSerializer, BookingListSerializer
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter, SearchFilter
 import django_filters
 from rest_framework import viewsets, status
 from .google_calendar.events import create_event, update_event, delete_event
@@ -18,24 +19,32 @@ logger = logging.getLogger(__name__)
 
 
 class ListBookingFilter(django_filters.FilterSet):
-    room_id = django_filters.NumberFilter()
-    date = django_filters.DateFilter(
-        field_name='start_datetime', lookup_expr='date')
+    room = django_filters.CharFilter(
+        field_name='room__name', lookup_expr='icontains')
     visitor_name = django_filters.CharFilter(
         lookup_expr='icontains')       # contain + case insensitive
     visitor_email = django_filters.CharFilter(
-        lookup_expr='iexact')         # exact + case insensitive
+        lookup_expr='iexact')
 
     class Meta:
         model = Booking
-        fields = ["room_id", "date", "visitor_name", "visitor_email"]
+        fields = ["visitor_name", "visitor_email"]
 
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.select_related(
-        "room")   # for better performance
-    filter_backends = [DjangoFilterBackend]
+        "room").order_by('-start_datetime', '-created_at')
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
     filterset_class = ListBookingFilter
+
+    # Ordering: Allow users to order by these fields
+    ordering_fields = ['start_datetime', 'end_datetime',
+                       'created_at', 'updated_at', 'room__name']
+    ordering = ['-start_datetime', '-created_at']  # Default ordering
+
+    # Search: Allow users to search across these fields
+    search_fields = ['visitor_name', 'room__name']
+
     http_method_names = ["get", "post", "patch"]
 
     # for put and delete methods, use BookingSerializer for customization
