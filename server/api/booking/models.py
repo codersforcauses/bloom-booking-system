@@ -13,7 +13,7 @@ class Booking(models.Model):
     id = models.AutoField(primary_key=True)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     visitor_name = models.CharField(max_length=100)
-    visitor_email = models.CharField(max_length=100)
+    visitor_email = models.EmailField(max_length=100)
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
     # return "" when there is no recurrence rule
