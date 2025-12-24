@@ -8,6 +8,7 @@ import django_filters
 from rest_framework import viewsets, status
 from .google_calendar.events import create_event, update_event, delete_event
 from googleapiclient.errors import HttpError
+from django.db import transaction
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,8 +36,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         "room")   # for better performance
     filter_backends = [DjangoFilterBackend]
     filterset_class = ListBookingFilter
-    # PUT and DELETE is forbiddened
-    http_method_names = ["get", "post",  "patch"]
+    http_method_names = ["get", "post", "patch"]
 
     # for put and delete methods, use BookingSerializer for customization
     def get_serializer_class(self):
@@ -69,54 +69,52 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     # custom create logic to integrate Google calendar api
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        booking = serializer.save()
-        event_data = self._build_event_data(booking)
+        """Create booking with Google Calendar integration and transaction rollback."""
         try:
-            created_event = create_event(event_data)
-            booking.google_event_id = created_event["id"]
-            booking.save(update_fields=["google_event_id"])
+            # Step 1: Validate booking data
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            # Step 2 & 3: Perform both Google Calendar creation and DB save atomically
+            with transaction.atomic():
+                # Save booking to database first
+                booking = serializer.save()
+
+                # Create Google Calendar event
+                event_data = self._build_event_data(booking)
+                try:
+                    created_event = create_event(event_data)
+                    booking.google_event_id = created_event["id"]
+                    booking.save(update_fields=["google_event_id"])
+                except HttpError as error:
+                    logger.error(
+                        f"Failed to create Google Calendar event: {error}")
+                    # This will cause the transaction to rollback
+                    raise Exception({
+                        "detail": "Failed to create Google Calendar event. Please try again later."
+                    })
+                except Exception as error:
+                    logger.error(
+                        f"Failed to create Google Calendar event: {error}")
+                    # This will cause the transaction to rollback
+                    raise Exception({
+                        "detail": "Failed to create Google Calendar event. Please try again later."
+                    })
+
+            # If we get here, both Google Calendar and DB creation succeeded
             response_serializer = self.get_serializer(booking)
-            return Response(response_serializer.data, status=201)
-        except HttpError as error:
-            return Response(
-                {"detail": f"Failed to create Google Calendar event. Error: {error}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+        except ValidationError:
+            # Re-raise ValidationError (includes Google Calendar failures)
+            raise
         except Exception as error:
+            # Handle any other unexpected errors
+            logger.error(f"Unexpected error during booking creation: {error}")
             return Response(
-                {"detail": f"Unexpected error while creating Google Calendar event. Error: {error}"},
+                {"detail": f"Failed to create booking. Error: {error}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-    # helper function for update booking
-    def _perform_update(self, request, instance):
-        cancel_reason = request.data.get('cancel_reason')
-        status = request.data.get('status')
-        if status == "CANCELLED" and not cancel_reason:
-            raise ValidationError({
-                "detail": "Cancel reason is necessary to cancel a booking."
-            })
-
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        booking = serializer.save()
-
-        if booking.google_event_id:
-            event_data = self._build_event_data(booking)
-            try:
-                update_event(booking.google_event_id, event_data)
-            except HttpError as error:
-                logger.error(f"Google Calendar update fails: {error}")
-            except Exception as error:
-                logger.error(
-                    f"Unexpected error while updating Google Calendar event: {error}")
-
-        response_serializer = BookingSerializer(
-            booking, fields=('id', 'status', 'updated_at'))
-        return Response(response_serializer.data)
 
     # custom PATCH (including both booking update and deletion)
     def partial_update(self, request, *args, **kwargs):
@@ -127,42 +125,111 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "detail": "Visitor email is required."
             })
 
+        if visitor_email != instance.visitor_email:
+            raise ValidationError({
+                "detail": "Visitor email is incorrect."
+            })
+
         cancel_reason = request.data.get('cancel_reason')
+
+        # Check if this is a cancellation request
         if cancel_reason and cancel_reason.strip():
-            if visitor_email and visitor_email != instance.visitor_email:
+            # Handle cancellation with transaction and Google Calendar deletion
+            try:
+                with transaction.atomic():
+                    # Delete from Google Calendar first, inside the transaction
+                    if instance.google_event_id:
+                        try:
+                            delete_event(instance.google_event_id)
+                        except HttpError as error:
+                            logger.error(
+                                f"Failed to delete Google Calendar event: {error}"
+                            )
+                            raise Exception(
+                                "Failed to delete Google Calendar event. Please try again later."
+                            )
+                        except Exception as error:
+                            logger.error(
+                                f"Failed to delete Google Calendar event: {error}"
+                            )
+                            raise Exception(
+                                "Failed to delete Google Calendar event. Please try again later."
+                            )
+
+                    # Update database (serializer will auto-set status to CANCELLED)
+                    serializer = self.get_serializer(
+                        instance, data=request.data, partial=True)
+                    serializer.is_valid(raise_exception=True)
+                    booking = serializer.save()
+
+                    # Clear Google event ID after successful deletion
+                    booking.google_event_id = ""
+                    booking.save(update_fields=["google_event_id"])
+
+                    response_serializer = BookingSerializer(booking, fields=(
+                        'id', 'status', 'cancel_reason', 'updated_at'))
+                    return Response(response_serializer.data)
+
+            except ValidationError:
+                raise
+            except Exception as error:
                 raise ValidationError({
-                    "detail": "Visitor email is incorrect."
+                    "detail": f"Failed to cancel booking. Error: {error}"
                 })
 
-            data = {
-                "cancel_reason": cancel_reason,
-                "status": "CANCELLED"
-            }
+        # Regular update (not cancellation)
+        try:
+            with transaction.atomic():
+                # Step 1: Prepare updated booking data but do not save yet
+                serializer = self.get_serializer(
+                    instance, data=request.data, partial=True)
+                serializer.is_valid(raise_exception=True)
 
-            serializer = self.get_serializer(instance, data=data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            booking = serializer.save()
-            # for cancel action, delete google_event_id
-            if booking.google_event_id:
-                try:
-                    delete_event(booking.google_event_id)
-                except HttpError as error:
-                    logger.error(f"Google Calendar deletion fails: {error}")
-                except Exception as error:
-                    logger.error(
-                        f"Unexpected error while deleting Google Calendar event: {error}")
+                # Step 2: Sync to Google Calendar with updated data before saving
+                temp_booking = serializer.update(
+                    instance, serializer.validated_data)
+                if temp_booking.google_event_id:
+                    event_data = self._build_event_data(temp_booking)
+                    try:
+                        update_event(
+                            temp_booking.google_event_id, event_data)
+                    except HttpError as error:
+                        # Raise exception to trigger rollback
+                        logger.error(
+                            f"Failed to update Google Calendar event: {error}"
+                        )
+                        raise Exception(
+                            "Failed to update Google Calendar event. Please try again later."
+                        )
+                    except Exception as error:
+                        # Raise exception to trigger rollback
+                        logger.error(
+                            f"Failed to update Google Calendar event: {error}"
+                        )
+                        raise Exception(
+                            "Failed to update Google Calendar event. Please try again later."
+                        )
 
-            booking.google_event_id = ""
-            booking.save(update_fields=["google_event_id"])
-            response_serializer = BookingSerializer(booking, fields=(
-                'id', 'status', 'cancel_reason', 'updated_at'))
-            return Response(response_serializer.data)
+                # Step 3: Save the booking after successful Google Calendar update using serializer.save()
+                updated_booking = serializer.save()
 
-        # else, it is partial update
-        return self._perform_update(request, instance)
+                # If we get here, both Google Calendar and DB updates succeeded
+                response_serializer = BookingSerializer(
+                    updated_booking, fields=('id', 'status', 'updated_at'))
+                return Response(response_serializer.data)
+
+        except ValidationError:
+            # Re-raise ValidationError (includes Google Calendar failures)
+            raise
+        except Exception as error:
+            # Handle any other unexpected errors
+            logger.error(f"Unexpected error during booking update: {error}")
+            return Response(
+                {"detail": "Failed to update Google Calendar event. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     # helper method for google calendar data construction
-
     def _build_event_data(self, booking):
         return {
             "summary": f"Booking of {booking.room.name} - {booking.visitor_name}",

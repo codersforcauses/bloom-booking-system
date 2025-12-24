@@ -293,19 +293,6 @@ class BookingViewTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_booking_update_fails_with_status_cancelled_but_no_cancel_reason(self):
-        """Test booking update fails when setting status to CANCELLED without cancel_reason."""
-        payload = {
-            "visitor_email": self.booking.visitor_email,
-            "status": "CANCELLED"
-        }
-
-        url = f'/api/bookings/{self.booking.id}/'
-        response = self.client.patch(url, payload, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Cancel reason is necessary", response.json()["detail"])
-
     # ==================== CANCELLATION TESTS (PATCH with cancel_reason) ====================
 
     @patch('api.booking.views.delete_event')
