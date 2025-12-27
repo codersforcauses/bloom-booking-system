@@ -116,7 +116,11 @@ api.interceptors.response.use(
 
     try {
       const refreshToken = getRefreshToken();
-      if (!refreshToken) throw new Error("No refresh token found");
+      if (!refreshToken) {
+        console.warn("No refresh token available, logging out");
+        logout();
+        return Promise.reject(new Error("No refresh token found"));
+      }
 
       // IMPORTANT: use axios here to avoid interceptor loops
       const res = await axios.post(`${BACKEND_URL}/users/refresh/`, {
@@ -124,8 +128,14 @@ api.interceptors.response.use(
       });
 
       const newAccessToken = res.data.access;
-      if (!newAccessToken) throw new Error("No access token returned");
+      // console.log("Access token refreshed", newAccessToken);
+      if (!newAccessToken) {
+        console.warn("No access token returned, logging out");
+        logout();
+        return Promise.reject(new Error("No access token returned"));
+      }
 
+      // console.log("Setting new access token:", newAccessToken);
       setAccessToken(newAccessToken);
       processQueue(null, newAccessToken);
 
@@ -162,6 +172,12 @@ const logout = () => {
     window.location.href = "/login";
   }
 };
+
+// test only
+// if (typeof window !== "undefined") {
+//   // @ts-ignore
+//   window.api = api;
+// }
 
 export default api;
 export { setAccessToken };
