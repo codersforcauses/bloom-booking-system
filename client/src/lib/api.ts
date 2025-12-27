@@ -2,38 +2,45 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const api = axios.create({ baseURL: BACKEND_URL });
 
-const api = axios.create({ baseURL: BACKEND_URL, withCredentials: true });
+// Add in memory cache for access token to reduce cookie parsing
+let inMemoryAccessToken: string | undefined = undefined;
 
-// -----If access token & refresh token in localStorage-----
-// const api = axios.create({ baseURL: BACKEND_URL });
-
-// const getAccessToken = () =>
-//   typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-
-// const setAccessToken = (accessToken: string) =>
-//   typeof window !== "undefined"
-//     ? localStorage.setItem("accessToken", accessToken)
-//     : null;
-
-// const getRefreshToken = () =>
-//   typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
-
-// const clearTokens = () => {
-//   if (typeof window === "undefined") return;
-//   localStorage.removeItem("accessToken");
-//   localStorage.removeItem("refreshToken");
-// };
-
-// -----If access token in memory-----
-let accessToken: string | null = null;
-
-const getAccessToken = () => accessToken;
-const setAccessToken = (newAccessToken: string) => {
-  accessToken = newAccessToken;
+// Helper function to get cookie by name
+const getCookie = (name: string) => {
+  return decodeURIComponent(
+    document.cookie
+      .split("; ")
+      .find((row) => row.startsWith(name + "="))
+      ?.split("=")[1] ?? "",
+  );
 };
-const clearAccessToken = () => {
-  accessToken = null;
+
+const getAccessToken = () => {
+  if (typeof window === "undefined") return;
+  if (inMemoryAccessToken) return inMemoryAccessToken;
+  inMemoryAccessToken = getCookie("accessToken");
+  return inMemoryAccessToken;
+};
+
+const setAccessToken = (accessToken: string) => {
+  if (typeof window === "undefined") return;
+  inMemoryAccessToken = accessToken;
+  document.cookie = `accessToken=${encodeURIComponent(accessToken)}; path=/; SameSite=Lax`;
+};
+
+const getRefreshToken = () => {
+  if (typeof window === "undefined") return;
+  return getCookie("refreshToken");
+};
+
+const clearTokens = () => {
+  if (typeof window === "undefined") return;
+  const base = "path=/; SameSite=Lax";
+  document.cookie = `accessToken=; Max-Age=0; ${base}`;
+  document.cookie = `refreshToken=; Max-Age=0; ${base}`;
+  inMemoryAccessToken = undefined;
 };
 
 // Handle concurrent API calls to refresh tokens
@@ -43,7 +50,7 @@ let toBeRefreshedQueue: {
   reject: (err: unknown) => void;
 }[] = [];
 
-const processQueue = (error: unknown, accessToken?: string) => {
+const processQueue = (error: AxiosError | null, accessToken?: string) => {
   toBeRefreshedQueue.forEach((promise) =>
     error ? promise.reject(error) : promise.resolve(accessToken!),
   );
@@ -73,6 +80,13 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
+    // Prevent infinite loop
+    if (error.config?.url?.includes("/users/refresh")) {
+      logout();
+      return Promise.reject(error);
+    }
+
+    // Continue only if 401 error and not already retried
     if (
       !error.config ||
       !error.response ||
@@ -100,30 +114,19 @@ api.interceptors.response.use(
 
     isRefreshing = true;
 
-    // Send refresh request
     try {
-      // -----If access token & refresh token in localStorage-----
-      // const refreshToken = getRefreshToken();
-      // if (!refreshToken) throw new Error("No refresh token");
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) throw new Error("No refresh token found");
 
       // IMPORTANT: use axios here to avoid interceptor loops
-      // const res = await axios.post(`${BACKEND_URL}/users/refresh/`, {
-      //   refresh: refreshToken,
-      // });
-
-      // -----If refresh token is http only cookie-----
-      // IMPORTANT: use axios here to avoid interceptor loops
-      const res = await axios.post(
-        `${BACKEND_URL}/users/refresh/`,
-        {},
-        { withCredentials: true },
-      );
+      const res = await axios.post(`${BACKEND_URL}/users/refresh/`, {
+        refresh: refreshToken,
+      });
 
       const newAccessToken = res.data.access;
       if (!newAccessToken) throw new Error("No access token returned");
 
       setAccessToken(newAccessToken);
-
       processQueue(null, newAccessToken);
 
       originalRequest.headers = originalRequest.headers || {};
@@ -153,12 +156,8 @@ api.interceptors.response.use(
   },
 );
 
-const logout = async () => {
-  // -----If access token & refresh token in localStorage-----
-  // clearTokens();
-
-  // -----If refresh token is http only cookie-----
-  clearAccessToken();
+const logout = () => {
+  clearTokens();
   if (typeof window !== "undefined") {
     window.location.href = "/login";
   }
