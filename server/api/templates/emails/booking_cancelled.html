@@ -1,0 +1,33 @@
+{% extends "emails/base_booking_email.html" %}
+
+{% block title %}Booking cancelled{% endblock %}
+
+{% block extra_styles %}
+  h1 {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .subtitle {
+    margin: 0 0 28px;
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.6;
+  }
+{% endblock %}
+
+{% block content %}
+  <h1>Booking cancelled!</h1>
+
+  <p class="subtitle">
+    Your {{ room_name }} booking for
+    {{ start_datetime|date:"d M Y" }} from {{ start_datetime|time:"g:i A" }}
+    to {{ end_datetime|time:"g:i A" }} has been cancelled.
+  </p>
+
+  {% if book_room_url %}
+    <a href="{{ book_room_url }}" class="button">Book room</a>
+  {% endif %}
+{% endblock %}
