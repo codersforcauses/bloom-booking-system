@@ -1,3 +1,4 @@
+from datetime import timedelta
 from .models import Booking
 from api.room.models import Room, Location, Amenity
 from rest_framework import status
@@ -7,6 +8,7 @@ from django.contrib.auth import get_user_model
 from unittest.mock import patch
 
 User = get_user_model()
+future_date = timezone.now() + timedelta(days=7)
 
 
 class BookingViewTest(APITestCase):
@@ -24,10 +26,10 @@ class BookingViewTest(APITestCase):
             name="Meeting Room A",
             location=self.location,
             capacity=10,
-            start_datetime=timezone.make_aware(
-                timezone.datetime(2025, 10, 1, 9, 0)),
-            end_datetime=timezone.make_aware(
-                timezone.datetime(2025, 10, 1, 18, 0)),
+            start_datetime=future_date.replace(
+                hour=9, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=18, minute=0, second=0, microsecond=0),
             recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE",
             is_active=True
         )
@@ -42,10 +44,10 @@ class BookingViewTest(APITestCase):
             room=self.room,
             visitor_name='John Doe',
             visitor_email='john@example.com',
-            start_datetime=timezone.make_aware(
-                timezone.datetime(2025, 12, 25, 10, 0)),
-            end_datetime=timezone.make_aware(
-                timezone.datetime(2025, 12, 25, 12, 0)),
+            start_datetime=future_date.replace(
+                hour=10, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=12, minute=0, second=0, microsecond=0),
             recurrence_rule="",
             status='CONFIRMED',
             google_event_id='test-google-event-id'
@@ -63,10 +65,8 @@ class BookingViewTest(APITestCase):
             "room_id": self.room.id,
             "visitor_name": "Alice Johnson",
             "visitor_email": "alice@example.com",
-            "start_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 26, 10, 0)),
-            "end_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 26, 12, 0)),
+            "start_datetime": future_date.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=1),
+            "end_datetime": future_date.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=1),
             "recurrence_rule": ""
         }
 
@@ -98,10 +98,8 @@ class BookingViewTest(APITestCase):
             "room_id": self.room.id,
             "visitor_name": "Bob Smith",
             "visitor_email": "bob@example.com",
-            "start_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 27, 10, 0)),
-            "end_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 27, 12, 0)),
+            "start_datetime": future_date.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=2),
+            "end_datetime": future_date.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=2),
             "recurrence_rule": ""
         }
 
@@ -119,10 +117,9 @@ class BookingViewTest(APITestCase):
             "room_id": self.room.id,
             "visitor_name": "Invalid User",
             "visitor_email": "invalid@example.com",
-            "start_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 26, 12, 0)),
-            "end_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 26, 10, 0)),  # Before start time
+            "start_datetime": future_date.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=1),
+            # Before start time
+            "end_datetime": future_date.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=1),
             "recurrence_rule": ""
         }
 
@@ -225,10 +222,8 @@ class BookingViewTest(APITestCase):
         """Test successful booking update with Google Calendar sync."""
         payload = {
             "visitor_email": self.booking.visitor_email,
-            "start_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 25, 14, 0)),
-            "end_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 25, 16, 0)),
+            "start_datetime": future_date.replace(hour=12, minute=0, second=0, microsecond=0),
+            "end_datetime": future_date.replace(hour=14, minute=0, second=0, microsecond=0),
             "recurrence_rule": "FREQ=WEEKLY"
         }
 
@@ -252,10 +247,8 @@ class BookingViewTest(APITestCase):
     def test_booking_update_fails_without_visitor_email(self):
         """Test booking update fails without visitor_email in request."""
         payload = {
-            "start_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 25, 14, 0)),
-            "end_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 25, 16, 0))
+            "start_datetime": future_date.replace(hour=14, minute=0, second=0, microsecond=0),
+            "end_datetime": future_date.replace(hour=16, minute=0, second=0, microsecond=0)
         }
 
         url = f'/api/bookings/{self.booking.id}/'
@@ -268,10 +261,8 @@ class BookingViewTest(APITestCase):
         """Test booking update fails with wrong visitor_email."""
         payload = {
             "visitor_email": "wrong@example.com",
-            "start_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 25, 14, 0)),
-            "end_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 25, 16, 0))
+            "start_datetime": future_date.replace(hour=14, minute=0, second=0, microsecond=0),
+            "end_datetime": future_date.replace(hour=16, minute=0, second=0, microsecond=0)
         }
 
         url = f'/api/bookings/{self.booking.id}/'
@@ -330,10 +321,9 @@ class BookingViewTest(APITestCase):
             "room_id": self.room.id,
             "visitor_name": "Test User",
             "visitor_email": "test@example.com",
-            "start_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 28, 14, 0)),
-            "end_datetime": timezone.make_aware(
-                timezone.datetime(2025, 12, 28, 12, 0)),  # Before start
+            "start_datetime": future_date.replace(hour=14, minute=0, second=0, microsecond=0) + timedelta(days=3),
+            # Before start
+            "end_datetime": future_date.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=3),
             "recurrence_rule": ""
         }
 
@@ -352,21 +342,16 @@ class BookingViewTest(APITestCase):
 
         # Create multiple bookings
         for i in range(15):
-            # Use modulo to keep hours within valid range (0-23)
-            start_hour = (10 + i) % 24
-            end_hour = (11 + i) % 24
-            # If end_hour wraps around to be <= start_hour, add a day
-            start_day = 28
-            end_day = 28 if end_hour > start_hour else 29
-
+            start_dt = future_date.replace(
+                hour=10, minute=0, second=0, microsecond=0) + timedelta(days=4 + i)
+            end_dt = future_date.replace(
+                hour=11, minute=0, second=0, microsecond=0) + timedelta(days=4 + i)
             payload = {
                 "room_id": self.room.id,
                 "visitor_name": f"User {i}",
                 "visitor_email": f"user{i}@example.com",
-                "start_datetime": timezone.make_aware(
-                    timezone.datetime(2025, 12, start_day, start_hour, 0)),
-                "end_datetime": timezone.make_aware(
-                    timezone.datetime(2025, 12, end_day, end_hour, 0)),
+                "start_datetime": start_dt,
+                "end_datetime": end_dt,
                 "recurrence_rule": ""
             }
             self.client.post('/api/bookings/', payload, format='json')
