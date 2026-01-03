@@ -29,7 +29,7 @@ const mockAmenities: Item[] = [
   { id: "4", name: "TV2", status: "Not In Use" },
 ];
 
-export default function AdminSettingsController() {
+export default function AdminSettingsPage() {
   const [view, setView] = useState<View>("summary");
   const [editingItem, setEditingItem] = useState<Item | null>(null);
 
