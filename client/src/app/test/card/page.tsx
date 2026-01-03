@@ -4,7 +4,7 @@ import {
   AdminRoomCard,
   BookingRoomCard,
   RoomCard,
-} from "@/components/ui/room-card";
+} from "@/components/room-card";
 import { roomsMock } from "@/types/card";
 
 export default function RoomsList() {

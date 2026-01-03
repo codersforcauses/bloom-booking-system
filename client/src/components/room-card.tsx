@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Room } from "@/types/card";
 
-import { Button } from "./button";
+import { Button } from "./ui/button";
 
 // Mapping amenity string -> React icon component
 const amenityIcons: Record<string, React.JSX.Element> = {
@@ -29,7 +29,7 @@ const amenityIcons: Record<string, React.JSX.Element> = {
  *
  * @param {Object} props
  * @param {string[]} props.amenities List of amenities to display.
- * @param {boolean} [props.hideIcon=false] If true, displays amenities as plain text.
+ * @param {boolean} [props.hideIcon=true] If true, displays amenities as plain text.
  * @param {string} [props.className] Optional extra class names for styling.
  *
  * @example
@@ -38,7 +38,7 @@ const amenityIcons: Record<string, React.JSX.Element> = {
  */
 const Amenities = ({
   amenities,
-  hideIcon = false,
+  hideIcon = true,
   className,
 }: {
   amenities: string[];
@@ -154,7 +154,7 @@ type BookingRoomProps = {
  *
  * <BookingRoomCard room={room} onBook={() => console.log("Booked!")} />
  */
-export function BookingRoomCard({ room, onBook }: BookingRoomProps) {
+function BookingRoomCard({ room, onBook }: BookingRoomProps) {
   // Default: User card view
   return (
     <Card className="flex w-full flex-col overflow-hidden rounded-xl border-black bg-white shadow-md">
@@ -245,7 +245,7 @@ function AdminRoomCard({
   ];
 
   return (
-    <div className="flex w-full flex-col overflow-hidden rounded-lg bg-white shadow-sm">
+    <div className="flex w-full flex-col overflow-hidden bg-white p-4 shadow-sm">
       {/* Room Image */}
       <div className="relative h-40 w-full">
         <Image
@@ -257,7 +257,7 @@ function AdminRoomCard({
       </div>
 
       {/* Room Details */}
-      <div className="space-y-2 px-4 py-4">
+      <div className="space-y-2 py-4">
         {roomDetails.map((item) => (
           <div
             key={item.label}
@@ -270,22 +270,22 @@ function AdminRoomCard({
       </div>
 
       {/* Action Buttons */}
-      <div className="mt-auto flex gap-4 px-4 pb-4">
+      <div className="mt-auto flex flex-wrap gap-4">
         <Button
-          className="h-[23px] bg-bloom-orbit px-2 text-[10px] hover:bg-bloom-orbit-light"
+          className="caption h-6 bg-bloom-orbit text-white hover:bg-bloom-orbit-light"
           onClick={onView}
         >
           View Bookings
         </Button>
         <Button
-          className="h-[23px] bg-bloom-yellow text-[10px] hover:bg-bloom-yellow-light"
+          className="caption h-6 bg-bloom-yellow text-white hover:bg-bloom-yellow-light"
           onClick={onEdit}
         >
           Edit
         </Button>
         <Button
           className={cn(
-            "h-[23px] bg-bloom-red text-[10px] hover:bg-bloom-red-light",
+            "caption h-6 bg-bloom-red text-white hover:bg-bloom-red-light",
             room.removed && "cursor-not-allowed bg-gray-400 hover:bg-gray-400",
           )}
           onClick={onRemove}
@@ -298,4 +298,4 @@ function AdminRoomCard({
   );
 }
 
-export { AdminRoomCard, RoomCard };
+export { AdminRoomCard, BookingRoomCard, RoomCard };
