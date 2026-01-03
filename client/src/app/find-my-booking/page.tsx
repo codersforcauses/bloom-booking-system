@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
+import InputField from "@/components/input";
+import ReCAPTCHA_v2 from "@/components/recaptcha";
 import { Button } from "@/components/ui/button";
-import InputField from "@/components/ui/input";
-import ReCAPTCHA_v2 from "@/components/ui/recaptchaV2";
 import api from "@/lib/api";
 
 export default function FindMyBookingPage() {
