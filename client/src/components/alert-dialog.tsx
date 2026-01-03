@@ -108,4 +108,47 @@ function AlertDialog({
   );
 }
 
-export default AlertDialog;
+function LogOutAlertDialog({
+  children,
+  isPending,
+  handleLogout,
+}: {
+  children: React.ReactNode;
+  isPending: boolean;
+  handleLogout: () => Promise<void>;
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+
+      <DialogContent className="flex w-[95%] flex-col items-center rounded-lg shadow-xl [&_button:has(svg.lucide-x)]:hidden">
+        <DialogHeader>
+          <DialogTitle className="pt-4" />
+
+          <DialogDescription className="py-10 text-center font-semibold text-black">
+            Are you sure you want to log out?
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter className="flex flex-row justify-center gap-4 pb-4">
+          <DialogClose asChild>
+            <Button className="h-8 w-24 text-xs" variant="outline">
+              Cancel
+            </Button>
+          </DialogClose>
+
+          <Button
+            onClick={handleLogout}
+            disabled={isPending}
+            variant="warning"
+            className="h-8 w-24 text-xs"
+          >
+            {isPending ? "Logging out..." : "Log Out"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export { AlertDialog, LogOutAlertDialog };

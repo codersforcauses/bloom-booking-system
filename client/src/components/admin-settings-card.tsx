@@ -2,8 +2,9 @@
 
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
-import { MdAdd,MdExpandLess,MdExpandMore  } from "react-icons/md";
+import { MdAdd, MdExpandLess, MdExpandMore } from "react-icons/md";
 
+import { LogOutAlertDialog } from "@/components/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { delay } from "@/lib/utils";
 
 type SummaryCardProps = {
   locations: string[];
@@ -27,32 +29,35 @@ function AdminSettingsSummaryCard({
   onEditLocations,
   onEditAmenities,
 }: SummaryCardProps) {
-  const maxItems = 3; // show first 3 items, then view more
-
   const ListWithSeeMore = ({ items }: { items: string[] }) => {
+    const maxItems = 3; // show first 3 items, then view more
     const [showAll, setShowAll] = useState(false);
+
     if (!items.length)
       return <span className="text-sm text-gray-500">Not Provided</span>;
 
     const displayed = showAll ? items : items.slice(0, maxItems);
+    const hasMore = items.length > maxItems;
 
     return (
       <span className="text-sm text-gray-500">
         {displayed.join(", ")}
-        {items.length > maxItems && (
+        {hasMore && (
           <button
             className="ml-1 text-blue-500 hover:underline"
             onClick={() => setShowAll(!showAll)}
           >
-            {showAll ? (
-              <span className="flex">
-                view less <MdExpandLess size={20} />
-              </span>
-            ) : (
-              <span className="flex">
-                view more <MdExpandMore size={20} />
-              </span>
-            )}
+            <span className="flex items-center">
+              {showAll ? (
+                <>
+                  view less <MdExpandLess size={20} />
+                </>
+              ) : (
+                <>
+                  view more <MdExpandMore size={20} />
+                </>
+              )}
+            </span>
           </button>
         )}
       </span>
@@ -60,7 +65,7 @@ function AdminSettingsSummaryCard({
   };
 
   // Reusable row
-  const Row = ({
+  const SummaryRow = ({
     title,
     items,
     onEdit,
@@ -80,31 +85,47 @@ function AdminSettingsSummaryCard({
     </div>
   );
 
+  const [isPending, setIsPending] = useState(false);
+
+  // TODO: rewrite when API ready
+  const handleLogout = async () => {
+    try {
+      setIsPending(true);
+      await delay(1500);
+    } catch (error) {
+      console.error("Logout failed", error);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
   return (
     <Card className="rounded-xl border bg-white shadow-sm">
       <div className="divide-y divide-gray-200 px-6">
-        <Row
+        <SummaryRow
           title="Room Locations"
           items={locations}
           onEdit={onEditLocations}
         />
-        <Row
+        <SummaryRow
           title="Room Amenities"
           items={amenities}
           onEdit={onEditAmenities}
         />
-
         {/* Logout Row */}
         <div className="flex justify-center py-6">
-          <Button variant="warning" size="sm" className="w-32 font-semibold">
-            Log out
-          </Button>
+          <LogOutAlertDialog isPending={isPending} handleLogout={handleLogout}>
+            <Button variant="warning" size="sm" className="w-32 font-semibold">
+              Log out
+            </Button>
+          </LogOutAlertDialog>
         </div>
       </div>
     </Card>
   );
 }
 
+// TODO: Replace Item with actual type from API
 type Item = {
   id: string;
   name: string;
