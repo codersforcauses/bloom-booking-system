@@ -12,7 +12,7 @@ from django.utils.dateparse import parse_date
 from dateutil.rrule import rruleset, rrulestr
 from api.booking.models import Booking
 from datetime import datetime, time
-from django.utils.timezone import localdate, make_aware, localtime
+from django.utils.timezone import localdate, make_aware, localtime, now
 from collections import defaultdict
 # Viewset is library that provides CRUD operations for api
 # Admin have create update delete permissions everyone can read
@@ -200,8 +200,17 @@ class RoomViewSet(viewsets.ModelViewSet):
         ]
         # Subtract booked intervals
         free_intervals = self._subtract_booked_from_room_availability(room_start, room_end, overlapping_bookings)
-        # Append free intervals to availability_slots, grouped by local date
+
+        # Append free intervals to availability_slots, grouped by local date. If the interval is today, include only future times.
+        current_time = localtime(now())
         for fi_start, fi_end in free_intervals:
+            # If the interval is today, include only future times
+            if fi_start.date() == current_time.date():
+                # Skip intervals that end in the past
+                if fi_end <= current_time:
+                    continue
+                # Adjust fi_start to be current_time if it's in the past
+                fi_start = max(fi_start, current_time)
             date_str = localtime(fi_start).date().isoformat()
             availability_slots[date_str].append({
                 "start": localtime(fi_start).isoformat(),
