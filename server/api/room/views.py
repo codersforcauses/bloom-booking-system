@@ -87,12 +87,18 @@ class RoomViewSet(viewsets.ModelViewSet):
         start_date = parse_date(start_date)
         end_date = parse_date(end_date)
 
-        # If the date range is invalid or in the past, return empty availability
-        if start_date > end_date or end_date < localdate():
+        today = localdate()
+
+        # Update start_date to be today if it's in the past (assume availability is meaningless in the past)
+        if start_date < today:
+            start_date = today
+
+        # If the date range is invalid or end_date is in the past, return empty
+        if start_date > end_date or end_date < today:
             return Response({"room_id": room.id, "availability": []}, status=200)
 
         availability = self._calculate_availability(room, start_date, end_date)
-        return Response({"room_id": room.id, "availability": availability})
+        return Response({"room_id": room.id, "availability": availability}, status=200)
 
     def _calculate_availability(self, room, start_date, end_date):
         """
@@ -124,7 +130,6 @@ class RoomViewSet(viewsets.ModelViewSet):
                     booked_slots.append((occurence_start, occurence_start + duration))
             else:
                 booked_slots.append((booking.start_datetime, booking.end_datetime))
-        print("Booked slots:", booked_slots)
 
         # Step 2: get all available slots based on room's recurrence rules
         availability_slots = defaultdict(list)
@@ -155,7 +160,6 @@ class RoomViewSet(viewsets.ModelViewSet):
                     occurrence_end,
                     booked_slots
                 )
-        print("Availability slots:", availability_slots)
 
         return [{"date": date, "slots": slots} for date, slots in sorted(availability_slots.items())]
 
