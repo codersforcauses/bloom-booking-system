@@ -26,6 +26,7 @@ def next_monday_and_sunday():
 
 future_date = date.today() + timedelta(days=7)
 next_monday, next_tuesday, next_wednesday, next_sunday = next_monday_and_sunday()
+today = timezone.localdate()
 
 
 class RoomAPITest(APITestCase):
@@ -165,7 +166,7 @@ class AvailabilityAPITest(APITestCase):
 
         # Rooms
         self.room1 = Room.objects.create(
-            name="Conference Room 1",
+            name="Meeting Room 1",
             location=self.loc1,
             capacity=10,
             start_datetime=timezone.make_aware(
@@ -179,7 +180,7 @@ class AvailabilityAPITest(APITestCase):
 
         # Room without recurrence rules
         self.room2 = Room.objects.create(
-            name="Meeting Room A",
+            name="Meeting Room 2",
             location=self.loc1,
             capacity=5,
             start_datetime=timezone.make_aware(
@@ -189,6 +190,20 @@ class AvailabilityAPITest(APITestCase):
             is_active=True
         )
         self.room2.amenities.set([self.amenity1, self.amenity2])
+
+        self.room3 = Room.objects.create(
+            name="Meeting Room 3",
+            location=self.loc1,
+            capacity=8,
+            start_datetime=timezone.make_aware(
+                 timezone.datetime.combine(today, time(9, 0))
+                 ),
+            end_datetime=timezone.make_aware(
+                 timezone.datetime.combine(today, time(23, 59))
+                ),
+            is_active=True
+            )
+        self.room3.amenities.set([self.amenity1, self.amenity2])
 
         # Bookings
         self.booking1 = Booking.objects.create(
@@ -280,3 +295,33 @@ class AvailabilityAPITest(APITestCase):
             timezone.datetime.combine(future_date, time(13, 0))).isoformat())
         self.assertEqual(availability[0]["slots"][1]['start'], timezone.make_aware(
             timezone.datetime.combine(future_date, time(14, 0))).isoformat())
+
+    # Test availability when start_date is at today
+    def test_availability_today(self):
+        response = self.client.get(
+            f"/api/rooms/{self.room3.id}/availability/?start_date={today.isoformat()}&end_date={today.isoformat()}"
+            )
+        print("\nAvailability Today Response:")
+        print(response.content.decode())
+        print()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        room_id = response.data["room_id"]
+        self.assertEqual(room_id, self.room3.id)
+        availability = response.data["availability"]
+        self.assertEqual(availability[0]["date"], today.isoformat())
+        # Only one slot should remain (from now → 24:00)
+        self.assertEqual(len(availability[0]["slots"]), 1)
+        now_local = timezone.localtime(timezone.now())
+        room_start = timezone.make_aware(
+            timezone.datetime.combine(today, time(9, 0))
+            )
+        room_end = timezone.make_aware(
+            timezone.datetime.combine(today, time(23, 59))
+            )
+        # Expected start = max(now, room_start)
+        expected_start = max(room_start, now_local)
+        expected_end = room_end
+        actual_start = timezone.datetime.fromisoformat(availability[0]["slots"][0]["start"])
+        self.assertLess(abs(actual_start - expected_start), timedelta(seconds=1))
+        self.assertEqual(availability[0]["slots"][0]["end"], expected_end.isoformat())
