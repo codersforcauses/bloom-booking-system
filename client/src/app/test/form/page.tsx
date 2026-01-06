@@ -4,6 +4,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import InputField from "@/components/input";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,7 +14,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import InputField from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
