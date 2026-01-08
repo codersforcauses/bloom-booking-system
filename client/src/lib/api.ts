@@ -2,42 +2,83 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+if (!BACKEND_URL) {
+  throw new Error(
+    "Backend URL is not defined. Please set NEXT_PUBLIC_BACKEND_URL environment variable.",
+  );
+}
+
 const api = axios.create({ baseURL: BACKEND_URL });
 
-// Add in memory cache for access token to reduce cookie parsing
+// Module-level in-memory cache for the access token.
+// Used only to avoid repeated cookie parsing on the client.
+// This module is loaded once per browser session, so this value persists across all renders on the client.
+// Warning: Don't use functions involving this variable for Server Side Rendering (SSR).
 let inMemoryAccessToken: string | undefined = undefined;
 
 // Helper function to get cookie by name
 const getCookie = (name: string) => {
-  return decodeURIComponent(
-    document.cookie
-      .split("; ")
-      .find((row) => row.startsWith(name + "="))
-      ?.split("=")[1] ?? "",
-  );
+  const cookies = document.cookie.split("; ");
+  // Only split on the first '=' to allow '=' in the value
+  const prefix = name + "=";
+  const match = cookies.find((row) => row.startsWith(prefix));
+  if (!match) {
+    return "";
+  }
+  const value = match.substring(prefix.length);
+  return decodeURIComponent(value);
 };
 
 const getAccessToken = () => {
-  if (typeof window === "undefined") return;
+  // Ensure this function is called only on the client side
+  if (typeof window === "undefined") {
+    throw new Error("getAccessToken can only be called on the client side");
+  }
   if (inMemoryAccessToken) return inMemoryAccessToken;
-  inMemoryAccessToken = getCookie("accessToken");
+  // Check if the token returned is an empty string before caching it
+  const tokenFromCookie = getCookie("accessToken");
+  if (!tokenFromCookie) return;
+  inMemoryAccessToken = tokenFromCookie;
   return inMemoryAccessToken;
 };
 
 const setAccessToken = (accessToken: string) => {
-  if (typeof window === "undefined") return;
+  // Ensure this function is called only on the client side
+  if (typeof window === "undefined") {
+    throw new Error("setAccessToken can only be called on the client side");
+  }
+  // Cookies with Secure flag only be set over HTTPS (allow non-secure in development)
+  const isSecure = window.location.protocol === "https:";
   inMemoryAccessToken = accessToken;
-  document.cookie = `accessToken=${encodeURIComponent(accessToken)}; path=/; SameSite=Lax`;
+  const newCookie = [
+    `accessToken=${encodeURIComponent(accessToken)}`,
+    "path=/",
+    "SameSite=Lax",
+    isSecure ? "Secure" : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
+  document.cookie = newCookie;
 };
 
 const getRefreshToken = () => {
-  if (typeof window === "undefined") return;
+  // Ensure this function is called only on the client side
+  if (typeof window === "undefined") {
+    throw new Error("getRefreshToken can only be called on the client side");
+  }
   return getCookie("refreshToken");
 };
 
 const clearTokens = () => {
-  if (typeof window === "undefined") return;
-  const base = "path=/; SameSite=Lax";
+  if (typeof window === "undefined") {
+    throw new Error("clearTokens can only be called on the client side");
+  }
+  // Cookies with Secure flag only be set over HTTPS (allow non-secure in development)
+  const isSecure = window.location.protocol === "https:";
+  const base = ["path=/", "SameSite=Lax", isSecure ? "Secure" : ""]
+    .filter(Boolean)
+    .join("; ");
   document.cookie = `accessToken=; Max-Age=0; ${base}`;
   document.cookie = `refreshToken=; Max-Age=0; ${base}`;
   inMemoryAccessToken = undefined;
@@ -50,10 +91,21 @@ let toBeRefreshedQueue: {
   reject: (err: unknown) => void;
 }[] = [];
 
-const processQueue = (error: AxiosError | null, accessToken?: string) => {
-  toBeRefreshedQueue.forEach((promise) =>
-    error ? promise.reject(error) : promise.resolve(accessToken!),
-  );
+const processQueue = (
+  error: AxiosError | Error | null,
+  accessToken?: string,
+) => {
+  toBeRefreshedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else if (typeof accessToken === "string") {
+      promise.resolve(accessToken);
+    } else {
+      promise.reject(
+        new Error("Access token is missing while processing queue"),
+      );
+    }
+  });
   toBeRefreshedQueue = [];
 };
 
@@ -81,10 +133,8 @@ api.interceptors.response.use(
     };
 
     // Prevent infinite loop
-    if (error.config?.url?.includes("/users/refresh")) {
-      logout();
-      return Promise.reject(error);
-    }
+    if (error.config?.url?.includes("/users/refresh"))
+      return handleEarlyLogout("Token refreshed failed", error);
 
     // Continue only if 401 error and not already retried
     if (
@@ -118,8 +168,7 @@ api.interceptors.response.use(
       const refreshToken = getRefreshToken();
       if (!refreshToken) {
         console.warn("No refresh token available, logging out");
-        logout();
-        return Promise.reject(new Error("No refresh token found"));
+        return handleEarlyLogout("No refresh token available");
       }
 
       // IMPORTANT: use axios here to avoid interceptor loops
@@ -131,8 +180,7 @@ api.interceptors.response.use(
       // console.log("Access token refreshed", newAccessToken);
       if (!newAccessToken) {
         console.warn("No access token returned, logging out");
-        logout();
-        return Promise.reject(new Error("No access token returned"));
+        return handleEarlyLogout("No access token returned");
       }
 
       // console.log("Setting new access token:", newAccessToken);
@@ -165,6 +213,14 @@ api.interceptors.response.use(
     }
   },
 );
+
+// Helper function to handle refresh failure
+const handleEarlyLogout = (errMsg: string, err?: AxiosError) => {
+  isRefreshing = false;
+  processQueue(new Error(errMsg));
+  logout();
+  return Promise.reject(err || new Error(errMsg));
+};
 
 const logout = () => {
   clearTokens();
