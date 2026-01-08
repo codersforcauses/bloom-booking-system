@@ -49,20 +49,15 @@ export default function LoginPage() {
       const access: string | undefined =
         res.data?.access || res.data?.access_token || res.data?.token;
 
-      const refresh: string | undefined =
-        res.data?.refresh || res.data?.refresh_token;
-
-      if (!access || !refresh) {
+      if (!access) {
         setError("root", {
           type: "server",
-          message:
-            "Login succeeded but tokens were not returned (expected access + refresh).",
+          message: "Login succeeded but no access token was returned.",
         });
         return;
       }
 
       setAccessToken(access);
-      setRefreshToken(refresh);
 
       router.push("/");
       router.refresh();
