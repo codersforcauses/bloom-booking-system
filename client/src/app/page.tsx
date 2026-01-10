@@ -1,39 +1,42 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import React from "react";
+import { useForm } from "react-hook-form";
 
-import { useState } from "react";
-import { HiOutlineUser } from "react-icons/hi";
-
-import { usePings } from "@/hooks/pings";
-import { cn } from "@/lib/utils";
-
-import { Button } from "../components/ui/button";
+import SearchRoomForm, {
+  RoomSearchSchema,
+  RoomSearchSchemaValue,
+} from "@/app/search-room-form";
 
 export default function Home() {
-  const [clicked, setClicked] = useState(false);
-  const { data, isLoading } = usePings({
-    enabled: clicked,
+  const form = useForm<RoomSearchSchemaValue>({
+    resolver: zodResolver(RoomSearchSchema),
+    mode: "onChange",
   });
 
+  // Handle search form submission
+  const onSubmit = (data: RoomSearchSchemaValue) => {
+    alert("submitted data:\n" + JSON.stringify(data));
+  };
+
+  // Reset search form
+  const onReset = () => {
+    form.reset();
+  };
+
+  // Fetch Location Data & Amentities Data
+
+  // Fetch Rooms (Scroll down to get next page)
+
   return (
-    <main
-      className={cn(
-        "flex min-h-screen flex-col items-center gap-4 p-24 font-montserrat",
-      )}
-    >
-      <Button
-        variant="login"
-        onClick={() => setClicked(true)}
-        className="flex items-center gap-2"
-      >
-        <HiOutlineUser className="h-5 w-5" />
-        Ping
-      </Button>
-      <p>
-        Response from server:{" "}
-        <span className="font-bold">
-          {isLoading ? "Loading..." : (data ?? "No response")}
-        </span>
-      </p>
-    </main>
+    <div className="grid h-screen grid-cols-1 md:grid-cols-2">
+      <div>
+        <h1 className="title">Booking A Meeting Room</h1>
+        <SearchRoomForm form={form} onSubmit={onSubmit} onReset={onReset} />
+      </div>
+      <div>
+        <h2 className="title">Rooms Availability</h2>
+      </div>
+    </div>
   );
 }
