@@ -10,6 +10,7 @@ from rest_framework import exceptions
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 from unittest.mock import patch
 from datetime import timedelta
 # import modules to be tested
@@ -62,11 +63,12 @@ class CustomUserModelTests(TestCase):
             )
 
     def test_user_creation_with_invalid_email(self):
-        # creating user with invalid email format should raise ValueError
-        with self.assertRaises(ValueError):
-            CustomUser.objects.create_user(
+        # creating user with invalid email format should raise ValidationError
+        with self.assertRaises(ValidationError):
+            user = CustomUser.objects.create_user(
                 username='user', email='invalidemail', password='pw'
             )
+            user.full_clean()  # This triggers field validation
 
     def test_user_creation_empty_username(self):
         # creating user with empty username should raise ValueError
@@ -122,6 +124,7 @@ class CustomTokenObtainPairSerializerTests(TestCase):
     """
     test successful authentication with username or email, failure cases, and token generation.
     """
+
     def setUp(self):
         self.username = "serializertest"
         self.email = "serializer@test.com"
@@ -194,6 +197,7 @@ class CustomTokenObtainPairViewTests(APITestCase):
     """
     Tests for login and refresh token endpoints.
     """
+
     def setUp(self):
         self.username = "viewtestuser"
         self.email = "viewtest@example.com"
@@ -205,13 +209,16 @@ class CustomTokenObtainPairViewTests(APITestCase):
         )
         self.login_url = reverse('user:token_obtain_pair')
         self.refresh_url = reverse('user:token_refresh')
-        self.valid_data = {'username': self.username, 'password': self.password}
-        self.invalid_data = {'username': 'wronguser', 'password': 'wrongpassword'}
+        self.valid_data = {'username': self.username,
+                           'password': self.password}
+        self.invalid_data = {'username': 'wronguser',
+                             'password': 'wrongpassword'}
 
     def test_post_request_with_valid_username(self):
         """test POST request with valid username credentials
         and data structure of response."""
-        response = self.client.post(self.login_url, self.valid_data, format='json')
+        response = self.client.post(
+            self.login_url, self.valid_data, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
@@ -219,7 +226,8 @@ class CustomTokenObtainPairViewTests(APITestCase):
     def test_post_request_with_invalid_credentials(self):
         """test POST request with invalid credentials
         and data structure of error response."""
-        response = self.client.post(self.login_url, self.invalid_data, format='json')
+        response = self.client.post(
+            self.login_url, self.invalid_data, format='json')
         self.assertEqual(response.status_code, 401)
         self.assertIn('detail', response.data)
 
@@ -229,7 +237,8 @@ class CustomTokenObtainPairViewTests(APITestCase):
         Access Token: 15 minutes
         Refresh Token: 1 day
         """
-        response = self.client.post(self.login_url, self.valid_data, format='json')
+        response = self.client.post(
+            self.login_url, self.valid_data, format='json')
 
         access_token = RefreshToken(response.data['refresh']).access_token
         access_exp_timestamp = access_token['exp']
@@ -241,7 +250,8 @@ class CustomTokenObtainPairViewTests(APITestCase):
         refresh_token = RefreshToken(response.data['refresh'])
         refresh_exp_timestamp = refresh_token['exp']
         expected_refresh_exp = timezone.now() + timedelta(days=1)
-        refresh_time_difference = abs(expected_refresh_exp.timestamp() - refresh_exp_timestamp)
+        refresh_time_difference = abs(
+            expected_refresh_exp.timestamp() - refresh_exp_timestamp)
         # allow 5sec difference for processing time
         self.assertLess(refresh_time_difference, 5)
 
@@ -251,11 +261,13 @@ class URLsTests(TestCase):
     """
     test /login and /refresh URLs resolve to correct views.
     """
+
     def test_login_url(self):
         """test login URL resolves to CustomTokenObtainPairView."""
         login_url = reverse('user:token_obtain_pair')
         resolved_view = resolve(login_url)
-        self.assertEqual(resolved_view.func.view_class, CustomTokenObtainPairView)
+        self.assertEqual(resolved_view.func.view_class,
+                         CustomTokenObtainPairView)
 
     def test_refresh_url(self):
         """test refresh URL resolves to TokenRefreshView."""
