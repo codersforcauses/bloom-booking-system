@@ -13,7 +13,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <nav className="w-full border-b bg-white">
+    <nav className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* logo */}
         <Link href="/" className="text-xl font-semibold">
@@ -51,7 +51,7 @@ export default function Navbar() {
             <Button variant="outline">Book room</Button>
           </Link>
           <Link href="/bookings" className="hover:text-primary">
-            <Button variant="link">Find my booking</Button>
+            <Button variant="text">Find my booking</Button>
           </Link>
           <Link href="/admin" className="hover:text-primary">
             <Button variant="login">
@@ -69,7 +69,7 @@ export default function Navbar() {
             <Button variant="outline">Book room</Button>
           </Link>
           <Link href="/bookings" className="-mx-4 mt-4 hover:text-primary">
-            <Button variant="link">Find my booking</Button>
+            <Button variant="text">Find my booking</Button>
           </Link>
           <div className="-mx-2 mt-20">
             <Link href="/admin" className="hover:text-primary">
