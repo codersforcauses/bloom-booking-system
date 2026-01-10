@@ -11,79 +11,6 @@ if (!BACKEND_URL) {
 
 const api = axios.create({ baseURL: BACKEND_URL });
 
-// Module-level in-memory cache for the access token.
-// Used only to avoid repeated cookie parsing on the client.
-// This module is loaded once per browser session, so this value persists across all renders on the client.
-// Warning: Don't use functions involving this variable for Server Side Rendering (SSR).
-// let inMemoryAccessToken: string | undefined = undefined;
-
-// Helper function to get cookie by name
-// const getCookie = (name: string) => {
-//   const cookies = document.cookie.split("; ");
-//   // Only split on the first '=' to allow '=' in the value
-//   const prefix = name + "=";
-//   const match = cookies.find((row) => row.startsWith(prefix));
-//   if (!match) {
-//     return "";
-//   }
-//   const value = match.substring(prefix.length);
-//   return decodeURIComponent(value);
-// };
-
-// const getAccessToken = () => {
-//   // Ensure this function is called only on the client side
-//   if (typeof window === "undefined") {
-//     throw new Error("getAccessToken can only be called on the client side");
-//   }
-//   if (inMemoryAccessToken) return inMemoryAccessToken;
-//   // Check if the token returned is an empty string before caching it
-//   const tokenFromCookie = getCookie("accessToken");
-//   if (!tokenFromCookie) return;
-//   inMemoryAccessToken = tokenFromCookie;
-//   return inMemoryAccessToken;
-// };
-
-// const setAccessToken = (accessToken: string) => {
-//   // Ensure this function is called only on the client side
-//   if (typeof window === "undefined") {
-//     throw new Error("setAccessToken can only be called on the client side");
-//   }
-//   // Cookies with Secure flag only be set over HTTPS (allow non-secure in development)
-//   const isSecure = window.location.protocol === "https:";
-//   inMemoryAccessToken = accessToken;
-//   const newCookie = [
-//     `accessToken=${encodeURIComponent(accessToken)}`,
-//     "path=/",
-//     "SameSite=Lax",
-//     isSecure ? "Secure" : "",
-//   ]
-//     .filter(Boolean)
-//     .join("; ");
-//   document.cookie = newCookie;
-// };
-
-// const getRefreshToken = () => {
-//   // Ensure this function is called only on the client side
-//   if (typeof window === "undefined") {
-//     throw new Error("getRefreshToken can only be called on the client side");
-//   }
-//   return getCookie("refreshToken");
-// };
-
-// const clearTokens = () => {
-//   if (typeof window === "undefined") {
-//     throw new Error("clearTokens can only be called on the client side");
-//   }
-//   // Cookies with Secure flag only be set over HTTPS (allow non-secure in development)
-//   const isSecure = window.location.protocol === "https:";
-//   const base = ["path=/", "SameSite=Lax", isSecure ? "Secure" : ""]
-//     .filter(Boolean)
-//     .join("; ");
-//   document.cookie = `accessToken=; Max-Age=0; ${base}`;
-//   document.cookie = `refreshToken=; Max-Age=0; ${base}`;
-//   inMemoryAccessToken = undefined;
-// };
-
 const getAccessToken = () =>
   typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
@@ -151,7 +78,7 @@ api.interceptors.response.use(
 
     // Prevent infinite loop
     if (error.config?.url?.includes("/users/refresh"))
-      return handleEarlyLogout("Token refreshed failed", error);
+      return handleEarlyLogout("Token refresh failed", error);
 
     // Continue only if 401 error and not already retried
     if (
@@ -194,13 +121,11 @@ api.interceptors.response.use(
       });
 
       const newAccessToken = res.data.access;
-      // console.log("Access token refreshed", newAccessToken);
       if (!newAccessToken) {
         console.warn("No access token returned, logging out");
         return handleEarlyLogout("No access token returned");
       }
 
-      // console.log("Setting new access token:", newAccessToken);
       setAccessToken(newAccessToken);
       processQueue(null, newAccessToken);
 
@@ -245,12 +170,6 @@ const logout = () => {
     window.location.href = "/login";
   }
 };
-
-// test only
-if (typeof window !== "undefined") {
-  // @ts-ignore
-  window.api = api;
-}
 
 export default api;
 export { setAccessToken };
