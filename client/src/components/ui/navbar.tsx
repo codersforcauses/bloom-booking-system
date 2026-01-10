@@ -47,13 +47,13 @@ export default function Navbar() {
 
         {/* desktop */}
         <div className="hidden items-center gap-6 md:flex">
-          <Link href="/" className="hover:text-primary">
+          <Link href="/">
             <Button variant="outline">Book room</Button>
           </Link>
-          <Link href="/bookings" className="hover:text-primary">
+          <Link href="/bookings">
             <Button variant="text">Find my booking</Button>
           </Link>
-          <Link href="/admin" className="hover:text-primary">
+          <Link href="/admin">
             <Button variant="login">
               <HiOutlineUser className="h-5 w-5" />
               Admin login
@@ -65,14 +65,14 @@ export default function Navbar() {
       {/* mobile hamburger */}
       {open && (
         <div className="m-6 flex flex-col items-end px-8 pb-4 md:hidden">
-          <Link href="/" className="hover:text-primary">
+          <Link href="/">
             <Button variant="outline">Book room</Button>
           </Link>
           <Link href="/bookings" className="-mx-4 mt-4 hover:text-primary">
             <Button variant="text">Find my booking</Button>
           </Link>
           <div className="-mx-2 mt-20">
-            <Link href="/admin" className="hover:text-primary">
+            <Link href="/admin">
               <Button variant="login">
                 <HiOutlineUser className="h-5 w-5" />
                 Admin login
