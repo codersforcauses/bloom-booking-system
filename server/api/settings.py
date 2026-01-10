@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     "storages",
     "api.user",
     "api.room",
+    "api.booking",
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -81,7 +83,7 @@ ROOT_URLCONF = "api.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "api" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -183,7 +185,38 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
 }
+
+# =========================
+# Email configuration
+# =========================
+
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend",
+)
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+
+# TLS / SSL flags come from env as strings ("True"/"False")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False") == "True"
+
+DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER", "")
+SERVER_EMAIL = os.environ.get("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
+
+
+# =========================
+# AWS S3 storage configuration
+# =========================
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -200,18 +233,7 @@ USE_S3 = all([
 ])
 
 # By default, models using ImageField/FileField will use S3 for storage, as configured in STORAGES.
-# example model:
-# ```
-# class Room(models.Model):
-#     name = models.CharField(max_length=255)
-#     image = models.ImageField(upload_to="rooms/")
-# ```
 # Only specify a custom storage backend if you need to use something other than S3.
-# Example: to check the default storage backend being used:
-# ```
-# from django.core.files.storage import default_storage
-# print(default_storage.__class__)
-# ```
 if USE_S3:
     STORAGES = {
         "default": {
@@ -244,4 +266,4 @@ else:
     }
     MEDIA_URL = "/media/"
 
-AUTH_USER_MODEL = 'api_user.CustomUser'
+AUTH_USER_MODEL = "api_user.CustomUser"
