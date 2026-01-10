@@ -64,20 +64,22 @@ export default function Navbar() {
 
       {/* mobile hamburger */}
       {open && (
-        <div className="m-6 flex flex-col items-end px-8 pb-4 md:hidden">
-          <Link href="/">
-            <Button variant="outline">Book room</Button>
-          </Link>
-          <Link href="/bookings" className="-mx-4 mt-4 hover:text-primary">
-            <Button variant="text">Find my booking</Button>
-          </Link>
-          <div className="-mx-2 mt-20">
-            <Link href="/admin">
-              <Button variant="login">
-                <HiOutlineUser className="h-5 w-5" />
-                Admin login
-              </Button>
+        <div className="absolute left-0 top-full max-h-screen w-full overflow-y-auto bg-white md:hidden">
+          <div className="flex h-full flex-col items-end gap-6 px-8 py-6">
+            <Link href="/">
+              <Button variant="outline">Book room</Button>
             </Link>
+            <Link href="/bookings" className="-mx-4 mt-4 hover:text-primary">
+              <Button variant="text">Find my booking</Button>
+            </Link>
+            <div className="-mx-2 mt-20">
+              <Link href="/admin">
+                <Button variant="login">
+                  <HiOutlineUser className="h-5 w-5" />
+                  Admin login
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       )}
