@@ -23,7 +23,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         data-gr-ext-installed=""
         data-gr-ext-disabled="forever"
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <Navbar />
+          {children}
+        </Providers>
       </body>
     </html>
   );
