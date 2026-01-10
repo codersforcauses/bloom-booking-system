@@ -15,73 +15,90 @@ const api = axios.create({ baseURL: BACKEND_URL });
 // Used only to avoid repeated cookie parsing on the client.
 // This module is loaded once per browser session, so this value persists across all renders on the client.
 // Warning: Don't use functions involving this variable for Server Side Rendering (SSR).
-let inMemoryAccessToken: string | undefined = undefined;
+// let inMemoryAccessToken: string | undefined = undefined;
 
 // Helper function to get cookie by name
-const getCookie = (name: string) => {
-  const cookies = document.cookie.split("; ");
-  // Only split on the first '=' to allow '=' in the value
-  const prefix = name + "=";
-  const match = cookies.find((row) => row.startsWith(prefix));
-  if (!match) {
-    return "";
-  }
-  const value = match.substring(prefix.length);
-  return decodeURIComponent(value);
-};
+// const getCookie = (name: string) => {
+//   const cookies = document.cookie.split("; ");
+//   // Only split on the first '=' to allow '=' in the value
+//   const prefix = name + "=";
+//   const match = cookies.find((row) => row.startsWith(prefix));
+//   if (!match) {
+//     return "";
+//   }
+//   const value = match.substring(prefix.length);
+//   return decodeURIComponent(value);
+// };
 
-const getAccessToken = () => {
-  // Ensure this function is called only on the client side
-  if (typeof window === "undefined") {
-    throw new Error("getAccessToken can only be called on the client side");
-  }
-  if (inMemoryAccessToken) return inMemoryAccessToken;
-  // Check if the token returned is an empty string before caching it
-  const tokenFromCookie = getCookie("accessToken");
-  if (!tokenFromCookie) return;
-  inMemoryAccessToken = tokenFromCookie;
-  return inMemoryAccessToken;
-};
+// const getAccessToken = () => {
+//   // Ensure this function is called only on the client side
+//   if (typeof window === "undefined") {
+//     throw new Error("getAccessToken can only be called on the client side");
+//   }
+//   if (inMemoryAccessToken) return inMemoryAccessToken;
+//   // Check if the token returned is an empty string before caching it
+//   const tokenFromCookie = getCookie("accessToken");
+//   if (!tokenFromCookie) return;
+//   inMemoryAccessToken = tokenFromCookie;
+//   return inMemoryAccessToken;
+// };
 
-const setAccessToken = (accessToken: string) => {
-  // Ensure this function is called only on the client side
-  if (typeof window === "undefined") {
-    throw new Error("setAccessToken can only be called on the client side");
-  }
-  // Cookies with Secure flag only be set over HTTPS (allow non-secure in development)
-  const isSecure = window.location.protocol === "https:";
-  inMemoryAccessToken = accessToken;
-  const newCookie = [
-    `accessToken=${encodeURIComponent(accessToken)}`,
-    "path=/",
-    "SameSite=Lax",
-    isSecure ? "Secure" : "",
-  ]
-    .filter(Boolean)
-    .join("; ");
-  document.cookie = newCookie;
-};
+// const setAccessToken = (accessToken: string) => {
+//   // Ensure this function is called only on the client side
+//   if (typeof window === "undefined") {
+//     throw new Error("setAccessToken can only be called on the client side");
+//   }
+//   // Cookies with Secure flag only be set over HTTPS (allow non-secure in development)
+//   const isSecure = window.location.protocol === "https:";
+//   inMemoryAccessToken = accessToken;
+//   const newCookie = [
+//     `accessToken=${encodeURIComponent(accessToken)}`,
+//     "path=/",
+//     "SameSite=Lax",
+//     isSecure ? "Secure" : "",
+//   ]
+//     .filter(Boolean)
+//     .join("; ");
+//   document.cookie = newCookie;
+// };
 
-const getRefreshToken = () => {
-  // Ensure this function is called only on the client side
-  if (typeof window === "undefined") {
-    throw new Error("getRefreshToken can only be called on the client side");
-  }
-  return getCookie("refreshToken");
-};
+// const getRefreshToken = () => {
+//   // Ensure this function is called only on the client side
+//   if (typeof window === "undefined") {
+//     throw new Error("getRefreshToken can only be called on the client side");
+//   }
+//   return getCookie("refreshToken");
+// };
+
+// const clearTokens = () => {
+//   if (typeof window === "undefined") {
+//     throw new Error("clearTokens can only be called on the client side");
+//   }
+//   // Cookies with Secure flag only be set over HTTPS (allow non-secure in development)
+//   const isSecure = window.location.protocol === "https:";
+//   const base = ["path=/", "SameSite=Lax", isSecure ? "Secure" : ""]
+//     .filter(Boolean)
+//     .join("; ");
+//   document.cookie = `accessToken=; Max-Age=0; ${base}`;
+//   document.cookie = `refreshToken=; Max-Age=0; ${base}`;
+//   inMemoryAccessToken = undefined;
+// };
+
+const getAccessToken = () =>
+  typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+
+const setAccessToken = (accessToken: string) =>
+  typeof window !== "undefined"
+    ? localStorage.setItem("accessToken", accessToken)
+    : null;
+
+const getRefreshToken = () =>
+  typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
 
 const clearTokens = () => {
-  if (typeof window === "undefined") {
-    throw new Error("clearTokens can only be called on the client side");
-  }
-  // Cookies with Secure flag only be set over HTTPS (allow non-secure in development)
-  const isSecure = window.location.protocol === "https:";
-  const base = ["path=/", "SameSite=Lax", isSecure ? "Secure" : ""]
-    .filter(Boolean)
-    .join("; ");
-  document.cookie = `accessToken=; Max-Age=0; ${base}`;
-  document.cookie = `refreshToken=; Max-Age=0; ${base}`;
-  inMemoryAccessToken = undefined;
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
 };
 
 // Handle concurrent API calls to refresh tokens
@@ -230,10 +247,10 @@ const logout = () => {
 };
 
 // test only
-// if (typeof window !== "undefined") {
-//   // @ts-ignore
-//   window.api = api;
-// }
+if (typeof window !== "undefined") {
+  // @ts-ignore
+  window.api = api;
+}
 
 export default api;
 export { setAccessToken };
