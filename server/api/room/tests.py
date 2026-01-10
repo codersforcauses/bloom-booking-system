@@ -1,10 +1,54 @@
+from django.test import TestCase
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from .models import Room, Location, Amenity
+from .serializers import AmenitySerializer, LocationSerializer, RoomSerializer
+from .views import RoomViewSet, LocationViewSet, AmenityViewSet
+from django.urls import reverse, resolve
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
+
+
+# --- 1. Models Tests ---
+class RoomModelTests(TestCase):
+    def test_invalid_room_capacity(self):
+        with self.assertRaises(ValidationError):
+            print("\nTest invalid room capacity:")
+            room = Room(name="room", capacity=0, start_datetime=None, end_datetime=None)
+
+
+# --- 2. Serializers Tests ---
+class AmenitySerializerTests(TestCase):
+    pass
+
+
+class LocationSerializerTests(TestCase):
+    pass
+
+
+class RoomSerializerTests(TestCase):
+    pass
+
+
+# --- 3. Views Tests ---
+class RoomViewSetTests(TestCase):
+    pass
+
+
+class LocationViewSetTests(TestCase):
+    pass
+
+
+class AmenityViewSetTests(TestCase):
+    pass
+
+
+# --- 4. URLs Tests ---
+class URLTests(TestCase):
+    pass
 
 
 class RoomAPITest(APITestCase):
