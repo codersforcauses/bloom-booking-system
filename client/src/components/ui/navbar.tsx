@@ -13,8 +13,8 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+    <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-white">
+      <div className="max-w-8xl mx-auto flex items-center justify-between px-12 py-3">
         {/* logo */}
         <Link href="/" className="text-xl font-semibold">
           <Image src="/logo.png" width={50} height={50} alt="logo" />
