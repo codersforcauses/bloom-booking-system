@@ -50,7 +50,7 @@ export default function Navbar() {
           <Link href="/">
             <Button variant="outline">Book room</Button>
           </Link>
-          <Link href="/bookings">
+          <Link href="/find-my-booking">
             <Button variant="text">Find my booking</Button>
           </Link>
           <Link href="/admin">
@@ -69,7 +69,10 @@ export default function Navbar() {
             <Link href="/">
               <Button variant="outline">Book room</Button>
             </Link>
-            <Link href="/bookings" className="-mx-4 mt-4 hover:text-primary">
+            <Link
+              href="/find-my-booking"
+              className="-mx-4 mt-4 hover:text-primary"
+            >
               <Button variant="text">Find my booking</Button>
             </Link>
             <div className="-mx-2 mt-20">
