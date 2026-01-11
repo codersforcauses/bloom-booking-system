@@ -18,6 +18,8 @@ const nextConfig = {
         return config;
       }
     : undefined,
+  // allow images from s3 to render
+  images: { domains: ["bloom-images-dev.s3.amazonaws.com"] },
 };
 
 export default nextConfig;
