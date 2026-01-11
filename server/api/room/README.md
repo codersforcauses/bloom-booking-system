@@ -80,6 +80,25 @@ Returns details for a single room.
 
 ---
 
+## Retrieve room availability
+
+**GET** `/api/rooms/{id}/availability`
+
+Returns availabile slots for a single room. Slots returned will only include time later than now.
+
+### Query Parameters (all optional):
+
+- `start_date`: Start date after or equal to (YYYY-MM-DD).
+- `end_date`: End date before or equal to (YYYY-MM-DD).
+
+**Example Request:**
+
+```
+GET /api/rooms/1/availability/?start_date=2026-01-05&end_date=2026-01-11
+```
+
+---
+
 ## Notes
 
 - Unauthenticated users only see rooms where `is_active=true`.
