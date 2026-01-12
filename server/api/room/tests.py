@@ -24,7 +24,6 @@ def next_monday_and_sunday():
     return next_monday, next_tuesday, next_wednesday, next_sunday
 
 
-future_date = date.today() + timedelta(days=7)
 next_monday, next_tuesday, next_wednesday, next_sunday = next_monday_and_sunday()
 today = timezone.localdate()
 
@@ -173,7 +172,7 @@ class AvailabilityAPITest(APITestCase):
                 timezone.datetime(2025, 10, 1, 9, 0)),
             end_datetime=timezone.make_aware(
                 timezone.datetime(2025, 10, 1, 18, 0)),
-            recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE",
+            recurrence_rule="FREQ=WEEKLY;BYDAY=MO,TU,WE",
             is_active=True
         )
         self.room1.amenities.set([self.amenity1, self.amenity2])
@@ -184,9 +183,9 @@ class AvailabilityAPITest(APITestCase):
             location=self.loc1,
             capacity=5,
             start_datetime=timezone.make_aware(
-                timezone.datetime.combine(future_date, time(9, 0))),
+                timezone.datetime.combine(next_monday, time(9, 0))),
             end_datetime=timezone.make_aware(
-                timezone.datetime.combine(future_date, time(18, 0))),
+                timezone.datetime.combine(next_monday, time(18, 0))),
             is_active=True
         )
         self.room2.amenities.set([self.amenity1, self.amenity2])
@@ -214,7 +213,7 @@ class AvailabilityAPITest(APITestCase):
                 timezone.datetime(2025, 10, 1, 11, 0)),
             end_datetime=timezone.make_aware(
                 timezone.datetime(2025, 10, 1, 12, 0)),
-            recurrence_rule="FREQ=DAILY;BYDAY=MO",
+            recurrence_rule="FREQ=WEEKLY;BYDAY=MO",
             status='CONFIRMED'
         )
 
@@ -224,9 +223,9 @@ class AvailabilityAPITest(APITestCase):
             visitor_name='John Doe',
             visitor_email='john@example.com',
             start_datetime=timezone.make_aware(
-                timezone.datetime.combine(future_date, time(13, 0))),
+                timezone.datetime.combine(next_monday, time(13, 0))),
             end_datetime=timezone.make_aware(
-                timezone.datetime.combine(future_date, time(14, 0))),
+                timezone.datetime.combine(next_monday, time(14, 0))),
             recurrence_rule="",
             status='CONFIRMED'
         )
@@ -288,13 +287,13 @@ class AvailabilityAPITest(APITestCase):
         self.assertEqual(room_id, self.room2.id)
         availability = response.data["availability"]
         self.assertEqual(len(availability), 1)
-        self.assertEqual(availability[0]['date'], future_date.isoformat())
+        self.assertEqual(availability[0]['date'], next_monday.isoformat())
         self.assertEqual(len(availability[0]["slots"]), 2)
         # Room 2 has a booking from 13:00 to 14:00
         self.assertEqual(availability[0]["slots"][0]['end'], timezone.make_aware(
-            timezone.datetime.combine(future_date, time(13, 0))).isoformat())
+            timezone.datetime.combine(next_monday, time(13, 0))).isoformat())
         self.assertEqual(availability[0]["slots"][1]['start'], timezone.make_aware(
-            timezone.datetime.combine(future_date, time(14, 0))).isoformat())
+            timezone.datetime.combine(next_monday, time(14, 0))).isoformat())
 
     # Test availability when start_date is at today
     def test_availability_today(self):
@@ -325,3 +324,27 @@ class AvailabilityAPITest(APITestCase):
         actual_start = timezone.datetime.fromisoformat(availability[0]["slots"][0]["start"])
         self.assertLess(abs(actual_start - expected_start), timedelta(seconds=1))
         self.assertEqual(availability[0]["slots"][0]["end"], expected_end.isoformat())
+
+    def test_rooms_availability(self):
+        start_datetime = timezone.make_aware(
+            timezone.datetime.combine(next_monday, time(11, 0))
+            )
+        end_datetime = timezone.make_aware(
+            timezone.datetime.combine(next_monday, time(12, 0))
+            )
+        response = self.client.get(
+            f"/api/rooms/availability/?start_datetime={start_datetime.isoformat()}&end_datetime={end_datetime.isoformat()}"
+            )
+        print("\nRooms Availability Response:")
+        print(response.content.decode())
+        print()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 3)
+        self.assertEqual(data[0]['room_id'], self.room1.id)
+        self.assertEqual(data[0]['availability'], False)
+        self.assertEqual(data[1]['room_id'], self.room2.id)
+        self.assertEqual(data[1]['availability'], True)
+        self.assertEqual(data[2]['room_id'], self.room3.id)
+        self.assertEqual(data[2]['availability'], False)
