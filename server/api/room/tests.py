@@ -195,7 +195,7 @@ class AvailabilityAPITest(APITestCase):
             location=self.loc1,
             capacity=8,
             start_datetime=timezone.make_aware(
-                 timezone.datetime.combine(today, time(9, 0))
+                 timezone.datetime.combine(today, time(0, 0))
                  ),
             end_datetime=timezone.make_aware(
                  timezone.datetime.combine(today, time(23, 59))
@@ -313,7 +313,7 @@ class AvailabilityAPITest(APITestCase):
         self.assertEqual(len(availability[0]["slots"]), 1)
         now_local = timezone.localtime(timezone.now())
         room_start = timezone.make_aware(
-            timezone.datetime.combine(today, time(9, 0))
+            timezone.datetime.combine(today, time(0, 0))
             )
         room_end = timezone.make_aware(
             timezone.datetime.combine(today, time(23, 59))
