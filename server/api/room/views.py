@@ -8,12 +8,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.decorators import action
 from django.db.models import Q
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from dateutil.rrule import rruleset, rrulestr
 from api.booking.models import Booking
 from datetime import datetime, time
 from django.utils.timezone import localdate, make_aware, localtime, now
 from collections import defaultdict
+from rest_framework.exceptions import ValidationError
 # Viewset is library that provides CRUD operations for api
 # Admin have create update delete permissions everyone can read
 # get request can filter by name, location, capacity for get
@@ -25,9 +26,11 @@ from collections import defaultdict
 
 # Helper function to expand recurrence rules
 def _expand_recurrences(base_start_datetime, rrule_str, rdate_list=None, exdate_list=None):
+    # Convert DTSTART to local timezone (where the recurrence rule apply)
+    start_local = localtime(base_start_datetime)
     rrule_set = rruleset()
     if rrule_str:
-        rrule_set.rrule(rrulestr(rrule_str, dtstart=base_start_datetime))
+        rrule_set.rrule(rrulestr(rrule_str, dtstart=start_local))
     if rdate_list:
         for dt in rdate_list:
             rrule_set.rdate(dt)
@@ -35,6 +38,30 @@ def _expand_recurrences(base_start_datetime, rrule_str, rdate_list=None, exdate_
         for dt in exdate_list:
             rrule_set.exdate(dt)
     return rrule_set
+
+
+# Helper function to validate optional datetime string (excluding date string)
+def parse_optional_datetime(value, field_name):
+    # Allow None
+    if value is None:
+        return None
+    # Fix URL-encoded '+' turning into space
+    value = value.replace(" ", "+", 1) if " " in value and "+" not in value else value
+    # If still no timezone is present, append default ('Australia/Perth')
+    if "+" not in value and "-" not in value[-6:] and "Z" not in value:
+        value += '+0800'
+    # Parse datetime string
+    datetime = parse_datetime(value)
+    if datetime is None:
+        raise ValidationError({
+            "detail": f"Invalid datetime format for {field_name}."
+        })
+    # Reject date-only strings (YYYY-MM-DD)
+    if "T" not in value:
+        raise ValidationError({
+            "detail": f"Date-only strings are not allowed for {field_name}."
+        })
+    return datetime
 
 
 class RoomViewSet(viewsets.ModelViewSet):
@@ -68,8 +95,48 @@ class RoomViewSet(viewsets.ModelViewSet):
 
         return qs
 
+    # get boolean availability (whether they can be booked) for rooms
+    @action(detail=False, methods=["get"], url_path="availability")
+    def get_rooms_availability(self, request, pk=None):
+        """
+        Get availability (whether they can be booked) for rooms within a datetime range.
+        Returns: JSON response with room ID and availability (boolean).
+        """
+        # Get the same base queryset as /rooms
+        queryset = self.get_queryset()
+        # Apply filter and order as /rooms
+        queryset = self.filter_queryset(queryset)
+        # Apply pagination as /rooms
+        page = self.paginate_queryset(queryset)
+        # Get start_datetime & end_datetime from params
+        start_datetime = request.query_params.get("start_datetime")
+        end_datetime = request.query_params.get("end_datetime")
+        start_datetime = parse_optional_datetime(start_datetime, 'start_datetime')
+        end_datetime = parse_optional_datetime(end_datetime, 'end_datetime')
+        # if start_datetime is earlier than now, set to now
+        current_time = localtime(now())
+        if start_datetime is None or start_datetime < current_time:
+            start_datetime = current_time
+        # Compute availability for each room in the page
+        results = []
+        # If there is no end_datetime, theoretically the room cannot be fully booked
+        if end_datetime is None:
+            for room in page:
+                results.append({"room_id": room.id, "availability": True})
+        # If end_datetime is earlier than now, the room cannot be booked
+        elif end_datetime < current_time:
+            for room in page:
+                results.append({"room_id": room.id, "availability": False})
+        else:
+            for room in page:
+                availability = self._calculate_boolean_availability(room, start_datetime, end_datetime)
+                results.append({"room_id": room.id, "availability": availability})
+        # Return paginated response
+        return self.get_paginated_response(results)
+
+    # get availability slots (when a room can be booked) for a single room
     @action(detail=True, methods=["get"], url_path="availability")
-    def availability(self, request, pk=None):
+    def get_room_availability(self, request, pk=None):
         """
         Get availability for a specific room within a date range.
         Returns: JSON response with room ID and availability slots.
@@ -99,6 +166,79 @@ class RoomViewSet(viewsets.ModelViewSet):
 
         availability = self._calculate_availability(room, start_date, end_date)
         return Response({"room_id": room.id, "availability": availability}, status=200)
+
+    def _calculate_boolean_availability(self, room, start_datetime, end_datetime):
+        """
+        Returns True if the room has any free slot that overlaps with the requested time range.
+        Returns False only if no free interval intersects the requested time range.
+        """
+        availability_slots = self._get_availability_slots(room, start_datetime, end_datetime)
+        for as_start, as_end in availability_slots:
+            if as_end > start_datetime and as_start < end_datetime:
+                return True
+        return False
+
+    # Helper function to get availability slots after subtracting booked slots
+    def _get_availability_slots(self, room, start_datetime, end_datetime):
+        """
+        Returns a flat list of (free_start, free_end) datetime tuples.
+        No sorting and formatting about output.
+        """
+        # Step 1: get all slots that have been booked
+        booked_slots = []
+        bookings = Booking.objects.filter(room=room).filter(
+            Q(recurrence_rule__isnull=False) |
+            Q(start_datetime__lt=end_datetime, end_datetime__gt=start_datetime)
+        )
+        for booking in bookings:
+            duration = booking.end_datetime - booking.start_datetime
+            if booking.recurrence_rule:
+                booking_recurrence_rule = booking.recurrence_rule   # handle rdate_list, exdate_list if needed
+                # get start time of occurrences between the date of start_datetime and the date of end_datetime
+                booking_occurrences = _expand_recurrences(
+                    booking.start_datetime,
+                    booking_recurrence_rule,
+                ).between(
+                    make_aware(datetime.combine(start_datetime.date(), time.min)),
+                    make_aware(datetime.combine(end_datetime.date(), time.max))
+                )
+                for occurence_start in booking_occurrences:
+                    booked_slots.append((occurence_start, occurence_start + duration))
+            else:
+                booked_slots.append((booking.start_datetime, booking.end_datetime))
+
+        # Step 2: get all available slots based on room's recurrence rules
+        availability_slots = []
+        if not room.recurrence_rule:
+            # assume room.start_datetime and room.end_datetime are on the same date
+            available_date = room.start_datetime.date()
+            if start_datetime.date() <= available_date <= end_datetime.date():
+                availability_slots.extend(
+                    self._get_free_intervals(
+                        room.start_datetime,
+                        room.end_datetime,
+                        booked_slots
+                        ))
+        else:
+            duration = room.end_datetime - room.start_datetime
+            room_recurrence_rule = room.recurrence_rule    # handle rdate_list, exdate_list if needed
+            # get start time of occurrences between the date of start_datetime and the date of end_datetime
+            room_occurrences = _expand_recurrences(
+                room.start_datetime,
+                room_recurrence_rule
+            ).between(
+                make_aware(datetime.combine(start_datetime.date(), time.min)),
+                make_aware(datetime.combine(end_datetime.date(), time.max))
+            )
+            for occurrence_start in room_occurrences:
+                occurrence_end = occurrence_start + duration
+                availability_slots.extend(
+                    self._get_free_intervals(
+                        occurrence_start,
+                        occurrence_end,
+                        booked_slots
+                        ))
+        return availability_slots
 
     def _calculate_availability(self, room, start_date, end_date):
         """
@@ -216,6 +356,32 @@ class RoomViewSet(viewsets.ModelViewSet):
                 "start": localtime(fi_start).isoformat(),
                 "end": localtime(fi_end).isoformat()
             })
+
+    # Helper function to get free intervals
+    def _get_free_intervals(self, room_start, room_end, booked_slots):
+        # Filter only overlapping bookings
+        overlapping_bookings = [
+            (b_start, b_end)
+            for b_start, b_end in booked_slots
+            if b_end > room_start and b_start < room_end
+        ]
+        # Subtract booked intervals
+        free_intervals = self._subtract_booked_from_room_availability(
+            room_start, room_end, overlapping_bookings
+        )
+        # Trim past intervals
+        current_time = localtime(now())
+        trimmed_free_intervals = []
+        for fi_start, fi_end in free_intervals:
+            # If the interval is today, include only future times
+            if fi_start.date() == current_time.date():
+                # Skip intervals that end in the past
+                if fi_end <= current_time:
+                    continue
+                # Adjust fi_start to be current_time if it's in the past
+                fi_start = max(fi_start, current_time)
+            trimmed_free_intervals.append((fi_start, fi_end))
+        return trimmed_free_intervals
 
 
 class LocationViewSet(viewsets.ModelViewSet):
