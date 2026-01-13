@@ -8,12 +8,11 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import api, { setAccessToken } from "@/lib/api";
+import api, { setAccessToken, setRefreshToken } from "@/lib/api";
 
 /**
  * - POST /users/login/ with username/password
- * - Backend returns access token in JSON and sets refresh token cookie
- * - Store access token in memory via setAccessToken()
+ * - Store access + refresh tokens in localStorage via api.ts helpers cookie
  * - Redirect to home page on success
  * - Show error message on failure
  */
@@ -50,15 +49,20 @@ export default function LoginPage() {
       const access: string | undefined =
         res.data?.access || res.data?.access_token || res.data?.token;
 
-      if (!access) {
+      const refresh: string | undefined =
+        res.data?.refresh || res.data?.refresh_token;
+
+      if (!access || !refresh) {
         setError("root", {
           type: "server",
-          message: "Login succeeded but no access token was returned.",
+          message:
+            "Login succeeded but tokens were not returned (expected access + refresh).",
         });
         return;
       }
 
       setAccessToken(access);
+      setRefreshToken(refresh);
 
       router.push("/");
       router.refresh();
