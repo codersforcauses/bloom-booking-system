@@ -32,6 +32,11 @@ export default function TestInputPage() {
   const [amenities, setAmenities] = React.useState<string[]>([]);
   const [frequency, setFrequency] = React.useState("");
 
+  const [timeManual, setTimeManual] = React.useState("");
+  const [timeSelect, setTimeSelect] = React.useState("");
+
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
+
   return (
     <div className="min-h-screen bg-[hsl(var(--secondary))] p-8">
       <div className="mx-auto max-w-lg space-y-6 rounded-lg border bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))] shadow-sm">
@@ -65,7 +70,7 @@ export default function TestInputPage() {
           options={AMENITIES}
           value={amenities}
           onChange={setAmenities}
-          placeholder="Select Amenities"
+          placeholder="Select amenities"
         />
 
         {/* Select input */}
@@ -77,6 +82,36 @@ export default function TestInputPage() {
           value={frequency}
           onChange={setFrequency}
           placeholder="Select frequency"
+        />
+
+        {/* Time (manual HH:MM) */}
+        <InputField
+          kind="time"
+          label="Start Time"
+          name="startTimeManual"
+          value={timeManual}
+          onChange={setTimeManual}
+          placeholder="HH:MM"
+        />
+
+        {/* Time-Select (08:00–17:00, 30-min intervals) */}
+        <InputField
+          kind="time-select"
+          label="End Time"
+          name="startTimeSelect"
+          value={timeSelect}
+          onChange={setTimeSelect}
+          placeholder="Select a time"
+        />
+
+        {/* Date input */}
+        <InputField
+          kind="date"
+          label="Date"
+          name="bookingDate"
+          value={date}
+          onChange={setDate}
+          placeholder="Select date"
         />
       </div>
     </div>
