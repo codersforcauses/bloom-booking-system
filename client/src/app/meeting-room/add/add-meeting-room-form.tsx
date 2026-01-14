@@ -142,9 +142,9 @@ export default function AddMeetingRoomForm() {
         {/* Room Title */}
         <InputField
           kind="text"
-          name="title"
-          label="Room Name"
-          placeholder="e.g., BHAGIRATHI"
+          name="name"
+          label="Name"
+          placeholder="Name"
           value={formData.title || ""}
           onChange={(value) => handleInputChange("title", value)}
           required
@@ -156,7 +156,7 @@ export default function AddMeetingRoomForm() {
           kind="text"
           name="location"
           label="Location"
-          placeholder="e.g., Pune Hinjewadi"
+          placeholder="Location"
           value={formData.location || ""}
           onChange={(value) => handleInputChange("location", value)}
           required
@@ -167,7 +167,7 @@ export default function AddMeetingRoomForm() {
         <InputField
           kind="number"
           name="seats"
-          label="Number of Seats"
+          label="Seat Capacity"
           placeholder="e.g., 10"
           value={formData.seats?.toString() || ""}
           onChange={(value) => handleInputChange("seats", parseInt(value) || 0)}
