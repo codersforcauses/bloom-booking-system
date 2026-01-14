@@ -13,8 +13,6 @@ export default function AddMeetingRoomPage() {
           { label: "Add Meeting Room" },
         ]}
       />
-      {/* Page title */}
-      <h1 className="text-2xl font-semibold">Meeting Rooms</h1>
 
       {/* Admin-only form */}
       <AddMeetingRoomForm />
