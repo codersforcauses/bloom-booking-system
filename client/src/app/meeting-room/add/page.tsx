@@ -1,6 +1,6 @@
 import Breadcrumb from "@/components/breadcrumb";
 
-import AddMeetingRoomForm from "./AddMeetingRoomForm";
+import AddMeetingRoomForm from "./add-meeting-room-form";
 
 export default function AddMeetingRoomPage() {
   return (
