@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
 import { PaginationBar } from "@/components/pagination-bar";
+import { cn } from "@/lib/utils";
 
 const mockData = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
@@ -72,45 +73,74 @@ type TableProps = {
 };
 
 function Table({ data }: TableProps) {
-  return (
-    <div className="mb-4 overflow-hidden rounded-lg border border-gray-300 bg-white">
-      <table className="w-full border-collapse text-sm">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="border-b px-4 py-2 text-left font-medium">ID</th>
-            <th className="border-b px-4 py-2 text-left font-medium">Name</th>
-            <th className="border-b px-4 py-2 text-left font-medium">Status</th>
-          </tr>
-        </thead>
+  const commonTableHeadClasses =
+    "w-auto px-4 py-2 text-left font-medium text-nowrap";
 
-        <tbody>
-          {data.length === 0 ? (
+  return (
+    <div className="mb-4 rounded-lg border border-gray-300 bg-white">
+      {/* Horizontal scroll wrapper */}
+      <div className="relative max-h-[60vh] overflow-x-auto overflow-y-auto rounded-lg border">
+        <table className="w-full min-w-[800px] border-collapse text-sm">
+          <thead className="sticky top-0 z-10 bg-gray-200">
             <tr>
-              <td colSpan={3} className="px-4 py-6 text-center text-gray-500">
-                No data available
-              </td>
+              <th className={commonTableHeadClasses}>
+                ID with Super Long Header Name To Test Sticky Behavior
+              </th>
+              <th className={commonTableHeadClasses}>
+                Name with Super Long Header Name To Test Sticky Behavior
+              </th>
+              <th className={commonTableHeadClasses}>
+                Status with Super Long Header Name To Test Sticky Behavior
+              </th>
+              <th
+                className={cn(
+                  commonTableHeadClasses,
+                  "sticky right-0 z-20 bg-gray-200",
+                )}
+              >
+                Actions
+              </th>
             </tr>
-          ) : (
-            data.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
-                <td className="border-b px-4 py-2">{row.id}</td>
-                <td className="border-b px-4 py-2">{row.name}</td>
-                <td className="border-b px-4 py-2">
-                  <span
-                    className={
-                      row.status === "Active"
-                        ? "text-green-600"
-                        : "text-gray-500"
-                    }
-                  >
-                    {row.status}
-                  </span>
+          </thead>
+
+          <tbody>
+            {data.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
+                  No data available
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              data.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50">
+                  <td className="border-b px-4 py-2">{row.id}</td>
+
+                  <td className="border-b px-4 py-2">{row.name}</td>
+
+                  <td className="border-b px-4 py-2">
+                    <span
+                      className={
+                        row.status === "Active"
+                          ? "text-green-600"
+                          : "text-gray-500"
+                      }
+                    >
+                      {row.status}
+                    </span>
+                  </td>
+
+                  {/* Sticky column */}
+                  <td className="sticky right-0 border-b bg-white px-4 py-2">
+                    <button className="text-blue-600 hover:underline">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

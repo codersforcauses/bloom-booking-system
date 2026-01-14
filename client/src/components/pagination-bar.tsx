@@ -81,40 +81,39 @@ export function PaginationBar({
 
   return (
     <div
-      className={cn(
-        "flex w-full flex-wrap items-center justify-between gap-6 max-sm:justify-center",
-        className,
-      )}
+      className={cn("flex w-full flex-wrap justify-between gap-6", className)}
     >
-      {/* Rows per page */}
-      <div className="flex shrink-0 items-center gap-3">
-        <Label htmlFor={id}>Rows per page</Label>
+      <div className="flex gap-2">
+        {/* Rows per page */}
+        <div className="flex shrink-0 items-center gap-3">
+          <Label htmlFor={id}>Rows per page</Label>
 
-        {row !== undefined && onRowChange && (
-          <SelectRow
-            id={id}
-            className="h-7 w-20"
-            selectedRow={row}
-            onChange={onRowChange}
+          {row !== undefined && onRowChange && (
+            <SelectRow
+              id={id}
+              className="h-7 w-20 justify-normal gap-3"
+              selectedRow={row}
+              onChange={onRowChange}
+            />
+          )}
+        </div>
+
+        {/* Page input */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          Page
+          <input
+            value={pageInput}
+            onChange={(e) => setPageInput(e.target.value.replace(/\D/g, ""))}
+            onBlur={commitPageChange}
+            onKeyDown={(e) => e.key === "Enter" && commitPageChange()}
+            className="w-12 rounded border px-2 py-0.5 text-center text-foreground"
           />
-        )}
-      </div>
-
-      {/* Page input */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        Page
-        <input
-          value={pageInput}
-          onChange={(e) => setPageInput(e.target.value.replace(/\D/g, ""))}
-          onBlur={commitPageChange}
-          onKeyDown={(e) => e.key === "Enter" && commitPageChange()}
-          className="w-12 rounded border px-2 py-0.5 text-center text-foreground"
-        />
-        of <span className="text-foreground">{totalPages}</span>
+          of <span className="text-foreground">{totalPages}</span>
+        </div>
       </div>
 
       {/* Pagination */}
-      <Pagination className="w-fit max-sm:mx-0">
+      <Pagination className="mx-0 w-fit justify-end">
         <PaginationContent>
           {/* First */}
           <PaginationItem>
