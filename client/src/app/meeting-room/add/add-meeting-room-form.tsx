@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -12,8 +11,8 @@ import { Room } from "@/types/card";
 export default function AddMeetingRoomForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState<Partial<Room>>({
     title: "",
@@ -26,18 +25,18 @@ export default function AddMeetingRoomForm() {
     bookings: 0,
   });
 
-  // Available amenities
+  // Available amenities matching the screenshot
   const availableAmenities = [
     "Audio",
     "Video",
-    "HDMI",
     "White Board",
-    "Sound System",
+    "HDMI",
+    "Projector",
+    "Speaker Phone",
   ];
 
   const handleInputChange = (field: keyof Room, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
@@ -45,11 +44,6 @@ export default function AddMeetingRoomForm() {
 
   const handleAmenitiesChange = (value: string[]) => {
     setFormData((prev) => ({ ...prev, amenities: value }));
-  };
-
-  const handleImageChange = (value: string) => {
-    handleInputChange("image", value);
-    setImagePreview(value);
   };
 
   const validateForm = () => {
@@ -64,15 +58,7 @@ export default function AddMeetingRoomForm() {
     }
 
     if (!formData.seats || formData.seats <= 0) {
-      newErrors.seats = "Number of seats must be greater than 0";
-    }
-
-    if (!formData.image?.trim()) {
-      newErrors.image = "Image URL is required";
-    }
-
-    if (!formData.availablility?.trim()) {
-      newErrors.availablility = "Availability schedule is required";
+      newErrors.seats = "Seat capacity is required";
     }
 
     setErrors(newErrors);
@@ -97,7 +83,6 @@ export default function AddMeetingRoomForm() {
         throw new Error("Failed to add room");
       }
 
-      // Redirect to Meeting Rooms list after adding
       router.push("/meeting-room");
     } catch (error) {
       console.error("Failed to add room:", error);
@@ -112,111 +97,178 @@ export default function AddMeetingRoomForm() {
   };
 
   return (
-    <Card className="w-full bg-white p-6 shadow-sm">
-      <div className="space-y-6">
-        {/* Image URL and Preview */}
-        <div>
+    <div className="mx-auto max-w-4xl">
+      <h2 className="mb-6 text-2xl font-bold">Meeting Rooms</h2>
+
+      <Card className="w-full bg-white p-8 shadow-sm">
+        <div className="space-y-6">
+          {/* Row 1: Name, Location and Seat Capacity */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <InputField
+              kind="text"
+              name="name"
+              label="Name"
+              placeholder="Name"
+              value={formData.title || ""}
+              onChange={(value) => handleInputChange("title", value)}
+              required
+              error={errors.title}
+            />
+            <InputField
+              kind="text"
+              name="location"
+              label="Location"
+              placeholder="Location"
+              value={formData.location || ""}
+              onChange={(value) => handleInputChange("location", value)}
+              required
+              error={errors.location}
+            />
+            <InputField
+              kind="number"
+              name="seats"
+              label="Seat Capacity"
+              placeholder="Capacity"
+              value={formData.seats?.toString() || ""}
+              onChange={(value) =>
+                handleInputChange("seats", parseInt(value) || 0)
+              }
+              min={1}
+              required
+              error={errors.seats}
+            />
+          </div>
+
+          {/* Row 3: Amenities */}
           <InputField
-            kind="text"
-            name="image"
-            label="Room Image URL"
-            placeholder="Enter image URL"
-            value={formData.image || ""}
-            onChange={handleImageChange}
-            required
-            error={errors.image}
+            kind="badge"
+            name="amenities"
+            label="Amenities"
+            placeholder="Select amenities"
+            options={availableAmenities}
+            value={formData.amenities || []}
+            onChange={handleAmenitiesChange}
           />
-          {imagePreview && (
-            <div className="relative mt-4 h-40 w-full overflow-hidden rounded-md">
-              <Image
-                src={imagePreview}
-                alt="Room preview"
-                fill
-                className="object-cover"
-                onError={() => setImagePreview("")}
-              />
+
+          {/* Upload Image */}
+          <div className="space-y-1">
+            <label className="body-sm-bold block">Upload Image</label>
+
+            <div className="rounded-md border bg-background shadow-[0_4px_0_0_#D1D5DB]">
+              <label
+                htmlFor="image"
+                className="flex cursor-pointer items-center justify-between px-3 py-2"
+              >
+                <span className="body text-[var(--bloom-gray)]">
+                  {imageFile ? imageFile.name : "No file selected"}
+                </span>
+
+                <span className="body rounded-md bg-[var(--bloom-blue)] px-4 py-1.5 text-white hover:opacity-90">
+                  Choose File
+                </span>
+
+                <input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
             </div>
-          )}
+
+            {errors.image && (
+              <p className="caption text-[var(--bloom-red)]">{errors.image}</p>
+            )}
+          </div>
+
+          {/* Row 5: Date and Time Slots */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <InputField
+              kind="date"
+              name="date"
+              label="Date"
+              placeholder="DD/MM/YYYY"
+              value={undefined}
+              onChange={(value) => {
+                // Handle date change if needed
+              }}
+            />
+
+            <InputField
+              kind="time-select"
+              name="timeSlotStart"
+              label="Time Slot"
+              placeholder="Select"
+              value=""
+              onChange={(value) => {
+                // Handle start time change
+              }}
+            />
+
+            <InputField
+              kind="time-select"
+              name="timeSlotEnd"
+              label="Time Slot"
+              placeholder="Select"
+              value=""
+              onChange={(value) => {
+                // Handle end time change
+              }}
+            />
+          </div>
+
+          {/* All day checkbox */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="allDay"
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <label htmlFor="allDay" className="body text-gray-700">
+              All day
+            </label>
+          </div>
+
+          {/* Repeat dropdown */}
+          <div className="max-w-xs">
+            <InputField
+              kind="select"
+              name="repeat"
+              label="Repeat"
+              placeholder="Does not repeat"
+              options={[
+                { label: "Does not repeat", value: "none" },
+                { label: "Daily", value: "daily" },
+                { label: "Weekly", value: "weekly" },
+                { label: "Monthly", value: "monthly" },
+              ]}
+              value=""
+              onChange={(value) => {
+                // Handle repeat change
+              }}
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-4">
+            <Button
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              className="h-[41px] border border-gray-300 bg-white px-6 text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="hover:bg-[var(--bloom-blue)]/90 h-[41px] border-b-4 bg-[var(--bloom-blue)] px-6 text-white disabled:bg-gray-400"
+            >
+              {isSubmitting ? "Adding..." : "Add"}
+            </Button>
+          </div>
         </div>
-
-        {/* Room Title */}
-        <InputField
-          kind="text"
-          name="name"
-          label="Name"
-          placeholder="Name"
-          value={formData.title || ""}
-          onChange={(value) => handleInputChange("title", value)}
-          required
-          error={errors.title}
-        />
-
-        {/* Location */}
-        <InputField
-          kind="text"
-          name="location"
-          label="Location"
-          placeholder="Location"
-          value={formData.location || ""}
-          onChange={(value) => handleInputChange("location", value)}
-          required
-          error={errors.location}
-        />
-
-        {/* Seats */}
-        <InputField
-          kind="number"
-          name="seats"
-          label="Seat Capacity"
-          placeholder="e.g., 10"
-          value={formData.seats?.toString() || ""}
-          onChange={(value) => handleInputChange("seats", parseInt(value) || 0)}
-          min={1}
-          required
-          error={errors.seats}
-        />
-
-        {/* Availability Schedule */}
-        <InputField
-          kind="text"
-          name="availablility"
-          label="Availability Schedule"
-          placeholder="e.g., 8:00am - 5:00pm, Mon - Fri"
-          value={formData.availablility || ""}
-          onChange={(value) => handleInputChange("availablility", value)}
-          required
-          error={errors.availablility}
-        />
-
-        {/* Amenities */}
-        <InputField
-          kind="badge"
-          name="amenities"
-          label="Amenities"
-          placeholder="Select amenities"
-          options={availableAmenities}
-          value={formData.amenities || []}
-          onChange={handleAmenitiesChange}
-        />
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 pt-4">
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="hover:bg-[var(--bloom-blue)]/90 h-[41px] border-b-4 bg-[var(--bloom-blue)] px-6 text-white disabled:bg-gray-400"
-          >
-            {isSubmitting ? "Saving..." : "Save Room"}
-          </Button>
-          <Button
-            onClick={handleCancel}
-            disabled={isSubmitting}
-            className="h-[41px] border border-gray-300 bg-white px-6 text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 }
