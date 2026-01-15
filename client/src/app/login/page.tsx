@@ -8,7 +8,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import api, { setAccessToken, setRefreshToken } from "@/lib/api";
+import api, { setAccessToken } from "@/lib/api";
 
 /**
  * - POST /users/login/ with username/password
@@ -40,7 +40,8 @@ export default function LoginPage() {
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      // Backend should set refresh cookie and return access token in JSON.
+      // Swagger: POST /api/users/login/
+      // Using api instance => baseURL already includes /api (from NEXT_PUBLIC_BACKEND_URL)
       const res = await api.post("/users/login/", {
         username: values.username,
         password: values.password,
@@ -61,9 +62,16 @@ export default function LoginPage() {
         return;
       }
 
+      // Store tokens in localStorage
+      // accessToken setter is exported from api.ts
       setAccessToken(access);
-      setRefreshToken(refresh);
 
+      // refresh token is used by api.ts refresh flow, so we must store it too
+      if (typeof window !== "undefined") {
+        localStorage.setItem("refreshToken", refresh);
+      }
+
+      // Redirect to home
       router.push("/");
       router.refresh();
     } catch (err: any) {
@@ -71,7 +79,6 @@ export default function LoginPage() {
         err?.response?.data?.detail ||
         err?.response?.data?.message ||
         "Invalid username or password.";
-
       setError("root", { type: "server", message });
     }
   };
@@ -95,7 +102,6 @@ export default function LoginPage() {
             >
               Username / Email
             </Label>
-
             <Input
               id="username"
               type="text"
@@ -104,7 +110,6 @@ export default function LoginPage() {
               className="h-11 border border-slate-200 shadow-[0_2px_0_rgba(148,163,184,0.5)] placeholder:text-slate-400"
               {...register("username")}
             />
-
             {errors.username && (
               <p className="text-xs text-[var(--bloom-red)]">
                 {errors.username.message}
@@ -120,7 +125,6 @@ export default function LoginPage() {
             >
               Password
             </Label>
-
             <Input
               id="password"
               type="password"
@@ -129,7 +133,6 @@ export default function LoginPage() {
               className="h-11 border border-slate-200 shadow-[0_2px_0_rgba(148,163,184,0.5)] placeholder:text-slate-400"
               {...register("password")}
             />
-
             {errors.password && (
               <p className="text-xs text-[var(--bloom-red)]">
                 {errors.password.message}
@@ -146,7 +149,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Server / root error */}
+          {/* Server error */}
           {errors.root?.message && (
             <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
               {errors.root.message}
