@@ -1,13 +1,18 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
-import api from "@/lib/api";
+import { apiGet } from "@/lib/api"; // use typed helper
+import type { PingResponse } from "@/lib/apiTypes"; // response type
 
 export const usePings = (
-  args?: Omit<UseQueryOptions, "queryKey" | "queryFn">,
+  args?: Omit<
+    UseQueryOptions<PingResponse, AxiosError>,
+    "queryKey" | "queryFn"
+  >,
 ) => {
-  return useQuery({
+  return useQuery<PingResponse, AxiosError>({
     ...args,
     queryKey: ["pings"],
-    queryFn: () => api.get("/healthcheck/ping/").then((res) => res.data),
+    queryFn: () => apiGet<PingResponse>("/healthcheck/ping/"),
   });
 };
