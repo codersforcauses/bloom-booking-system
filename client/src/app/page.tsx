@@ -25,7 +25,7 @@ export default function Home() {
       </Button>
       <p>
         Response from server:{" "}
-        <span className="font-bold">{data as string}</span>
+        <span className="font-bold">{isLoading ? "Loading..." : data ?? "No response"}</span>
       </p>
     </main>
   );

@@ -60,4 +60,4 @@ export type PaginatedResponse<T> = {
 
 export type RoomListResponse = PaginatedResponse<Room>;
 
-export type PingResponse = Record<string, unknown>;
+export type PingResponse = string;
