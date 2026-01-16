@@ -224,7 +224,7 @@ class BookingViewTest(APITestCase):
             "visitor_email": self.booking.visitor_email,
             "start_datetime": future_date.replace(hour=12, minute=0, second=0, microsecond=0),
             "end_datetime": future_date.replace(hour=14, minute=0, second=0, microsecond=0),
-            "recurrence_rule": "FREQ=WEEKLY"
+            "recurrence_rule": "FREQ=WEEKLY;COUNT=10"  # Updated to include a COUNT
         }
 
         url = f'/api/bookings/{self.booking.id}/'
