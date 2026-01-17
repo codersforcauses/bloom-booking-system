@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { map } from "zod";
 
 import Breadcrumb from "@/components/breadcrumb";
 import InputField from "@/components/input";
@@ -14,14 +15,15 @@ import FilterPopOver from "./filterbutton";
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const [roomNames, setRoomNames] = useState<string[]>([]);
 
   async function fetchRooms() {
     const apiUrl = "/rooms/";
     await api({ url: apiUrl, method: "get" })
       .then((response) => {
         const mappedRooms = mapRooms(response.data.results);
+
         setRooms(mappedRooms);
-        console.log(response.data.results);
       })
       .catch((error) => {
         console.error("Error fetching rooms:", error);
@@ -86,7 +88,8 @@ export default function RoomsPage() {
               onChange={(e) => searchfunction(e)}
               placeholder="Search here"
             />
-            <FilterPopOver />
+
+            <FilterPopOver roomlames={["holder", "holder"]} />
             <a href="/meeting-room/add">
               <Button variant="confirm">Add Room</Button>
             </a>

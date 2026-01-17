@@ -7,7 +7,7 @@ import {
 
 import FilterDropDown from "./filterdropdown";
 
-export default function FilterPopover() {
+export default function FilterPopOver(roomlames: any) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -17,7 +17,7 @@ export default function FilterPopover() {
       </PopoverTrigger>
 
       <PopoverContent align="end" sideOffset={8} className="w-auto p-0">
-        <FilterDropDown />
+        <FilterDropDown roomNames={roomlames} />
       </PopoverContent>
     </Popover>
   );

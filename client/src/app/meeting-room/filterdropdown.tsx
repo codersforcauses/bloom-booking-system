@@ -21,13 +21,18 @@ import {
 } from "@/components/ui/form";
 import TimePicker from "@/components/ui/timeselect";
 
-const ROOM_NAMES = ["Jasmin", "Lily", "Lotus", "Marigold", "Rose"];
+const ROOM_NAMES = [
+  "Conference Room A",
+  "Meeting Room B",
+  "Huddle Space C",
+  "Boardroom D",
+];
 const FREQUENCIES = [
   { label: "Unavailable", value: "daily" },
   { label: "Available", value: "weekly" },
 ];
 
-export default function FilterDropDown() {
+export default function FilterDropDown(roomNames: any) {
   const form = useForm<{ frequency: string }>({
     defaultValues: { frequency: "" },
   });
@@ -50,7 +55,7 @@ export default function FilterDropDown() {
             </AccordionTrigger>
             <AccordionContent>
               <div className="mt-1 space-y-2 pl-1 text-sm">
-                {ROOM_NAMES.map((name) => (
+                {roomNames.map((name) => (
                   <label key={name} className="flex items-center gap-2">
                     <input type="checkbox" className="h-4 w-4" />
                     <span>{name}</span>
