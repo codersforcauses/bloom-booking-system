@@ -28,7 +28,7 @@ export default function AdminLayout({
         if (res.ok) {
           setIsValidating(false);
         } else {
-          // If returned status is 401, token is invalid, redirect to login
+          // If returned status is not 401 or 500, redirect to login
           router.push("/login");
         }
       } catch (err) {
