@@ -13,7 +13,6 @@ export default function AdminLayout({
   useEffect(() => {
     const checkAuth = async () => {
       const accessToken = localStorage.getItem("accessToken");
-      console.log("Access Token:", accessToken);
       // If no token found, redirect to login
       if (!accessToken) {
         router.push("/login");
