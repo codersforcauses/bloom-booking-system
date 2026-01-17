@@ -151,9 +151,22 @@ class RoomViewSet(viewsets.ModelViewSet):
         if not end_date:
             return Response({"detail": "end_date are required"}, status=400)
         today = localdate()
-        # Assign start_date to be today if it does not exist
-        start_date = parse_date(start_date) if start_date else today
-        end_date = parse_date(end_date)
+        # Assign start_date to be today if it does not exist)
+        # Parse date strings while validate format
+        try:
+            start_date = parse_date(start_date) if start_date else today
+            end_date = parse_date(end_date)
+        except ValueError as e:
+            # handle error like out of range month/day
+            return Response({"detail": f"Invalid date format. Error: {e}"}, status=400)
+        if start_date is None or end_date is None:
+            return Response({"detail": "Invalid date format."}, status=400)
+        # If the date range is larger than 42 days, return error
+        if (end_date - start_date).days > 42:
+            return Response(
+                {"detail": "Date range too large. Please limit to 42 days or fewer."},
+                status=400
+                )
         # Update start_date to be today if it's in the past
         if start_date < today:
             start_date = today
