@@ -257,14 +257,15 @@ export default function AddMeetingRoomForm() {
               <Button
                 onClick={handleCancel}
                 disabled={isSubmitting}
-                className="h-[41px] border border-gray-300 bg-white px-6 text-gray-700 hover:bg-gray-50"
+                variant="outline"
+                className="border-bloom-blue bg-white text-bloom-blue"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="hover:bg-[var(--bloom-blue)]/90 h-[41px] border-b-4 bg-[var(--bloom-blue)] px-6 text-white disabled:bg-gray-400"
+                className="text-white"
               >
                 {isSubmitting ? "Adding..." : "Add"}
               </Button>
