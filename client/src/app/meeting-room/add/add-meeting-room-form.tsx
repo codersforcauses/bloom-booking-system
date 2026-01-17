@@ -97,178 +97,185 @@ export default function AddMeetingRoomForm() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <h2 className="mb-6 text-2xl font-bold">Meeting Rooms</h2>
+    <div className="min-h-screen bg-[hsl(var(--secondary))] py-6">
+      <div className="mx-auto max-w-6xl">
+        <h2 className="mb-6 text-2xl font-bold">Meeting Rooms</h2>
 
-      <Card className="w-full bg-white p-8 shadow-sm">
-        <div className="space-y-6">
-          {/* Row 1: Name, Location and Seat Capacity */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <InputField
-              kind="text"
-              name="name"
-              label="Name"
-              placeholder="Name"
-              value={formData.title || ""}
-              onChange={(value) => handleInputChange("title", value)}
-              required
-              error={errors.title}
-            />
-            <InputField
-              kind="text"
-              name="location"
-              label="Location"
-              placeholder="Location"
-              value={formData.location || ""}
-              onChange={(value) => handleInputChange("location", value)}
-              required
-              error={errors.location}
-            />
-            <InputField
-              kind="number"
-              name="seats"
-              label="Seat Capacity"
-              placeholder="Capacity"
-              value={formData.seats?.toString() || ""}
-              onChange={(value) =>
-                handleInputChange("seats", parseInt(value) || 0)
-              }
-              min={1}
-              required
-              error={errors.seats}
-            />
-          </div>
+        <Card className="w-full bg-white p-8 shadow-sm">
+          <div className="space-y-6">
+            {/* Row 1: Name, Location and Seat Capacity */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <InputField
+                kind="text"
+                name="name"
+                label="Name"
+                placeholder="Name"
+                value={formData.title || ""}
+                onChange={(value) => handleInputChange("title", value)}
+                required
+                error={errors.title}
+              />
+              <InputField
+                kind="text"
+                name="location"
+                label="Location"
+                placeholder="Location"
+                value={formData.location || ""}
+                onChange={(value) => handleInputChange("location", value)}
+                required
+                error={errors.location}
+              />
+              <InputField
+                kind="number"
+                name="seats"
+                label="Seat Capacity"
+                placeholder="Capacity"
+                value={formData.seats?.toString() || ""}
+                onChange={(value) =>
+                  handleInputChange("seats", parseInt(value) || 0)
+                }
+                min={1}
+                required
+                error={errors.seats}
+              />
+            </div>
 
-          {/* Row 3: Amenities */}
-          <InputField
-            kind="badge"
-            name="amenities"
-            label="Amenities"
-            placeholder="Select amenities"
-            options={availableAmenities}
-            value={formData.amenities || []}
-            onChange={handleAmenitiesChange}
-          />
+            {/* Row 2: Amenities + Upload Image */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <InputField
+                kind="badge"
+                name="amenities"
+                label="Amenities"
+                placeholder="Select amenities"
+                options={availableAmenities}
+                value={formData.amenities || []}
+                onChange={handleAmenitiesChange}
+              />
 
-          {/* Upload Image */}
-          <div className="space-y-1">
-            <label className="body-sm-bold block">Upload Image</label>
+              {/* Upload Image */}
+              <div className="space-y-1">
+                <label htmlFor="image" className="body-sm-bold block">
+                  Upload Image
+                </label>
 
-            <div className="rounded-md border bg-background shadow-[0_4px_0_0_#D1D5DB]">
-              <label
-                htmlFor="image"
-                className="flex cursor-pointer items-center justify-between px-3 py-2"
-              >
-                <span className="body text-[var(--bloom-gray)]">
-                  {imageFile ? imageFile.name : "No file selected"}
-                </span>
+                <div className="rounded-md border border-[hsl(var(--border))] bg-background shadow-[0_4px_0_0_#D1D5DB]">
+                  <div className="flex min-h-[38px] flex-wrap items-center gap-2 px-1.5 py-1.5">
+                    <span className="body flex-1 truncate text-[var(--bloom-gray)]">
+                      {imageFile ? imageFile.name : "No file selected"}
+                    </span>
 
-                <span className="body rounded-md bg-[var(--bloom-blue)] px-4 py-1.5 text-white hover:opacity-90">
-                  Choose File
-                </span>
+                    <span className="body shrink-0 rounded-md bg-[var(--bloom-blue)] px-3 py-0.5 text-xs text-white hover:opacity-90">
+                      Choose File
+                    </span>
 
-                <input
-                  id="image"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-                />
+                    <input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) =>
+                        setImageFile(e.target.files?.[0] ?? null)
+                      }
+                    />
+                  </div>
+                </div>
+
+                {errors.image && (
+                  <p className="caption text-[var(--bloom-red)]">
+                    {errors.image}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Row 3: Date and Time Slots */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <InputField
+                kind="date"
+                name="date"
+                label="Date"
+                placeholder="DD/MM/YYYY"
+                value={undefined}
+                onChange={(value) => {
+                  // Handle date change if needed
+                }}
+              />
+
+              <InputField
+                kind="time-select"
+                name="timeSlotStart"
+                label="Time Slot"
+                placeholder="Select"
+                value=""
+                onChange={(value) => {
+                  // Handle start time change
+                }}
+              />
+
+              <InputField
+                kind="time-select"
+                name="timeSlotEnd"
+                label="Time Slot"
+                placeholder="Select"
+                value=""
+                onChange={(value) => {
+                  // Handle end time change
+                }}
+              />
+            </div>
+
+            {/* Row 4: All day checkbox */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="allDay"
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <label htmlFor="allDay" className="body text-gray-700">
+                All day
               </label>
             </div>
 
-            {errors.image && (
-              <p className="caption text-[var(--bloom-red)]">{errors.image}</p>
-            )}
+            {/* Row 5: Repeat dropdown */}
+            <div className="max-w-xs">
+              <InputField
+                kind="select"
+                name="repeat"
+                label="Repeat"
+                placeholder="Does not repeat"
+                options={[
+                  { label: "Does not repeat", value: "none" },
+                  { label: "Daily", value: "daily" },
+                  { label: "Weekly", value: "weekly" },
+                  { label: "Monthly", value: "monthly" },
+                ]}
+                value=""
+                onChange={(value) => {
+                  // Handle repeat change
+                }}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-4">
+              <Button
+                onClick={handleCancel}
+                disabled={isSubmitting}
+                className="h-[41px] border border-gray-300 bg-white px-6 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="hover:bg-[var(--bloom-blue)]/90 h-[41px] border-b-4 bg-[var(--bloom-blue)] px-6 text-white disabled:bg-gray-400"
+              >
+                {isSubmitting ? "Adding..." : "Add"}
+              </Button>
+            </div>
           </div>
-
-          {/* Row 5: Date and Time Slots */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <InputField
-              kind="date"
-              name="date"
-              label="Date"
-              placeholder="DD/MM/YYYY"
-              value={undefined}
-              onChange={(value) => {
-                // Handle date change if needed
-              }}
-            />
-
-            <InputField
-              kind="time-select"
-              name="timeSlotStart"
-              label="Time Slot"
-              placeholder="Select"
-              value=""
-              onChange={(value) => {
-                // Handle start time change
-              }}
-            />
-
-            <InputField
-              kind="time-select"
-              name="timeSlotEnd"
-              label="Time Slot"
-              placeholder="Select"
-              value=""
-              onChange={(value) => {
-                // Handle end time change
-              }}
-            />
-          </div>
-
-          {/* All day checkbox */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="allDay"
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <label htmlFor="allDay" className="body text-gray-700">
-              All day
-            </label>
-          </div>
-
-          {/* Repeat dropdown */}
-          <div className="max-w-xs">
-            <InputField
-              kind="select"
-              name="repeat"
-              label="Repeat"
-              placeholder="Does not repeat"
-              options={[
-                { label: "Does not repeat", value: "none" },
-                { label: "Daily", value: "daily" },
-                { label: "Weekly", value: "weekly" },
-                { label: "Monthly", value: "monthly" },
-              ]}
-              value=""
-              onChange={(value) => {
-                // Handle repeat change
-              }}
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4 pt-4">
-            <Button
-              onClick={handleCancel}
-              disabled={isSubmitting}
-              className="h-[41px] border border-gray-300 bg-white px-6 text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="hover:bg-[var(--bloom-blue)]/90 h-[41px] border-b-4 bg-[var(--bloom-blue)] px-6 text-white disabled:bg-gray-400"
-            >
-              {isSubmitting ? "Adding..." : "Add"}
-            </Button>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
