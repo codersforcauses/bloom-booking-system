@@ -158,14 +158,10 @@ export default function AddMeetingRoomForm() {
                   Upload Image
                 </label>
 
-                <div className="rounded-md border border-[hsl(var(--border))] bg-background shadow-[0_4px_0_0_#D1D5DB]">
+                <div className="rounded-md border bg-background shadow-[0_4px_0_0_#D1D5DB]">
                   <div className="flex min-h-[38px] flex-wrap items-center gap-2 px-1.5 py-1.5">
-                    <span className="body flex-1 truncate text-[var(--bloom-gray)]">
+                    <span className="body mx-1.5 text-[var(--bloom-gray)] opacity-100">
                       {imageFile ? imageFile.name : "No file selected"}
-                    </span>
-
-                    <span className="body shrink-0 rounded-md bg-[var(--bloom-blue)] px-3 py-0.5 text-xs text-white hover:opacity-90">
-                      Choose File
                     </span>
 
                     <input
