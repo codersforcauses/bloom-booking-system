@@ -10,8 +10,8 @@
 import { format } from "date-fns";
 import React from "react";
 
-import { Calendar } from "@/components/calendar";
 import Badge from "@/components/badge";
+import { Calendar } from "@/components/calendar";
 import {
   Popover,
   PopoverContent,
