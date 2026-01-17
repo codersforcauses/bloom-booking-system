@@ -1,7 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef,useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import SearchRoomForm, {
@@ -46,6 +46,7 @@ export default function Home() {
 
   // Reset search form
   const onReset = () => {
+    fetchRooms("/rooms/");
     form.reset();
   };
 
