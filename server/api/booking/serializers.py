@@ -3,6 +3,10 @@ from django.utils import timezone
 from .models import Booking
 from api.room.models import Room
 import re
+from dateutil.rrule import rruleset, rrulestr
+from django.utils.timezone import localtime, make_aware
+from datetime import datetime, time
+from django.db.models import Q
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
@@ -54,27 +58,50 @@ class BookingSerializer(DynamicFieldsModelSerializer):
         recurrence_rule = data.get('recurrence_rule')
         room = data.get('room')
 
-        # For updates, get existing values if not provided
+        # for updates, get existing values if not provided
         if self.instance:
             start_datetime = start_datetime or self.instance.start_datetime
             end_datetime = end_datetime or self.instance.end_datetime
             room = room or self.instance.room
             recurrence_rule = recurrence_rule or self.instance.recurrence_rule
 
-        # For new bookings, ensure start_datetime is in the future
+        # validate recurrence_rule (Google Calendar RFC 5545 format)
+        if recurrence_rule:
+            # MUST start with FREQ= and have valid values for it
+            if not re.match(r'^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;.*)?$', recurrence_rule):
+                raise serializers.ValidationError({
+                    'recurrence_rule': 'RRULE must start with FREQ= and use DAILY/WEEKLY/MONTHLY/YEARLY.'
+                })
+
+            has_count = re.search(r'(?:^|;)COUNT=\d+(?:;|$)',
+                                  recurrence_rule) is not None
+            has_until = re.search(
+                r'(?:^|;)UNTIL=[^;]+(?:;|$)', recurrence_rule) is not None
+
+            # MUST have a COUNT or UNTIL but not both
+            if has_count and has_until:
+                raise serializers.ValidationError({
+                    'recurrence_rule': 'RRULE cannot contain both COUNT and UNTIL.'
+                })
+            if not has_count and not has_until:
+                raise serializers.ValidationError({
+                    'recurrence_rule': 'RRULE must contain either COUNT or UNTIL as it must be finite.'
+                })
+
+        # for new bookings, ensure start_datetime is in the future
         if not self.instance and start_datetime:
             if start_datetime <= timezone.now():
                 raise serializers.ValidationError({
                     'start_datetime': 'Booking start time must be in the future.'
                 })
 
+        # ensure booking start and end on the same day and that the end time is after the start time
         if start_datetime and end_datetime:
             if end_datetime <= start_datetime:
                 raise serializers.ValidationError({
                     'end_datetime': 'End datetime must be greater than start datetime.'
                 })
 
-            # Ensure booking start and end are on the same day
             if start_datetime.date() != end_datetime.date():
                 raise serializers.ValidationError({
                     'non_field_errors': [
@@ -83,14 +110,78 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                     ]
                 })
 
-        # Check for overlapping bookings in the same room
+        # check for overlapping bookings in the same room
         if room and start_datetime and end_datetime:
+
+            # helper: standard interval overlap check for [start, end)
+            def _overlaps(a_start, a_end, b_start, b_end):
+                return a_start < b_end and a_end > b_start
+
+            # helper: same one used in the availability api
+            def _expand_recurrences(base_start_datetime, rrule_str, rdate_list=None, exdate_list=None):
+                # Convert DTSTART to local timezone (where the recurrence rule apply)
+                start_local = localtime(base_start_datetime)
+                rrule_set = rruleset()
+                if rrule_str:
+                    rrule_set.rrule(rrulestr(rrule_str, dtstart=start_local))
+                if rdate_list:
+                    for dt in rdate_list:
+                        rrule_set.rdate(dt)
+                if exdate_list:
+                    for dt in exdate_list:
+                        rrule_set.exdate(dt)
+                return rrule_set
+
+            # helper: returns list[(start,end)] for this booking inside a window
+            def _booking_intervals(b_start, b_end, b_rrule, window_start, window_end):
+                duration = b_end - b_start
+                if b_rrule:
+                    occ_starts = _expand_recurrences(
+                        localtime(b_start),
+                        b_rrule,
+                    ).between(
+                        make_aware(datetime.combine(
+                            window_start.date(), time.min)),
+                        make_aware(datetime.combine(
+                            window_end.date(), time.max)),
+                    )
+                    return [(localtime(s), localtime(s) + duration) for s in occ_starts]
+                return [(localtime(b_start), localtime(b_end))]
+
+            # build the window for the new booking
+            new_duration = end_datetime - start_datetime
+            if recurrence_rule:
+                # creates the window but theres a 366 day upper bound so if a collision were to happen only after a year, then this would miss it
+                new_occ_starts = _expand_recurrences(
+                    localtime(start_datetime),
+                    recurrence_rule,
+                ).between(
+                    make_aware(datetime.combine(start_datetime.date(), time.min)),
+                    make_aware(datetime.combine((start_datetime + timezone.timedelta(days=366)).date(), time.max)),
+                )
+
+                new_intervals = [(localtime(s), localtime(s) + new_duration) for s in new_occ_starts]
+                if not new_intervals:
+                    raise serializers.ValidationError({
+                        'recurrence_rule': 'RRULE produced no occurrences.'
+                    })
+                window_start = min(s for s, _ in new_intervals)
+                window_end = max(e for _, e in new_intervals)
+            else:
+                new_intervals = [
+                    (localtime(start_datetime), localtime(end_datetime))]
+                window_start = localtime(start_datetime)
+                window_end = localtime(end_datetime)
+
+            # pull candidate existing bookings
             overlapping_bookings = Booking.objects.filter(
                 room=room,
-                # Exclude cancelled bookings
+                # exclude cancelled bookings
                 status__in=['CONFIRMED', 'COMPLETED'],
-                start_datetime__lt=end_datetime,  # Existing booking starts before this one ends
-                end_datetime__gt=start_datetime   # Existing booking ends after this one starts
+            ).filter(
+                Q(recurrence_rule__isnull=False) |
+                # window overlap for one-offs
+                Q(start_datetime__lt=window_end, end_datetime__gt=window_start)
             )
 
             # For updates, exclude the current booking being updated
@@ -98,24 +189,25 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                 overlapping_bookings = overlapping_bookings.exclude(
                     id=self.instance.id)
 
-            if overlapping_bookings.exists():
-                overlapping_booking = overlapping_bookings.first()
-                raise serializers.ValidationError({
-                    'non_field_errors': [
-                        f'Room is already booked from {overlapping_booking.start_datetime.strftime("%Y-%m-%d %H:%M")} '
-                        f'to {overlapping_booking.end_datetime.strftime("%Y-%m-%d %H:%M")} '
-                        f'by {overlapping_booking.visitor_name}.'
-                    ]
-                })
-
-        # Validate recurrence_rule (Google Calendar RFC 5545 format)
-        if recurrence_rule:
-            # Basic RFC 5545 RRULE validation: must start with FREQ= and contain valid frequency
-            freq_pattern = r'^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;.*)?$'
-            if not re.match(freq_pattern, recurrence_rule):
-                raise serializers.ValidationError({
-                    'recurrence_rule': 'Recurrence rule must start with FREQ= and use a valid frequency (DAILY, WEEKLY, MONTHLY, YEARLY).'
-                })
+            # collision test: any existing occurrence overlaps any new interval
+            for existing in overlapping_bookings:
+                existing_intervals = _booking_intervals(
+                    existing.start_datetime,
+                    existing.end_datetime,
+                    existing.recurrence_rule,
+                    window_start,
+                    window_end,
+                )
+                for ns, ne in new_intervals:
+                    for es, ee in existing_intervals:
+                        if _overlaps(ns, ne, es, ee):
+                            raise serializers.ValidationError({
+                                'non_field_errors': [
+                                    f'Room is already booked from {es.strftime("%Y-%m-%d %H:%M")} '
+                                    f'to {ee.strftime("%Y-%m-%d %H:%M")} '
+                                    f'by {existing.visitor_name}.'
+                                ]
+                            })
 
         return data
 
