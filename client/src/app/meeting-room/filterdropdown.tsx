@@ -1,5 +1,9 @@
 "use client";
+import { FormProvider, useForm } from "react-hook-form";
 
+import { Calendar } from "@/components/calendar";
+import InputField from "@/components/input";
+import Textarea from "@/components/textarea";
 import {
   Accordion,
   AccordionContent,
@@ -7,12 +11,28 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import TimePicker from "@/components/ui/timeselect";
 
 const ROOM_NAMES = ["Jasmin", "Lily", "Lotus", "Marigold", "Rose"];
+const FREQUENCIES = [
+  { label: "Unavailable", value: "daily" },
+  { label: "Available", value: "weekly" },
+];
 
 export default function FilterDropDown() {
+  const form = useForm<{ frequency: string }>({
+    defaultValues: { frequency: "" },
+  });
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100">
+    <div className="flex items-center justify-center">
       <div className="w-[360px] rounded-xl border bg-white p-4 shadow-sm">
         {/* Card title */}
         <h2 className="mb-2 text-base font-semibold">Filter</h2>
@@ -46,9 +66,7 @@ export default function FilterDropDown() {
               Date
             </AccordionTrigger>
             <AccordionContent>
-              <p className="text-sm text-muted-foreground">
-                Date controls go here…
-              </p>
+              <Calendar />
             </AccordionContent>
           </AccordionItem>
 
@@ -58,9 +76,7 @@ export default function FilterDropDown() {
               Time
             </AccordionTrigger>
             <AccordionContent>
-              <p className="text-sm text-muted-foreground">
-                Time controls go here…
-              </p>
+              <TimePicker />
             </AccordionContent>
           </AccordionItem>
 
@@ -70,9 +86,27 @@ export default function FilterDropDown() {
               Location
             </AccordionTrigger>
             <AccordionContent>
-              <p className="text-sm text-muted-foreground">
-                Location options go here…
-              </p>
+              <FormProvider {...form}>
+                <FormField
+                  name="middlename"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <InputField
+                          kind="text"
+                          label=""
+                          name="middlename"
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          placeholder="Middle Name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </FormProvider>
             </AccordionContent>
           </AccordionItem>
 
@@ -82,9 +116,29 @@ export default function FilterDropDown() {
               Status
             </AccordionTrigger>
             <AccordionContent>
-              <p className="text-sm text-muted-foreground">
-                Status options go here…
-              </p>
+              <FormProvider {...form}>
+                <FormField
+                  name="frequency"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <InputField
+                          kind="select"
+                          label=""
+                          name="frequency"
+                          options={FREQUENCIES}
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          placeholder="Select status"
+                          required={true}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </FormProvider>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
