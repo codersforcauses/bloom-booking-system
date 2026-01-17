@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { CheckboxGroup, CheckboxItem } from "@/components/checkbox-group";
 import InputField from "@/components/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,6 +14,7 @@ export default function AddMeetingRoomForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [value, setValue] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<Partial<Room>>({
     title: "",
@@ -221,16 +223,12 @@ export default function AddMeetingRoomForm() {
             </div>
 
             {/* Row 4: All day checkbox */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="allDay"
-                className="h-4 w-4 rounded border-gray-300"
-              />
-              <label htmlFor="allDay" className="body text-gray-700">
-                All day
-              </label>
-            </div>
+            <CheckboxGroup value={value} onValueChange={setValue}>
+              <div className="flex items-center gap-2">
+                <CheckboxItem value="allDay" id="allDay" />
+                <label className="body text-black">All day</label>
+              </div>
+            </CheckboxGroup>
 
             {/* Row 5: Repeat dropdown */}
             <div className="max-w-xs">
