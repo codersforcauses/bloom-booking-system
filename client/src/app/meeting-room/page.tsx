@@ -7,25 +7,38 @@ import InputField from "@/components/input";
 import { AdminRoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
-import { Room , roomsMock } from "@/types/card";
+import { Room } from "@/types/card";
 
 import FilterPopOver from "./filterbutton";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [searchValue, setSearchValue] = useState("");
 
   async function fetchRooms() {
     const apiUrl = "/rooms/";
     await api({ url: apiUrl, method: "get" })
       .then((response) => {
         const mappedRooms = mapRooms(response.data.results);
-
         setRooms(mappedRooms);
         console.log(response.data.results);
       })
       .catch((error) => {
         console.error("Error fetching rooms:", error);
       });
+  }
+
+  function searchfunction(value: string) {
+    if (value === "") {
+      fetchRooms();
+      setSearchValue(value);
+      return;
+    }
+    const filteredRooms = rooms.filter((room) =>
+      room.title.toLowerCase().includes(value.toLowerCase()),
+    );
+    setRooms(filteredRooms);
+    setSearchValue(value);
   }
 
   // Bandaid fix need to change component paramters to match api response
@@ -69,8 +82,8 @@ export default function RoomsPage() {
               kind="text"
               label=""
               name="search"
-              // value={}
-              // onChange={}
+              value={searchValue}
+              onChange={(e) => searchfunction(e)}
               placeholder="Search here"
             />
             <FilterPopOver />
