@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 User = get_user_model()
 future_date = timezone.now() + timedelta(days=7)
+url = '/api/bookings/'
 
 
 class BookingViewTest(APITestCase):
@@ -74,7 +75,6 @@ class BookingViewTest(APITestCase):
             "recurrence_rule": ""
         }
 
-        url = '/api/bookings/'
         response = self.client.post(url, payload, format='json')
 
         # Verify response
@@ -108,14 +108,13 @@ class BookingViewTest(APITestCase):
             "recurrence_rule": ""
         }
 
-        url = '/api/bookings/'
         response = self.client.post(url, payload, format='json')
 
         # Should return error when Google Calendar fails
         self.assertEqual(response.status_code,
                          status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertIn("Google Calendar", response.json()["detail"])
-        
+
         # Verify error was logged (but not printed to console)
         mock_logger.error.assert_called()
 
@@ -131,24 +130,62 @@ class BookingViewTest(APITestCase):
             "recurrence_rule": ""
         }
 
-        url = '/api/bookings/'
+        
         response = self.client.post(url, payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("end_datetime", response.json())
 
+    @patch('api.booking.views.create_event')
+    def test_booking_creation_fails_with_conflicting_time_slot(self, mock_create_event):
+        """Test booking creation fails when another booking exists in the same time slot for the same room."""
+        mock_create_event.return_value = {"id": "mocked-event-id"}
+
+        # Create first booking for a specific time slot (10-12AM, same day as the future_date + 10)
+        test_date = future_date + timedelta(days=10)
+        first_payload = {
+            "room_id": self.room.id,
+            "visitor_name": "First User",
+            "visitor_email": "first@example.com",
+            "start_datetime": test_date.replace(hour=10, minute=0, second=0, microsecond=0),
+            "end_datetime": test_date.replace(hour=12, minute=0, second=0, microsecond=0),
+            "recurrence_rule": ""
+        }
+
+        first_response = self.client.post(url, first_payload, format='json')
+
+        if first_response.status_code != status.HTTP_201_CREATED:
+            print(f"\nFirst booking failed!")
+            print(f"Start: {first_payload['start_datetime']}")
+            print(f"End: {first_payload['end_datetime']}")
+            print(f"Response: {first_response.json()}")
+        
+        self.assertEqual(first_response.status_code, status.HTTP_201_CREATED)
+        
+        # Attempt to create conflicting booking (11AM -1PM, overlaps with first booking)
+        conflicting_payload = {
+            "room_id": self.room.id,
+            "visitor_name": "Second User",
+            "visitor_email": "second@example.com",
+            "start_datetime": test_date.replace(hour=11, minute=0, second=0, microsecond=0),
+            "end_datetime": test_date.replace(hour=13, minute=0, second=0, microsecond=0),
+            "recurrence_rule": ""
+        }
+        
+        conflicting_response = self.client.post(url, conflicting_payload, format='json')
+        self.assertEqual(conflicting_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("already booked", conflicting_response.json()["non_field_errors"][0].lower())
+
     # ==================== LIST TESTS (GET /api/bookings/) ====================
 
     def test_booking_listing_fails_without_authentication(self):
         """Test that listing bookings requires authentication when no visitor_email provided."""
-        url = '/api/bookings/'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_booking_listing_with_authentication(self):
         """Test authenticated admin can list all bookings."""
         self.client.force_authenticate(user=self.admin_user)
-        url = '/api/bookings/'
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -335,7 +372,6 @@ class BookingViewTest(APITestCase):
             "recurrence_rule": ""
         }
 
-        url = '/api/bookings/'
         response = self.client.post(url, payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
