@@ -1,10 +1,115 @@
+from django.test import TestCase
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from .models import Room, Location, Amenity
+from .serializers import AmenitySerializer, LocationSerializer, RoomSerializer
+from .views import RoomViewSet, LocationViewSet, AmenityViewSet
+from django.urls import reverse, resolve
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+from datetime import datetime, timedelta
 
 User = get_user_model()
+
+
+# --- 1. Models Tests ---
+class RoomModelTests(TestCase):
+    def test_invalid_room_capacity(self):
+        mock_location = Location.objects.create(name="mock_location")
+        invalid_room = Room(
+            name="room",
+            location=mock_location,
+            capacity=-1,
+            start_datetime=datetime(2025, 1, 1),
+            end_datetime=datetime(2025, 1, 2),
+        )
+        valid_room = Room(
+            name="room",
+            location=mock_location,
+            capacity=1,
+            start_datetime=datetime(2025, 1, 1),
+            end_datetime=datetime(2025, 1, 2),
+        )
+
+        print("\nTest room capacity:")
+        with self.assertRaises(ValidationError):
+            invalid_room.clean_fields()  # validates each field
+
+        try:
+            valid_room.clean_fields()
+        except ValidationError as e:
+            self.fail(f"Valid room flagged as invalid: {e}")
+
+
+# --- 2. Serializers Tests ---
+class AmenitySerializerTests(TestCase):
+    pass
+
+
+class LocationSerializerTests(TestCase):
+    pass
+
+
+class RoomSerializerTests(TestCase):
+    def setUp(self):
+        self.mock_location = Location.objects.create(id=1, name="mock_location")
+        self.mock_amenity = Amenity.objects.create(id=1, name="mock_amenity")
+        self.generic_room_dict = {
+            "name": "testroom",
+            "capacity": 1,
+            "location_id": self.mock_location.pk,
+            "amenities_id": [self.mock_amenity.pk],
+        }
+        self.generic_date = datetime(2025, 1, 1, 10)
+        self.one_hour = timedelta(hours=1)
+
+    def test_date_combinations(self):
+        # end date must be strictly after start date
+        valid_room_data = self.generic_room_dict | {
+            "start_datetime": self.generic_date,
+            "end_datetime": self.generic_date + self.one_hour,
+        }
+        invalid_room_data = self.generic_room_dict | {
+            "start_datetime": self.generic_date,
+            "end_datetime": self.generic_date - self.one_hour,
+        }
+
+        print("\nTesting valid date combination:")
+        valid_serializer = RoomSerializer(data=valid_room_data)
+        valid = valid_serializer.is_valid()
+        self.assertTrue(valid)
+
+        print("\nTesting invalid date combination:")
+        invalid_serializer = RoomSerializer(data=invalid_room_data)
+        valid = invalid_serializer.is_valid()
+        self.assertFalse(valid)
+
+    def test_response_data_structure(self):
+        # ...
+        pass
+
+    def test_recurrence_rule(self):
+        # not required, but test the format
+        pass
+
+
+# --- 3. Views Tests ---
+class RoomViewSetTests(TestCase):
+    pass
+
+
+class LocationViewSetTests(TestCase):
+    pass
+
+
+class AmenityViewSetTests(TestCase):
+    pass
+
+
+# --- 4. URLs Tests ---
+class URLTests(TestCase):
+    pass
 
 
 class RoomAPITest(APITestCase):
