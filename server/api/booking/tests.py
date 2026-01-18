@@ -1,3 +1,7 @@
+'''
+To run this test file, use the command:
+cd server && python manage.py test api.booking
+'''
 from datetime import timedelta
 from .models import Booking
 from api.room.models import Room, Location, Amenity
@@ -89,7 +93,8 @@ class BookingViewTest(APITestCase):
         self.assertEqual(booking.google_event_id, "mocked-google-event-id")
 
     @patch('api.booking.views.create_event')
-    def test_booking_creation_handles_google_calendar_failure(self, mock_create_event):
+    @patch('api.booking.views.logger')
+    def test_booking_creation_handles_google_calendar_failure(self, mock_logger, mock_create_event):
         """Test booking creation when Google Calendar API fails."""
         # Mock Google Calendar API to raise an exception
         mock_create_event.side_effect = Exception("Google Calendar API error")
@@ -110,6 +115,9 @@ class BookingViewTest(APITestCase):
         self.assertEqual(response.status_code,
                          status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertIn("Google Calendar", response.json()["detail"])
+        
+        # Verify error was logged (but not printed to console)
+        mock_logger.error.assert_called()
 
     def test_booking_creation_fails_with_invalid_datetime(self):
         """Test booking creation fails when end_datetime is before start_datetime."""
