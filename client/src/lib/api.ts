@@ -177,6 +177,7 @@ const logout = () => {
 
 export default api;
 export { logout, setAccessToken };
+<<<<<<< HEAD
 
 // Helper functions for typed API calls
 export async function apiGet<T>(url: string, config?: object): Promise<T> {
@@ -192,3 +193,5 @@ export async function apiPost<T, B = unknown>(
   const res = await api.post<T>(url, body, config);
   return res.data;
 }
+=======
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
