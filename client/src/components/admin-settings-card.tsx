@@ -1,7 +1,7 @@
 "use client";
 
 import { MoreHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MdAdd, MdExpandLess, MdExpandMore } from "react-icons/md";
 
 import { LogOutAlertDialog } from "@/components/alert-dialog";
@@ -14,11 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { delay } from "@/lib/utils";
+import { logout } from "@/lib/api";
+import { RoomAmenity, RoomLocation } from "@/types/room";
 
 type SummaryCardProps = {
   locations: string[];
   amenities: string[];
+  isLoading: boolean;
   onEditLocations: () => void;
   onEditAmenities: () => void;
 };
@@ -26,10 +28,11 @@ type SummaryCardProps = {
 function AdminSettingsSummaryCard({
   locations,
   amenities,
+  isLoading,
   onEditLocations,
   onEditAmenities,
 }: SummaryCardProps) {
-  const ListWithSeeMore = ({ items }: { items: string[] }) => {
+  const ListWithViewMore = ({ items }: { items: string[] }) => {
     const maxItems = 3; // show first 3 items, then view more
     const [showAll, setShowAll] = useState(false);
 
@@ -77,21 +80,30 @@ function AdminSettingsSummaryCard({
     <div className="flex items-center justify-between py-6">
       <div>
         <p className="font-medium">{title}</p>
-        <ListWithSeeMore items={items} />
+        {isLoading ? (
+          <span className="text-sm italic text-gray-400">Loading data...</span>
+        ) : (
+          <ListWithViewMore items={items} />
+        )}
       </div>
-      <Button variant="outline" className="w-20" size="sm" onClick={onEdit}>
-        {items.length ? "Edit" : "Add"}
+      <Button
+        variant="outline"
+        className="min-w-20"
+        size="sm"
+        onClick={onEdit}
+        disabled={isLoading}
+      >
+        {isLoading ? "Loading..." : items.length ? "Edit" : "Add"}
       </Button>
     </div>
   );
 
   const [isPending, setIsPending] = useState(false);
 
-  // TODO: rewrite when API ready
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
       setIsPending(true);
-      await delay(1500);
+      logout();
     } catch (error) {
       console.error("Logout failed", error);
     } finally {
@@ -125,21 +137,13 @@ function AdminSettingsSummaryCard({
   );
 }
 
-// TODO: Replace Item with actual type from API
-type Item = {
-  id: string;
-  name: string;
-  status: string;
-};
-
 type TableCardProps = {
   title: string;
-  items: Item[];
+  items: RoomAmenity[] | RoomLocation[];
   onAdd: () => void;
   onBack: () => void;
-  onEditItem?: (item: Item) => void;
-  onSetStatusItem?: (item: Item) => void;
-  onDeleteItem?: (item: Item) => void;
+  onEditItem?: (item: RoomLocation | RoomAmenity) => void;
+  onDeleteItem?: (item: RoomLocation | RoomAmenity) => void;
 };
 
 function AdminSettingsTableCard({
@@ -148,7 +152,6 @@ function AdminSettingsTableCard({
   onAdd,
   onBack,
   onEditItem,
-  onSetStatusItem,
   onDeleteItem,
 }: TableCardProps) {
   return (
@@ -172,7 +175,6 @@ function AdminSettingsTableCard({
           <thead className="sticky top-0 bg-gray-50 text-left">
             <tr>
               <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Status</th>
               <th className="px-4 py-2" />
             </tr>
           </thead>
@@ -180,7 +182,6 @@ function AdminSettingsTableCard({
             {items.map((item) => (
               <tr key={item.id}>
                 <td className="px-4 py-2">{item.name}</td>
-                <td className="px-4 py-2">{item.status}</td>
                 <td className="px-4 py-2 text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -191,9 +192,6 @@ function AdminSettingsTableCard({
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem onClick={() => onEditItem?.(item)}>
                         Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onSetStatusItem?.(item)}>
-                        Set {item.status === "In Use" ? "Not In Use" : "In Use"}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onDeleteItem?.(item)}>
                         Delete
@@ -226,6 +224,16 @@ function AdminSettingsFormCard({
   onSubmit,
 }: FormCardProps) {
   const [value, setValue] = useState(defaultValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSubmit = () => {
+    if (!value.trim()) return;
+    onSubmit(value.trim());
+  };
 
   return (
     <Card className="space-y-3 rounded-xl border bg-white p-6">
@@ -236,9 +244,16 @@ function AdminSettingsFormCard({
       <div className="space-y-2">
         <label className="font-medium">Enter {title} name</label>
         <Input
+          ref={inputRef}
           placeholder={placeholder}
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
         />
       </div>
 
@@ -250,7 +265,7 @@ function AdminSettingsFormCard({
         >
           Cancel
         </Button>
-        <Button className="w-20 text-white" onClick={() => onSubmit(value)}>
+        <Button className="w-20 text-white" onClick={handleSubmit}>
           Ok
         </Button>
       </div>
