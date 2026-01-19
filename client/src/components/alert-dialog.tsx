@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import { useState } from "react";
-import { FaCheckCircle, FaInfoCircle, FaTimesCircle } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { MdOutlineHelpOutline } from "react-icons/md";
+=======
+import { useEffect, useState } from "react";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { MdDelete,MdOutlineHelpOutline } from "react-icons/md";
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
 
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
@@ -34,14 +41,20 @@ const variantMap: Record<
     color: "var(--bloom-yellow)",
     confirmText: "Yes",
   },
-  info: {
-    icon: <FaInfoCircle size={48} />,
-    color: "var(--bloom-blue)",
-    confirmText: "Got it",
+<<<<<<< HEAD
+};
+
+export type AlertDialogVariant = "success" | "error" | "confirm";
+=======
+  delete: {
+    icon: <MdDelete size={48} />,
+    color: "var(--bloom-red)",
+    confirmText: "Delete",
   },
 };
 
-export type AlertDialogVariant = "success" | "error" | "confirm" | "info";
+export type AlertDialogVariant = "success" | "error" | "confirm" | "delete";
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
 
 interface AlertDialogProps {
   title?: string;
@@ -50,18 +63,32 @@ interface AlertDialogProps {
   showIcon?: boolean;
   onConfirm?: () => void | Promise<void>;
   onClose?: () => void;
+<<<<<<< HEAD
   open: boolean; // controlled open
+=======
+  open?: boolean; // controlled open
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
   children?: React.ReactNode;
 }
 
 /**
- * AlertDialog component for showing success, error, confirm, and info dialogs.
+<<<<<<< HEAD
+ * AlertDialog component for showing success, error, and confirm dialogs.
  *
  * Features:
- * - Supports `success`, `error`, `confirm`, and `info` variants.
- * - Shows an icon corresponding to the variant (`FaCheckCircle`, `FaTimesCircle`, `MdOutlineHelpOutline`, `FaInfoCircle`).
+ * - Supports `success`, `error`, and `confirm` variants.
+ * - Shows an icon corresponding to the variant (`FaCheckCircle`, `FaTimesCircle`, `MdOutlineHelpOutline`).
  * - Displays a loading spinner when `onConfirm` is running (`isPending` state).
  * - For `confirm` variants, shows a Cancel button alongside the confirm button.
+=======
+ * AlertDialog component for showing success, error, confirm, and delete dialogs.
+ *
+ * Features:
+ * - Supports `success`, `error`, `confirm`, and `delete` variants.
+ * - Shows an icon corresponding to the variant (`FaCheckCircle`, `FaTimesCircle`, `MdOutlineHelpOutline`, `MdDelete`).
+ * - Displays a loading spinner when `onConfirm` is running (`isPending` state).
+ * - For `confirm` and `delete` variants, shows a Cancel button alongside the confirm button.
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
  * - Fully controlled `open` state if `open` prop is provided.
  * - Calls `onConfirm` when the confirm button is clicked (can be async).
  * - Calls `onClose` when the dialog is closed either via Cancel, outside click, or after confirm.
@@ -72,11 +99,18 @@ interface AlertDialogProps {
  *   - "success": shows a success icon and "Ok" button
  *   - "error": shows an error icon and "Ok" button
  *   - "confirm": shows a question icon and "Yes/Cancel" buttons
- *   - "info": shows an info icon and "Got it" button
+<<<<<<< HEAD
  * @param showIcon Whether to display the icon above the content. Defaults to `true`.
  * @param onConfirm Callback executed when the confirm button is clicked. Can be async.
  * @param onClose Callback executed when the dialog is closed (Cancel button, outside click, or after confirm).
  * @param open Controlled bool open state of the dialog.
+=======
+ *   - "delete": shows a delete icon and "Delete/Cancel" buttons
+ * @param showIcon Whether to display the icon above the content. Defaults to `true`.
+ * @param onConfirm Callback executed when the confirm button is clicked. Can be async.
+ * @param onClose Callback executed when the dialog is closed (Cancel button, outside click, or after confirm).
+ * @param open Optional controlled open state of the dialog.
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
  * @param children Optional React node used as the trigger element (DialogTrigger).
  *
  * @example
@@ -89,6 +123,17 @@ interface AlertDialogProps {
  * >
  *   <Button>Open Dialog</Button>
  * </AlertDialog>
+ *
+ * @example
+ * // Confirm delete dialog
+ * <AlertDialog
+ *   variant="delete"
+ *   title="Delete Item"
+ *   description="Are you sure you want to delete this item?"
+ *   onConfirm={async () => await handleDelete(item.id)}
+ *   onClose={() => console.log("Dialog closed")}
+ *   open={isDeleteDialogOpen} // controlled open
+ * />
  */
 function AlertDialog({
   title,
@@ -97,10 +142,43 @@ function AlertDialog({
   showIcon = true,
   onConfirm,
   onClose,
+<<<<<<< HEAD
   open,
+=======
+  open: controlledOpen,
+  children,
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
 }: AlertDialogProps) {
   const [isPending, setIsPending] = useState(false);
+  const [open, setOpen] = useState(false);
 
+  // sync controlled open
+  useEffect(() => {
+    if (controlledOpen !== undefined) setOpen(controlledOpen);
+  }, [controlledOpen]);
+
+  const { icon, color, confirmText } = variantMap[variant];
+
+  const handleConfirm = async () => {
+    if (onConfirm) {
+      setIsPending(true);
+      try {
+        await onConfirm();
+      } finally {
+        setIsPending(false);
+      }
+    }
+    setOpen(false);
+  };
+
+  const handleCancel = () => {
+    setOpen(false);
+    onClose?.();
+  };
+
+  const isConfirmVariant = variant === "confirm" || variant === "delete";
+
+<<<<<<< HEAD
   const { icon, color, confirmText } = variantMap[variant];
 
   const handleConfirm = async () => {
@@ -124,6 +202,16 @@ function AlertDialog({
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose?.()}>
       <DialogContent className="flex h-auto flex-col items-center rounded-lg bg-white p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden">
+=======
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
+
+      <DialogContent
+        onInteractOutside={handleCancel}
+        className="flex h-auto w-[95%] min-w-[60%] flex-col items-center rounded-lg p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden"
+      >
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
         {showIcon && (
           <div className="mt-6">
             {isPending ? (
@@ -141,12 +229,13 @@ function AlertDialog({
             </DialogTitle>
           )}
           {description && (
-            <DialogDescription className="whitespace-pre-line text-center">
+            <DialogDescription className="text-center">
               {isPending ? "Processing..." : description}
             </DialogDescription>
           )}
         </DialogHeader>
 
+<<<<<<< HEAD
         <DialogFooter className="mt-4 flex flex-row justify-center gap-12">
           {isConfirmVariant && (
             <Button
@@ -154,6 +243,64 @@ function AlertDialog({
               onClick={handleCancel}
               disabled={isPending}
             >
+=======
+        <DialogFooter className="flex flex-row justify-center gap-12">
+          {isConfirmVariant && (
+            <Button
+              variant={"warning"}
+              className={cn(
+                "mt-4 h-[41px] w-[72px] border-b-4 text-[14px]",
+                isPending && "bg-gray-300 text-black",
+              )}
+              onClick={handleCancel}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+          )}
+          <Button
+            className={cn(
+              "mt-4 h-[41px] w-[72px] border-b-4 text-[14px] text-white",
+              isPending && "bg-gray-300 text-black",
+            )}
+            style={{ backgroundColor: !isPending ? color : undefined }}
+            disabled={isPending}
+            onClick={handleConfirm}
+          >
+            {confirmText}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function LogOutAlertDialog({
+  children,
+  isPending,
+  handleLogout,
+}: {
+  children: React.ReactNode;
+  isPending: boolean;
+  handleLogout: () => void;
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+
+      <DialogContent className="flex w-[95%] flex-col items-center rounded-lg shadow-xl [&_button:has(svg.lucide-x)]:hidden">
+        <DialogHeader>
+          <DialogTitle className="pt-4" />
+
+          <DialogDescription className="py-10 text-center font-semibold text-black">
+            Are you sure you want to log out?
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter className="flex flex-row justify-center gap-4 pb-4">
+          <DialogClose asChild>
+            <Button className="h-8 w-24 text-xs" variant="outline">
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
               Cancel
             </Button>
           )}

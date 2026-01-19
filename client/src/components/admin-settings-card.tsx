@@ -2,8 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MoreHorizontal } from "lucide-react";
+<<<<<<< HEAD
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+=======
+import { useEffect, useRef, useState } from "react";
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
 import { MdAdd, MdExpandLess, MdExpandMore } from "react-icons/md";
 import { z } from "zod";
 
@@ -70,6 +74,44 @@ function AdminSettingsSummaryCard({
   onEditLocations,
   onEditAmenities,
 }: SummaryCardProps) {
+<<<<<<< HEAD
+=======
+  const ListWithViewMore = ({ items }: { items: string[] }) => {
+    const maxItems = 3; // show first 3 items, then view more
+    const [showAll, setShowAll] = useState(false);
+
+    if (!items.length)
+      return <span className="text-sm text-gray-500">Not Provided</span>;
+
+    const displayed = showAll ? items : items.slice(0, maxItems);
+    const hasMore = items.length > maxItems;
+
+    return (
+      <span className="text-sm text-gray-500">
+        {displayed.join(", ")}
+        {hasMore && (
+          <button
+            className="ml-1 text-blue-500 hover:underline"
+            onClick={() => setShowAll(!showAll)}
+          >
+            <span className="flex items-center">
+              {showAll ? (
+                <>
+                  view less <MdExpandLess size={20} />
+                </>
+              ) : (
+                <>
+                  view more <MdExpandMore size={20} />
+                </>
+              )}
+            </span>
+          </button>
+        )}
+      </span>
+    );
+  };
+
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
   // Reusable row
   const SummaryRow = ({
     title,
@@ -89,7 +131,17 @@ function AdminSettingsSummaryCard({
           <ListWithViewMore items={items} />
         )}
       </div>
+<<<<<<< HEAD
       <Button variant="outline" onClick={onEdit} disabled={isLoading}>
+=======
+      <Button
+        variant="outline"
+        className="min-w-20"
+        size="sm"
+        onClick={onEdit}
+        disabled={isLoading}
+      >
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
         {isLoading ? "Loading..." : items.length ? "Edit" : "Add"}
       </Button>
     </div>
@@ -102,6 +154,10 @@ function AdminSettingsSummaryCard({
 
   const handleLogout = () => {
     try {
+<<<<<<< HEAD
+=======
+      setIsPending(true);
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
       logout();
     } catch (error) {
       setLogoutDescription("An error occurred during logout.");
@@ -237,6 +293,7 @@ function AdminSettingsFormCard({
   onCancel,
   onSubmit,
 }: FormCardProps) {
+<<<<<<< HEAD
   const {
     register,
     handleSubmit,
@@ -247,6 +304,19 @@ function AdminSettingsFormCard({
       name: defaultValue,
     },
   });
+=======
+  const [value, setValue] = useState(defaultValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSubmit = () => {
+    if (!value.trim()) return;
+    onSubmit(value.trim());
+  };
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
 
   return (
     <Card className="space-y-3 rounded-xl border bg-white p-6">
@@ -254,6 +324,7 @@ function AdminSettingsFormCard({
         <p className="font-semibold">{title}</p>
       </div>
 
+<<<<<<< HEAD
       <div>
         <form
           onSubmit={handleSubmit((data) => onSubmit(data.name))}
@@ -281,6 +352,35 @@ function AdminSettingsFormCard({
             </Button>
           </div>
         </form>
+=======
+      <div className="space-y-2">
+        <label className="font-medium">Enter {title} name</label>
+        <Input
+          ref={inputRef}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+        />
+      </div>
+
+      <div className="flex justify-center gap-6 py-6">
+        <Button
+          variant="outline"
+          className="w-24 border-bloom-blue text-bloom-blue"
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+        <Button className="w-20 text-white" onClick={handleSubmit}>
+          Ok
+        </Button>
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
       </div>
     </Card>
   );
