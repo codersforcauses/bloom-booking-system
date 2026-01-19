@@ -48,8 +48,8 @@ def parse_optional_datetime(value, field_name):
     # Fix URL-encoded '+' turning into space
     value = value.replace(" ", "+", 1) if " " in value and "+" not in value else value
     # Parse datetime string
-    datetime = parse_datetime(value)
-    if datetime is None:
+    parsed_datetime = parse_datetime(value)
+    if parsed_datetime is None:
         raise ValidationError({
             "detail": f"Invalid datetime format for {field_name}."
         })
@@ -59,9 +59,9 @@ def parse_optional_datetime(value, field_name):
             "detail": f"Date-only strings are not allowed for {field_name}."
         })
     # If parsed datetime is naive, apply Django default timezone
-    if datetime.tzinfo is None:
-        datetime = make_aware(datetime)
-    return datetime
+    if parsed_datetime.tzinfo is None:
+        parsed_datetime = make_aware(parsed_datetime)
+    return parsed_datetime
 
 
 class RoomViewSet(viewsets.ModelViewSet):
@@ -122,14 +122,20 @@ class RoomViewSet(viewsets.ModelViewSet):
         # If there is no end_datetime, theoretically the room cannot be fully booked
         if end_datetime is None:
             for room in page:
-                results.append({"room_id": room.id, "availability": True})
+                # Availability is based on is_active status
+                availability = bool(room.is_active)
+                results.append({"room_id": room.id, "availability": availability})
         # If end_datetime is earlier than now, the room cannot be booked
         elif end_datetime < current_time:
             for room in page:
                 results.append({"room_id": room.id, "availability": False})
         else:
             for room in page:
-                availability = self._calculate_boolean_availability(room, start_datetime, end_datetime)
+                # If a room is inactive, its availability is always False
+                if not room.is_active:
+                    availability = False
+                else:
+                    availability = self._calculate_boolean_availability(room, start_datetime, end_datetime)
                 results.append({"room_id": room.id, "availability": availability})
         # Return paginated response
         return self.get_paginated_response(results)
@@ -149,7 +155,7 @@ class RoomViewSet(viewsets.ModelViewSet):
         end_date = request.query_params.get("end_date")
         # end_date is required (else there may be infinitely many slots)
         if not end_date:
-            return Response({"detail": "end_date are required"}, status=400)
+            return Response({"detail": "end_date is required"}, status=400)
         today = localdate()
         # Assign start_date to be today if it does not exist)
         # Parse date strings while validate format
@@ -190,7 +196,7 @@ class RoomViewSet(viewsets.ModelViewSet):
 
     def _calculate_availability(self, room, start_date, end_date):
         """
-        Returns availabile slots grouped by date in a dictionary format.
+        Returns available slots grouped by date in a dictionary format.
         Assumption: Room starttime and endtime are on the same day.
         """
         start_datetime = make_aware(datetime.combine(start_date, time.min))
@@ -214,7 +220,7 @@ class RoomViewSet(viewsets.ModelViewSet):
         """
         # Step 1: get all slots that have been booked
         booked_slots = []
-        bookings = Booking.objects.filter(room=room).filter(
+        bookings = Booking.objects.filter(room=room, status="CONFIRMED").filter(
             Q(recurrence_rule__isnull=False) |
             Q(start_datetime__lt=end_datetime, end_datetime__gt=start_datetime)
         )
@@ -230,8 +236,8 @@ class RoomViewSet(viewsets.ModelViewSet):
                     make_aware(datetime.combine(start_datetime.date(), time.min)),
                     make_aware(datetime.combine(end_datetime.date(), time.max))
                 )
-                for occurence_start in booking_occurrences:
-                    booked_slots.append((localtime(occurence_start), localtime(occurence_start) + duration))
+                for occurrence_start in booking_occurrences:
+                    booked_slots.append((localtime(occurrence_start), localtime(occurrence_start) + duration))
             else:
                 booked_slots.append((localtime(booking.start_datetime), localtime(booking.end_datetime)))
 
@@ -285,7 +291,7 @@ class RoomViewSet(viewsets.ModelViewSet):
             # If current_start reaches room_end, end the loop
             if current_start >= room_end:
                 break
-        # Add any remaining free interval after lastest booking
+        # Add any remaining free interval after latest booking
         if current_start < room_end:
             free_intervals.append((current_start, room_end))
         return free_intervals

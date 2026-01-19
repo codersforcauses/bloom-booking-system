@@ -224,7 +224,7 @@ class AvailabilityAPITest(APITestCase):
 
         # Rooms with a recurrence rule (with count)
         self.room5 = Room.objects.create(
-            name="Meeting Room 4",
+            name="Meeting Room 5",
             location=self.loc1,
             capacity=12,
             start_datetime=timezone.make_aware(
@@ -313,7 +313,7 @@ class AvailabilityAPITest(APITestCase):
         # Check availability for next Monday to next Sunday
         response = self.client.get(
             f"/api/rooms/{self.room1.id}/availability/?start_date={next_monday.isoformat()}&end_date={next_sunday.isoformat()}")
-        print("\nAvailability Recurrrence Rules Response:")
+        print("\nAvailability Recurrence Rules Response:")
         print(response.content.decode())
         print()
 
@@ -337,7 +337,7 @@ class AvailabilityAPITest(APITestCase):
         # Check availability for next Monday to next Sunday
         response = self.client.get(
             f"/api/rooms/{self.room2.id}/availability/?start_date={next_monday.isoformat()}&end_date={next_sunday.isoformat()}")
-        print("\nAvailability No Reccurrence Rules Response:")
+        print("\nAvailability No Recurrence Rules Response:")
         print(response.content.decode())
         print()
 
