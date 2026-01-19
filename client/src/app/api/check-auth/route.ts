@@ -1,11 +1,23 @@
 import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 
+const secretKey = process.env.API_SECRET_KEY;
+
 export async function POST(req: Request) {
   const { accessToken } = await req.json();
-  const secretKey = process.env.API_SECRET_KEY;
+  // If no token provided, return 400
+  if (typeof accessToken !== "string" || accessToken.trim().length === 0) {
+    return NextResponse.json(
+      { valid: false, error: "Missing or invalid accessToken" },
+      { status: 400 },
+    );
+  }
+  // If no secret key configured, return 503
   if (!secretKey) {
-    throw new Error("API_SECRET_KEY is not set in environment variables");
+    return NextResponse.json(
+      { valid: false, error: "Missing API secret key configuration" },
+      { status: 503 },
+    );
   }
   try {
     // Verify the JWT token
@@ -13,12 +25,6 @@ export async function POST(req: Request) {
     await jwtVerify(accessToken, secret);
     return NextResponse.json({ valid: true });
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message === "API_SECRET_KEY is not set in environment variables"
-    ) {
-      throw error;
-    }
     return NextResponse.json({ valid: false }, { status: 401 });
   }
 }
