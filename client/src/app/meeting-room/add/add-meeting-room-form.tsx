@@ -160,22 +160,28 @@ export default function AddMeetingRoomForm() {
                   Upload Image
                 </label>
 
-                <div className="rounded-md border bg-background shadow-[0_4px_0_0_#D1D5DB]">
-                  <div className="flex min-h-[38px] flex-wrap items-center gap-2 px-1.5 py-1.5">
-                    <span className="body mx-1.5 text-[var(--bloom-gray)] opacity-100">
+                <div className="flex items-stretch gap-0">
+                  <div className="flex min-h-[38px] flex-1 items-center rounded-l-md border bg-background px-3 shadow-[0_4px_0_0_#D1D5DB]">
+                    <span className="body text-[var(--bloom-gray)] opacity-100">
                       {imageFile ? imageFile.name : "No file selected"}
                     </span>
-
-                    <input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) =>
-                        setImageFile(e.target.files?.[0] ?? null)
-                      }
-                    />
                   </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => document.getElementById("image")?.click()}
+                    className="rounded-l-none rounded-r-md text-white shadow-[0_4px_0_0_#D1D5DB]"
+                  >
+                    Choose File
+                  </Button>
+
+                  <input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                  />
                 </div>
 
                 {errors.image && (
