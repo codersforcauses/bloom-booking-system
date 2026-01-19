@@ -172,4 +172,4 @@ const logout = () => {
 };
 
 export default api;
-export { setAccessToken };
+export { logout, setAccessToken };

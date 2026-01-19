@@ -1,5 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { useState } from "react";
 
 import {
@@ -7,6 +9,9 @@ import {
   AdminSettingsSummaryCard,
   AdminSettingsTableCard,
 } from "@/components/admin-settings-card";
+import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
+import RoomAPI from "@/hooks/room";
+import { RoomAmenity, RoomLocation } from "@/types/room";
 
 type View =
   | "summary"
@@ -15,44 +20,118 @@ type View =
   | "amenities-list"
   | "amenities-form";
 
-type Item = {
-  id: string;
-  name: string;
-  status: string;
-};
-
-const mockLocations: Item[] = [];
-const mockAmenities: Item[] = [
-  { id: "1", name: "TV", status: "In Use" },
-  { id: "2", name: "HDMI", status: "In Use" },
-  { id: "3", name: "Whiteboard", status: "Not In Use" },
-  { id: "4", name: "TV2", status: "Not In Use" },
-];
-
 export default function AdminSettingsPage() {
   const [view, setView] = useState<View>("summary");
-  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [editingItem, setEditingItem] = useState<
+    RoomLocation | RoomAmenity | null
+  >(null);
+
+  const [alert, setAlert] = useState<{
+    open: boolean;
+    variant: AlertDialogVariant;
+    title?: string;
+    description?: string;
+  }>({ open: false, variant: "success" });
+
+  const [confirmDelete, setConfirmDelete] = useState<{
+    item: RoomLocation | RoomAmenity;
+    type: "locations" | "amenities";
+  } | null>(null);
+
+  const queryClient = useQueryClient();
+
+  const { data: locations, isLoading: isLocationsLoading } =
+    RoomAPI.useFetchRoomLocations({ page: 1, nrows: 100 });
+
+  const { data: amenities, isLoading: isAmenitiesLoading } =
+    RoomAPI.useFetchRoomAmenities({ page: 1, nrows: 100 });
+
+  const createLocation = RoomAPI.useCreateRoomLocation();
+  const updateLocation = RoomAPI.useUpdateRoomLocation(editingItem?.id ?? 0);
+  const deleteLocation = RoomAPI.useDeleteRoomLocation();
+
+  const createAmenity = RoomAPI.useCreateRoomAmenity();
+  const updateAmenity = RoomAPI.useUpdateRoomAmenity(editingItem?.id ?? 0);
+  const deleteAmenity = RoomAPI.useDeleteRoomAmenity();
 
   const handleAdd = (type: "locations" | "amenities") => {
     setEditingItem(null);
     setView(type === "locations" ? "locations-form" : "amenities-form");
   };
 
-  const handleEdit = (item: Item, type: "locations" | "amenities") => {
+  const handleEdit = (
+    item: RoomLocation | RoomAmenity,
+    type: "locations" | "amenities",
+  ) => {
     setEditingItem(item);
     setView(type === "locations" ? "locations-form" : "amenities-form");
   };
 
-  const handleSubmit = (value: string) => {
-    if (editingItem) {
-      console.log("Edit", editingItem.id, value);
-    } else {
-      console.log("Add new", value);
-    }
+  const handleSubmit = async (value: string) => {
+    try {
+      if (editingItem) {
+        if (view.includes("locations")) {
+          await updateLocation.mutateAsync({ name: value });
+          queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+        } else {
+          await updateAmenity.mutateAsync({ name: value });
+          queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
+        }
+      } else {
+        if (view.includes("locations")) {
+          await createLocation.mutateAsync({ name: value });
+          queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+        } else {
+          await createAmenity.mutateAsync({ name: value });
+          queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
+        }
+      }
 
-    view.includes("locations")
-      ? setView("locations-list")
-      : setView("amenities-list");
+      setView(view.includes("locations") ? "locations-list" : "amenities-list");
+
+      setAlert({
+        open: true,
+        variant: "success",
+        title: "Success",
+        description: `${value} saved successfully!`,
+      });
+    } catch (err: AxiosError | any) {
+      setAlert({
+        open: true,
+        variant: "error",
+        title: "Error",
+        description: err?.message || "Something went wrong",
+      });
+    }
+  };
+
+  const handleDelete = async (
+    item: RoomLocation | RoomAmenity,
+    type: "locations" | "amenities",
+  ) => {
+    try {
+      if (type === "locations") {
+        await deleteLocation.mutateAsync(item.id);
+        queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+      } else {
+        await deleteAmenity.mutateAsync(item.id);
+        queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
+      }
+
+      setAlert({
+        open: true,
+        variant: "success",
+        title: "Deleted",
+        description: `${item.name} has been deleted.`,
+      });
+    } catch (err: AxiosError | any) {
+      setAlert({
+        open: true,
+        variant: "error",
+        title: "Error",
+        description: err?.message || "Failed to delete",
+      });
+    }
   };
 
   return (
@@ -60,8 +139,9 @@ export default function AdminSettingsPage() {
       <div className="w-full max-w-md">
         {view === "summary" && (
           <AdminSettingsSummaryCard
-            locations={mockLocations.map((l) => l.name)}
-            amenities={mockAmenities.map((a) => a.name)}
+            locations={locations.map((l) => l.name)}
+            amenities={amenities.map((a) => a.name)}
+            isLoading={isLocationsLoading || isAmenitiesLoading}
             onEditLocations={() => setView("locations-list")}
             onEditAmenities={() => setView("amenities-list")}
           />
@@ -70,24 +150,26 @@ export default function AdminSettingsPage() {
         {view === "locations-list" && (
           <AdminSettingsTableCard
             title="Locations"
-            items={mockLocations}
+            items={locations.map((l) => ({ id: l.id, name: l.name }))}
             onAdd={() => handleAdd("locations")}
             onBack={() => setView("summary")}
             onEditItem={(item) => handleEdit(item, "locations")}
-            onSetStatusItem={(item) => alert("Set status " + item.name)}
-            onDeleteItem={(item) => alert("Delete " + item.name)}
+            onDeleteItem={(item) =>
+              setConfirmDelete({ item, type: "locations" })
+            }
           />
         )}
 
         {view === "amenities-list" && (
           <AdminSettingsTableCard
             title="Amenities"
-            items={mockAmenities}
+            items={amenities.map((a) => ({ id: a.id, name: a.name }))}
             onAdd={() => handleAdd("amenities")}
             onBack={() => setView("summary")}
             onEditItem={(item) => handleEdit(item, "amenities")}
-            onSetStatusItem={(item) => alert("Set status " + item.name)}
-            onDeleteItem={(item) => alert("Delete " + item.name)}
+            onDeleteItem={(item) =>
+              setConfirmDelete({ item, type: "amenities" })
+            }
           />
         )}
 
@@ -105,6 +187,28 @@ export default function AdminSettingsPage() {
           />
         )}
       </div>
+
+      <AlertDialog
+        variant={alert.variant}
+        title={alert.title}
+        description={alert.description}
+        open={alert.open}
+        onConfirm={() => setAlert((prev) => ({ ...prev, open: false }))}
+      />
+
+      {confirmDelete && (
+        <AlertDialog
+          open={!!confirmDelete}
+          variant="confirm"
+          title="Confirm Delete"
+          description={`Are you sure you want to delete "${confirmDelete.item.name}"?`}
+          onClose={() => setConfirmDelete(null)}
+          onConfirm={async () => {
+            await handleDelete(confirmDelete.item, confirmDelete.type);
+            setConfirmDelete(null);
+          }}
+        />
+      )}
     </div>
   );
 }
