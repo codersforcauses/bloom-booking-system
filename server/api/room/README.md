@@ -106,7 +106,7 @@ http://localhost:8000/api/rooms/availability/?start_datetime=2026-01-19T12:00:00
 
 **GET** `/api/rooms/{id}/availability`
 
-Returns availabile slots for a single room. Slots returned will only include time later than now.
+Returns available slots for a single room. Slots returned will only include time later than now.
 
 ### Query Parameters:
 
