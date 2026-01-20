@@ -1,8 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { MoreHorizontal } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { MdAdd, MdExpandLess, MdExpandMore } from "react-icons/md";
+import { z } from "zod";
 
 import { AlertDialog } from "@/components/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -225,9 +228,14 @@ function AdminSettingsTableCard({
   );
 }
 
+const itemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+});
+
+type ItemFormValues = z.infer<typeof itemSchema>;
+
 type FormCardProps = {
   title: string;
-  placeholder: string;
   defaultValue?: string;
   onCancel: () => void;
   onSubmit: (value: string) => void;
@@ -235,22 +243,20 @@ type FormCardProps = {
 
 function AdminSettingsFormCard({
   title,
-  placeholder,
   defaultValue = "",
   onCancel,
   onSubmit,
 }: FormCardProps) {
-  const [value, setValue] = useState(defaultValue);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleSubmit = () => {
-    if (!value.trim()) return;
-    onSubmit(value.trim());
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ItemFormValues>({
+    resolver: zodResolver(itemSchema),
+    defaultValues: {
+      name: defaultValue,
+    },
+  });
 
   return (
     <Card className="space-y-3 rounded-xl border bg-white p-6">
@@ -258,33 +264,38 @@ function AdminSettingsFormCard({
         <p className="font-semibold">{title}</p>
       </div>
 
-      <div className="space-y-2">
-        <label className="font-medium">Enter {title} name</label>
-        <Input
-          ref={inputRef}
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleSubmit();
-            }
-          }}
-        />
-      </div>
-
-      <div className="flex justify-center gap-6 py-6">
-        <Button
-          variant="outline"
-          className="w-24 border-bloom-blue text-bloom-blue"
-          onClick={onCancel}
+      <div>
+        <form
+          onSubmit={handleSubmit((data) => onSubmit(data.name))}
+          className="space-y-2"
         >
-          Cancel
-        </Button>
-        <Button className="w-20 text-white" onClick={handleSubmit}>
-          Ok
-        </Button>
+          <label className="font-medium">Enter {title} name</label>
+
+          <Input {...register("name")} autoFocus placeholder={"Enter name"} />
+
+          {errors.name && (
+            <p className="text-sm text-red-500">{errors.name.message}</p>
+          )}
+
+          <div className="flex justify-center gap-6 py-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-24 border-bloom-blue text-bloom-blue"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="w-20 text-white"
+              disabled={isSubmitting}
+            >
+              Ok
+            </Button>
+          </div>
+        </form>
       </div>
     </Card>
   );
