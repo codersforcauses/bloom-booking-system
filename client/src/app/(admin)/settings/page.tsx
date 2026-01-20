@@ -11,6 +11,7 @@ import {
 } from "@/components/admin-settings-card";
 import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import RoomAPI from "@/hooks/room";
+import { logout } from "@/lib/api";
 import { RoomAmenity, RoomLocation } from "@/types/room";
 
 type View =

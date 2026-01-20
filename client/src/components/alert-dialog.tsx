@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
-import { MdDelete, MdOutlineHelpOutline } from "react-icons/md";
+import { MdOutlineHelpOutline } from "react-icons/md";
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -36,14 +35,9 @@ const variantMap: Record<
     color: "var(--bloom-yellow)",
     confirmText: "Yes",
   },
-  delete: {
-    icon: <MdDelete size={48} />,
-    color: "var(--bloom-red)",
-    confirmText: "Delete",
-  },
 };
 
-export type AlertDialogVariant = "success" | "error" | "confirm" | "delete";
+export type AlertDialogVariant = "success" | "error" | "confirm";
 
 interface AlertDialogProps {
   title?: string;
@@ -52,7 +46,7 @@ interface AlertDialogProps {
   showIcon?: boolean;
   onConfirm?: () => void | Promise<void>;
   onClose?: () => void;
-  open?: boolean; // controlled open
+  open: boolean; // controlled open
   children?: React.ReactNode;
 }
 
@@ -74,11 +68,10 @@ interface AlertDialogProps {
  *   - "success": shows a success icon and "Ok" button
  *   - "error": shows an error icon and "Ok" button
  *   - "confirm": shows a question icon and "Yes/Cancel" buttons
- *   - "delete": shows a delete icon and "Delete/Cancel" buttons
  * @param showIcon Whether to display the icon above the content. Defaults to `true`.
  * @param onConfirm Callback executed when the confirm button is clicked. Can be async.
  * @param onClose Callback executed when the dialog is closed (Cancel button, outside click, or after confirm).
- * @param open Optional controlled open state of the dialog.
+ * @param open Controlled bool open state of the dialog.
  * @param children Optional React node used as the trigger element (DialogTrigger).
  *
  * @example
@@ -110,16 +103,10 @@ function AlertDialog({
   showIcon = true,
   onConfirm,
   onClose,
-  open: controlledOpen,
+  open,
   children,
 }: AlertDialogProps) {
   const [isPending, setIsPending] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  // sync controlled open
-  useEffect(() => {
-    if (controlledOpen !== undefined) setOpen(controlledOpen);
-  }, [controlledOpen]);
 
   const { icon, color, confirmText } = variantMap[variant];
 
@@ -132,23 +119,21 @@ function AlertDialog({
         setIsPending(false);
       }
     }
-    setOpen(false);
   };
 
   const handleCancel = () => {
-    setOpen(false);
     onClose?.();
   };
 
-  const isConfirmVariant = variant === "confirm" || variant === "delete";
+  const isConfirmVariant = variant === "confirm";
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
 
       <DialogContent
         onInteractOutside={handleCancel}
-        className="flex h-auto w-[95%] min-w-[60%] flex-col items-center rounded-lg p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden"
+        className="flex h-auto w-[95%] min-w-[60%] flex-col items-center rounded-lg bg-white p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden"
       >
         {showIcon && (
           <div className="mt-6">
@@ -203,48 +188,4 @@ function AlertDialog({
     </Dialog>
   );
 }
-
-function LogOutAlertDialog({
-  children,
-  isPending,
-  handleLogout,
-}: {
-  children: React.ReactNode;
-  isPending: boolean;
-  handleLogout: () => void;
-}) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-
-      <DialogContent className="flex w-[95%] flex-col items-center rounded-lg shadow-xl [&_button:has(svg.lucide-x)]:hidden">
-        <DialogHeader>
-          <DialogTitle className="pt-4" />
-
-          <DialogDescription className="py-10 text-center font-semibold text-black">
-            Are you sure you want to log out?
-          </DialogDescription>
-        </DialogHeader>
-
-        <DialogFooter className="flex flex-row justify-center gap-4 pb-4">
-          <DialogClose asChild>
-            <Button className="h-8 w-24 text-xs" variant="outline">
-              Cancel
-            </Button>
-          </DialogClose>
-
-          <Button
-            onClick={handleLogout}
-            disabled={isPending}
-            variant="warning"
-            className="h-8 w-24 text-xs"
-          >
-            {isPending ? "Logging out..." : "Log Out"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export { AlertDialog, LogOutAlertDialog };
+export { AlertDialog };
