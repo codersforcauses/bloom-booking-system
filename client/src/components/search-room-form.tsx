@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
 
@@ -10,37 +10,12 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import api from "@/lib/api";
 
-// TODO: should be from API
-const LOCATIONS = [
-  { label: "Pune", value: "pune" },
-  { label: "Mumbai", value: "mumbai" },
-  { label: "Delhi", value: "delhi" },
-];
+// badge options string[] (name)
 
-// labels for Amenities
-const AMENITIES = [
-  "Audio",
-  "Video",
-  "White Board",
-  "HDMI",
-  "Projector",
-  "Speaker Phone",
-];
-
-// seats examples
-const SEAT_OPTIONS = [
-  { label: "1-5 seats", value: "1-5" },
-  { label: "6-10 seats", value: "6-10" },
-  { label: "11-20 seats", value: "11-20" },
-  { label: "20+ seats", value: "20+" },
-];
-
-// optional or required
 const RoomSearchSchemaBase = z.object({
   name: z.string().min(1, "Name is required"),
   location: z.string().min(1, "Location is required"),
@@ -49,38 +24,93 @@ const RoomSearchSchemaBase = z.object({
   toDate: z.date(),
   toTime: z.string().min(1, "To time is required"),
   amenities: z.array(z.string()).optional(),
-  seats: z.string().optional(),
+  minSeats: z.number().int().positive().optional(),
+  maxSeats: z.number().int().positive().optional(),
 });
 
-// check if toDate later than fromDate
 const RoomSearchSchema = RoomSearchSchemaBase.refine(
   (data) => {
-    if (data.fromDate && data.toDate) {
-      return data.toDate > data.fromDate;
+    if (data.fromDate && data.toDate) return data.toDate >= data.fromDate;
+    return true;
+  },
+  { message: "To Date must be on/after From Date", path: ["toDate"] },
+).refine(
+  (data) => {
+    if (data.minSeats != null && data.maxSeats != null) {
+      return data.minSeats <= data.maxSeats;
     }
     return true;
   },
-  {
-    message: "Booking requires at least one night",
-    path: ["toDate"],
-  },
+  { message: "Minimum seats cannot exceed maximum seats", path: ["maxSeats"] },
 );
 
-type RoomSearchSchemaValue = z.infer<typeof RoomSearchSchema>;
+export type RoomSearchSchemaValue = z.infer<typeof RoomSearchSchema>;
 
 interface SearchRoomFormProps {
   form: UseFormReturn<RoomSearchSchemaValue>;
   onSubmit: (data: RoomSearchSchemaValue) => void;
   onReset: () => void;
+
+  //
+  onLocationMapReady?: (map: Record<string, string>) => void;
+  onAmenityMapReady?: (map: Record<string, string>) => void;
 }
 
 export default function SearchRoomForm({
   form,
   onSubmit,
   onReset,
+  onLocationMapReady,
+  onAmenityMapReady,
 }: SearchRoomFormProps) {
+  const [locations, setLocations] = useState<
+    { label: string; value: string }[]
+  >([]);
+
+  //
+  const [amenityNames, setAmenityNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      const res = await api.get("/locations/");
+      const raw = Array.isArray(res.data) ? res.data : (res.data.results ?? []);
+      setLocations(
+        raw.map((loc: any) => ({
+          label: loc.name,
+          value: String(loc.id), // ✅ 仍然用 id，后端 filter 需要
+        })),
+      );
+      // loc ID to name
+      const locationMap: Record<string, string> = {};
+      raw.forEach((loc: any) => {
+        locationMap[String(loc.id)] = loc.name;
+      });
+      onLocationMapReady?.(locationMap);
+    };
+
+    const fetchAmenities = async () => {
+      const res = await api.get("/amenities/");
+      const raw = Array.isArray(res.data) ? res.data : (res.data.results ?? []);
+
+      //
+      setAmenityNames(raw.map((a: any) => a.name));
+
+      //
+      const map: Record<string, string> = {};
+      raw.forEach((a: any) => {
+        map[a.name] = String(a.id);
+      });
+      onAmenityMapReady?.(map);
+    };
+
+    Promise.all([fetchLocations(), fetchAmenities()]).catch((e) => {
+      console.error("Failed to fetch form options", e);
+    });
+  }, [onAmenityMapReady, onLocationMapReady]);
+
   return (
     <Form form={form} onSubmit={form.handleSubmit(onSubmit)}>
+      {/* name */}
       <FormField
         name="name"
         control={form.control}
@@ -102,6 +132,7 @@ export default function SearchRoomForm({
         )}
       />
 
+      {/* location */}
       <FormField
         name="location"
         control={form.control}
@@ -112,7 +143,7 @@ export default function SearchRoomForm({
                 kind="select"
                 label="Location"
                 name="location"
-                options={LOCATIONS} // location from api
+                options={locations}
                 value={field.value || ""}
                 onChange={field.onChange}
                 placeholder="Select location"
@@ -124,6 +155,7 @@ export default function SearchRoomForm({
         )}
       />
 
+      {/* from/to date+time */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FormField
           name="fromDate"
@@ -132,7 +164,7 @@ export default function SearchRoomForm({
             <FormItem>
               <FormControl>
                 <InputField
-                  kind="date" // Calendar
+                  kind="date"
                   label="From Date"
                   name="fromDate"
                   value={field.value}
@@ -212,6 +244,7 @@ export default function SearchRoomForm({
         />
       </div>
 
+      {/* amenities */}
       <FormField
         name="amenities"
         control={form.control}
@@ -222,7 +255,7 @@ export default function SearchRoomForm({
                 kind="badge"
                 label="Amenities"
                 name="amenities"
-                options={AMENITIES}
+                options={amenityNames}
                 value={field.value || []}
                 onChange={field.onChange}
                 placeholder="Select amenities"
@@ -233,26 +266,58 @@ export default function SearchRoomForm({
         )}
       />
 
-      <FormField
-        name="seats"
-        control={form.control}
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <InputField
-                kind="select"
-                label="Select Seats"
-                name="seats"
-                options={SEAT_OPTIONS}
-                value={field.value || ""}
-                onChange={field.onChange}
-                placeholder="Select seats"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* seats range */}
+      <div className="grid grid-cols-2 gap-3">
+        <FormField
+          name="minSeats"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <InputField
+                  kind="number"
+                  label="Minimum Seats"
+                  name="minSeats"
+                  value={field.value == null ? "" : String(field.value)}
+                  onChange={(v) => {
+                    // 将字符串转换为 number 或 undefined
+                    const num = v === "" ? undefined : Number(v);
+                    field.onChange(num);
+                  }}
+                  placeholder="e.g. 4"
+                  min={1}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          name="maxSeats"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <InputField
+                  kind="number"
+                  label="Maximum Seats"
+                  name="maxSeats"
+                  value={field.value == null ? "" : String(field.value)}
+                  onChange={(v) => {
+                    // 将字符串转换为 number 或 undefined
+                    const num = v === "" ? undefined : Number(v);
+                    field.onChange(num);
+                  }}
+                  placeholder="e.g. 12"
+                  min={1}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <div className="flex justify-end gap-3 pt-4">
         <Button type="button" variant="outline" onClick={onReset}>
@@ -271,4 +336,3 @@ export default function SearchRoomForm({
 }
 
 export { RoomSearchSchema };
-export type { RoomSearchSchemaValue };
