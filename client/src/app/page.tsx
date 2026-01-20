@@ -1,19 +1,19 @@
 "use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { BookingRoomCard } from "@/components/room-card";
 import SearchRoomForm, {
   RoomSearchSchema,
-  RoomSearchSchemaValue,
-} from "@/app/search-room-form";
-import { BookingRoomCard } from "@/components/room-card";
+  type RoomSearchSchemaValue,
+} from "@/components/search-room-form";
 import api from "@/lib/api";
 
 // helper function to bridge the gap between api room data and arguments of BookingRoomCard
 export const normalizedRooms = (apiRooms: any[]) => {
-  // todo: substitute any with the actual type
   return apiRooms.map((apiRoom) => ({
     id: apiRoom.id,
     title: apiRoom.name,
@@ -33,28 +33,65 @@ export default function Home() {
   const [rooms, setRooms] = useState<any[]>([]); // todo: substitute any with the actual type
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [locationIdToName, setLocationIdToName] = useState<
+    Record<string, string>
+  >({});
+  const [amenityNameToId, setAmenityNameToId] = useState<
+    Record<string, string>
+  >({});
 
   const form = useForm<RoomSearchSchemaValue>({
     resolver: zodResolver(RoomSearchSchema),
     mode: "onChange",
+    defaultValues: {
+      name: "",
+      location: "",
+      fromDate: new Date(),
+      fromTime: "",
+      toDate: new Date(),
+      toTime: "",
+      amenities: [],
+      minSeats: undefined,
+      maxSeats: undefined,
+    },
   });
 
   // Handle search form submission
-  const onSubmit = (data: RoomSearchSchemaValue) => {
-    alert("submitted data:\n" + JSON.stringify(data));
-  };
 
-  // Reset search form
+  async function onSubmit(data: RoomSearchSchemaValue) {
+    const params: Record<string, any> = {};
+
+    // name search
+    if (data.name) params.name = data.name;
+
+    // location search - location name
+    if (data.location && locationIdToName[data.location]) {
+      params.location = locationIdToName[data.location];
+    }
+    // amenities
+    if (data.amenities?.length) {
+      params.amenities = data.amenities.join(",");
+    }
+
+    // capacity range
+    if (data.minSeats != null) params.min_capacity = data.minSeats;
+    if (data.maxSeats != null) params.max_capacity = data.maxSeats;
+
+    await fetchRooms("/rooms/", params);
+  }
+
+  // Reset search form and initial roomlist
   const onReset = () => {
     fetchRooms("/rooms/");
     form.reset();
+    fetchRooms("/rooms/");
   };
 
   // Fetch Location Data & Amentities Data
 
   // Fetch Rooms (Scroll down to get next page)
-  const fetchRooms = async (url: string) => {
-    const { data } = await api.get(url);
+  const fetchRooms = async (url: string, params?: Record<string, any>) => {
+    const { data } = await api.get(url, { params });
     const newRooms = normalizedRooms(data.results);
     console.log(data);
     // if it is not the first page, append the data to the previous
@@ -90,8 +127,16 @@ export default function Home() {
     <div className="grid h-screen grid-cols-1 gap-4 p-4 md:grid-cols-2 md:gap-8 md:p-8">
       <div>
         <h1 className="title">Booking A Meeting Room</h1>
-        <SearchRoomForm form={form} onSubmit={onSubmit} onReset={onReset} />
+
+        <SearchRoomForm
+          form={form}
+          onSubmit={onSubmit}
+          onReset={onReset}
+          onLocationMapReady={setLocationIdToName}
+          onAmenityMapReady={setAmenityNameToId}
+        />
       </div>
+
       <div>
         <h2 className="title mb-4">Rooms Availability</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
