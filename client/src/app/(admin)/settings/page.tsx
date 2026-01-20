@@ -11,7 +11,6 @@ import {
 } from "@/components/admin-settings-card";
 import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import RoomAPI from "@/hooks/room";
-import { logout } from "@/lib/api";
 import { RoomAmenity, RoomLocation } from "@/types/room";
 
 type View =
@@ -177,7 +176,6 @@ export default function AdminSettingsPage() {
         {(view === "locations-form" || view === "amenities-form") && (
           <AdminSettingsFormCard
             title={view === "locations-form" ? "Location" : "Amenity"}
-            placeholder="Enter name"
             defaultValue={editingItem?.name || ""}
             onCancel={() =>
               setView(

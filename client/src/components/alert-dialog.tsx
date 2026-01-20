@@ -84,17 +84,6 @@ interface AlertDialogProps {
  * >
  *   <Button>Open Dialog</Button>
  * </AlertDialog>
- *
- * @example
- * // Confirm delete dialog
- * <AlertDialog
- *   variant="delete"
- *   title="Delete Item"
- *   description="Are you sure you want to delete this item?"
- *   onConfirm={async () => await handleDelete(item.id)}
- *   onClose={() => console.log("Dialog closed")}
- *   open={isDeleteDialogOpen} // controlled open
- * />
  */
 function AlertDialog({
   title,
@@ -133,6 +122,11 @@ function AlertDialog({
 
       <DialogContent
         onInteractOutside={handleCancel}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            handleCancel();
+          }
+        }}
         className="flex h-auto w-[95%] min-w-[60%] flex-col items-center rounded-lg bg-white p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden"
       >
         {showIcon && (
