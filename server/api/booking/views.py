@@ -10,6 +10,7 @@ from rest_framework import viewsets, status
 from .google_calendar.events import create_event, update_event, delete_event
 from googleapiclient.errors import HttpError
 from django.db import transaction
+from ..email_utils import send_booking_cancelled_email
 import logging
 
 logger = logging.getLogger(__name__)
@@ -188,6 +189,16 @@ class BookingViewSet(viewsets.ModelViewSet):
 
                     response_serializer = BookingSerializer(booking, fields=(
                         'id', 'status', 'cancel_reason', 'updated_at'))
+
+                    send_booking_cancelled_email(
+                        recipients=[visitor_email],
+                        context={
+                            "room_name": booking.room,
+                            "start_datetime": booking.start_datetime,
+                            "end_datetime": booking.end_datetime,
+                            "book_room_url": request.build_absolute_uri("/rooms/")}
+                        )
+
                     return Response(response_serializer.data)
 
             except ValidationError:
