@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import CustomRepeatModal from "@/app/meeting-room/add/custom-repeat";
 import { CheckboxGroup, CheckboxItem } from "@/components/checkbox-group";
 import InputField from "@/components/input";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,8 @@ export default function AddMeetingRoomForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [value, setValue] = useState<string[]>([]);
+  const [repeat, setRepeat] = useState<string>("none");
+  const [showCustomRepeat, setShowCustomRepeat] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Room>>({
     title: "",
@@ -247,14 +250,26 @@ export default function AddMeetingRoomForm() {
                   { label: "Does not repeat", value: "none" },
                   { label: "Daily", value: "daily" },
                   { label: "Weekly", value: "weekly" },
-                  { label: "Monthly", value: "monthly" },
+                  { label: "Custom", value: "custom" },
                 ]}
-                value=""
+                value={repeat}
                 onChange={(value) => {
-                  // Handle repeat change
+                  if (value === "custom") {
+                    setShowCustomRepeat(true);
+                  } else {
+                    setRepeat(value);
+                  }
                 }}
               />
             </div>
+            <CustomRepeatModal
+              open={showCustomRepeat}
+              onClose={() => setShowCustomRepeat(false)}
+              onDone={(customValue) => {
+                console.log(customValue); // structured repeat data
+                setRepeat("custom"); // keep dropdown value meaningful
+              }}
+            />
 
             {/* Action Buttons */}
             <div className="flex gap-4 pt-4">
