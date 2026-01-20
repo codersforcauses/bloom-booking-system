@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -25,7 +26,38 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  useEffect(() => {
+    const checkAuth = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Call the internal API to verify the JWT token
+        const res = await fetch("/api/check-auth", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ accessToken }),
+        });
+        if (res.ok) {
+          router.push("/dashboard");
+        } else {
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error("Error while validating authentication token:", err);
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const {
     register,
@@ -40,8 +72,6 @@ export default function LoginPage() {
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      // Swagger: POST /api/users/login/
-      // Using api instance => baseURL already includes /api (from NEXT_PUBLIC_BACKEND_URL)
       const res = await api.post("/users/login/", {
         username: values.username,
         password: values.password,
@@ -62,8 +92,6 @@ export default function LoginPage() {
         return;
       }
 
-      // Store tokens in localStorage
-      // accessToken setter is exported from api.ts
       setAccessToken(access);
 
       // refresh token is used by api.ts refresh flow, so we must store it too
@@ -71,8 +99,8 @@ export default function LoginPage() {
         localStorage.setItem("refreshToken", refresh);
       }
 
-      // Redirect to home
-      router.push("/");
+      // Redirect to dashboard
+      router.push("/dashboard");
       router.refresh();
     } catch (err: any) {
       const message =
@@ -83,8 +111,12 @@ export default function LoginPage() {
     }
   };
 
+  if (isLoading) {
+    return <></>;
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4">
+    <main className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-md rounded-3xl border border-slate-100 bg-white px-10 py-12 shadow-md">
         <h1 className="mb-2 text-center text-2xl font-semibold text-slate-900">
           Login
@@ -107,11 +139,10 @@ export default function LoginPage() {
               type="text"
               placeholder="Enter Username / Email"
               autoComplete="username"
-              className="h-11 border border-slate-200 shadow-[0_2px_0_rgba(148,163,184,0.5)] placeholder:text-slate-400"
               {...register("username")}
             />
             {errors.username && (
-              <p className="text-xs text-[var(--bloom-red)]">
+              <p className="text-xs text-bloom-red">
                 {errors.username.message}
               </p>
             )}
@@ -130,41 +161,34 @@ export default function LoginPage() {
               type="password"
               placeholder="Enter Password"
               autoComplete="current-password"
-              className="h-11 border border-slate-200 shadow-[0_2px_0_rgba(148,163,184,0.5)] placeholder:text-slate-400"
               {...register("password")}
             />
             {errors.password && (
-              <p className="text-xs text-[var(--bloom-red)]">
+              <p className="text-xs text-bloom-red">
                 {errors.password.message}
               </p>
             )}
 
-            <div className="mt-1 flex justify-end">
+            {/* <div className="mt-1 flex justify-end">
               <button
                 type="button"
                 className="text-xs text-slate-500 underline-offset-2 hover:underline"
               >
                 Forgot Password?
               </button>
-            </div>
+            </div> */}
           </div>
 
           {/* Server error */}
           {errors.root?.message && (
-            <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-bloom-red">
               {errors.root.message}
             </p>
           )}
 
           {/* Submit */}
           <div className="flex justify-center pt-4">
-            <Button
-              type="submit"
-              variant="confirm"
-              size="lg"
-              disabled={isSubmitting}
-              className="rounded-full px-10"
-            >
+            <Button type="submit" variant="confirm" disabled={isSubmitting}>
               {isSubmitting ? "Logging in..." : "Login"}
             </Button>
           </div>
