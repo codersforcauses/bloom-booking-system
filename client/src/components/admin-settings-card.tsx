@@ -4,7 +4,7 @@ import { MoreHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MdAdd, MdExpandLess, MdExpandMore } from "react-icons/md";
 
-import { LogOutAlertDialog } from "@/components/alert-dialog";
+import { AlertDialog } from "@/components/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -98,16 +98,19 @@ function AdminSettingsSummaryCard({
     </div>
   );
 
-  const [isPending, setIsPending] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [logoutDescription, setLogoutDescription] = useState(
+    "Are you sure you want to log out?",
+  );
 
   const handleLogout = () => {
     try {
-      setIsPending(true);
       logout();
     } catch (error) {
+      setLogoutDescription(
+        "An error occurred during logout. Please consult your system administrator.",
+      );
       console.error("Logout failed", error);
-    } finally {
-      setIsPending(false);
     }
   };
 
@@ -126,13 +129,27 @@ function AdminSettingsSummaryCard({
         />
         {/* Logout Row */}
         <div className="flex justify-center py-6">
-          <LogOutAlertDialog isPending={isPending} handleLogout={handleLogout}>
-            <Button variant="warning" size="sm" className="w-32 font-semibold">
-              Log out
-            </Button>
-          </LogOutAlertDialog>
+          <Button
+            variant="warning"
+            size="sm"
+            className="w-32 font-semibold"
+            onClick={() => setConfirmLogout(true)}
+          >
+            Log out
+          </Button>
         </div>
       </div>
+      {confirmLogout && (
+        <AlertDialog
+          open={confirmLogout}
+          showIcon={false}
+          variant="confirm"
+          title="Logout"
+          description={logoutDescription}
+          onClose={() => setConfirmLogout(false)}
+          onConfirm={handleLogout}
+        />
+      )}
     </Card>
   );
 }
