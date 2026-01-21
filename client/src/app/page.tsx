@@ -30,6 +30,7 @@ export const normalizedRooms = (apiRooms: any[]) => {
 
 export default function Home() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [rooms, setRooms] = useState<any[]>([]); // todo: substitute any with the actual type
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -70,12 +71,13 @@ export default function Home() {
     if (data.minSeats != null) params.min_capacity = data.minSeats;
     if (data.maxSeats != null) params.max_capacity = data.maxSeats;
 
+    // to do: date & time filtering logic to be confirmed with backend team
+
     await fetchRooms("/rooms/", params);
   }
 
   // Reset search form and initial roomlist
   const onReset = () => {
-    fetchRooms("/rooms/");
     form.reset();
     fetchRooms("/rooms/");
   };
@@ -84,9 +86,9 @@ export default function Home() {
 
   // Fetch Rooms (Scroll down to get next page)
   const fetchRooms = async (url: string, params?: Record<string, any>) => {
+    setLoading(true);
     const { data } = await api.get(url, { params });
     const newRooms = normalizedRooms(data.results);
-    console.log(data);
     // if it is not the first page, append the data to the previous
     if (!data.previous) {
       setRooms(newRooms);
@@ -95,6 +97,7 @@ export default function Home() {
     }
     // set next url to prepare for pagination
     setNextUrl(data.next);
+    setLoading(false);
   };
 
   // initial load
@@ -120,23 +123,26 @@ export default function Home() {
     <div className="grid h-screen grid-cols-1 gap-4 p-4 md:grid-cols-3 md:gap-8 md:p-8">
       <div className="md:col-span-1">
         <h1 className="title mb-4">Booking A Meeting Room</h1>
-
         <SearchRoomForm form={form} onSubmit={onSubmit} onReset={onReset} />
       </div>
 
       <div className="md:col-span-2">
         <h2 className="title mb-4">Rooms Availability</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {rooms.length > 0 ? (
-            rooms.map((room) => (
-              <BookingRoomCard
-                key={room.id}
-                room={room}
-                onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
-              />
-            ))
-          ) : (
-            <p>No rooms found. Please try again.</p>
+          {!loading && (
+            <>
+              {rooms.length > 0 ? (
+                rooms.map((room) => (
+                  <BookingRoomCard
+                    key={room.id}
+                    room={room}
+                    onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
+                  />
+                ))
+              ) : (
+                <p>No rooms found. Please try again.</p>
+              )}
+            </>
           )}
           {/* an invisible marker that trigger fetch when scrolling into view */}
           <div ref={loadMoreRef} style={{ height: 1 }} />
