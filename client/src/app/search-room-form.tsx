@@ -34,15 +34,35 @@ const RoomSearchSchema = RoomSearchSchemaBase.refine(
     return true;
   },
   { message: "To Date must be on/after From Date", path: ["toDate"] },
-).refine(
-  (data) => {
-    if (data.minSeats != null && data.maxSeats != null) {
-      return data.minSeats <= data.maxSeats;
+)
+  .refine(
+    (data) => {
+      if (data.minSeats != null && data.maxSeats != null) {
+        return data.minSeats <= data.maxSeats;
+      }
+      return true;
+    },
+    {
+      message: "Minimum seats cannot exceed maximum seats",
+      path: ["maxSeats"],
+    },
+  )
+  .superRefine((data, ctx) => {
+    if (data.fromDate && data.toDate && data.fromTime && data.toTime) {
+      const isSameDay =
+        data.fromDate.getFullYear() === data.toDate.getFullYear() &&
+        data.fromDate.getMonth() === data.toDate.getMonth() &&
+        data.fromDate.getDate() === data.toDate.getDate();
+
+      if (isSameDay && data.toTime <= data.fromTime) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "End time must be after start time on the same day",
+          path: ["toTime"],
+        });
+      }
     }
-    return true;
-  },
-  { message: "Minimum seats cannot exceed maximum seats", path: ["maxSeats"] },
-);
+  });
 
 export type RoomSearchSchemaValue = z.infer<typeof RoomSearchSchema>;
 
@@ -50,8 +70,6 @@ interface SearchRoomFormProps {
   form: UseFormReturn<RoomSearchSchemaValue>;
   onSubmit: (data: RoomSearchSchemaValue) => void;
   onReset: () => void;
-
-  //
   onLocationMapReady?: (map: Record<string, string>) => void;
   onAmenityMapReady?: (map: Record<string, string>) => void;
 }
@@ -61,7 +79,6 @@ export default function SearchRoomForm({
   onSubmit,
   onReset,
   onLocationMapReady,
-  onAmenityMapReady,
 }: SearchRoomFormProps) {
   const [locations, setLocations] = useState<
     { label: string; value: string }[]
@@ -77,7 +94,7 @@ export default function SearchRoomForm({
       setLocations(
         raw.map((loc: any) => ({
           label: loc.name,
-          value: String(loc.id), // ✅ 仍然用 id，后端 filter 需要
+          value: String(loc.id),
         })),
       );
       // loc ID to name
@@ -92,21 +109,13 @@ export default function SearchRoomForm({
       const res = await api.get("/amenities/");
       const raw = Array.isArray(res.data) ? res.data : (res.data.results ?? []);
 
-      //
       setAmenityNames(raw.map((a: any) => a.name));
-
-      //
-      const map: Record<string, string> = {};
-      raw.forEach((a: any) => {
-        map[a.name] = String(a.id);
-      });
-      onAmenityMapReady?.(map);
     };
 
     Promise.all([fetchLocations(), fetchAmenities()]).catch((e) => {
       console.error("Failed to fetch form options", e);
     });
-  }, [onAmenityMapReady, onLocationMapReady]);
+  }, [onLocationMapReady]);
 
   return (
     <Form form={form} onSubmit={form.handleSubmit(onSubmit)}>
@@ -156,7 +165,7 @@ export default function SearchRoomForm({
       />
 
       {/* from/to date+time */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <FormField
           name="fromDate"
           control={form.control}
@@ -189,7 +198,10 @@ export default function SearchRoomForm({
                   label="Time"
                   name="fromTime"
                   value={field.value || ""}
-                  onChange={field.onChange}
+                  onChange={(v) => {
+                    field.onChange(v);
+                    form.trigger(["toTime", "toDate"]);
+                  }}
                   placeholder="HH:MM"
                   required={false}
                 />
@@ -200,7 +212,7 @@ export default function SearchRoomForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <FormField
           name="toDate"
           control={form.control}
@@ -233,7 +245,10 @@ export default function SearchRoomForm({
                   label="Time"
                   name="toTime"
                   value={field.value || ""}
-                  onChange={field.onChange}
+                  onChange={(v) => {
+                    field.onChange(v);
+                    form.trigger(["toTime", "toDate"]);
+                  }}
                   placeholder="HH:MM"
                   required={false}
                 />
@@ -280,7 +295,6 @@ export default function SearchRoomForm({
                   name="minSeats"
                   value={field.value == null ? "" : String(field.value)}
                   onChange={(v) => {
-                    // 将字符串转换为 number 或 undefined
                     const num = v === "" ? undefined : Number(v);
                     field.onChange(num);
                   }}
@@ -305,7 +319,6 @@ export default function SearchRoomForm({
                   name="maxSeats"
                   value={field.value == null ? "" : String(field.value)}
                   onChange={(v) => {
-                    // 将字符串转换为 number 或 undefined
                     const num = v === "" ? undefined : Number(v);
                     field.onChange(num);
                   }}
