@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { BookingRoomCard } from "@/components/room-card";
 import SearchRoomForm, {
   RoomSearchSchema,
   type RoomSearchSchemaValue,
-} from "@/components/search-room-form";
+} from "@/app/search-room-form";
+import { BookingRoomCard } from "@/components/room-card";
 import api from "@/lib/api";
 
 // helper function to bridge the gap between api room data and arguments of BookingRoomCard
@@ -124,9 +124,9 @@ export default function Home() {
   }, [nextUrl]);
 
   return (
-    <div className="grid h-screen grid-cols-1 gap-4 p-4 md:grid-cols-2 md:gap-8 md:p-8">
-      <div>
-        <h1 className="title">Booking A Meeting Room</h1>
+    <div className="grid h-screen grid-cols-1 gap-4 p-4 md:grid-cols-3 md:gap-8 md:p-8">
+      <div className="md:col-span-1">
+        <h1 className="title mb-4">Booking A Meeting Room</h1>
 
         <SearchRoomForm
           form={form}
@@ -137,7 +137,7 @@ export default function Home() {
         />
       </div>
 
-      <div>
+      <div className="md:col-span-2">
         <h2 className="title mb-4">Rooms Availability</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
           {rooms.map((room) => (

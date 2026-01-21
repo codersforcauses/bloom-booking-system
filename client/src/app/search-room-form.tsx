@@ -17,12 +17,12 @@ import api from "@/lib/api";
 // badge options string[] (name)
 
 const RoomSearchSchemaBase = z.object({
-  name: z.string().min(1, "Name is required"),
-  location: z.string().min(1, "Location is required"),
-  fromDate: z.date(),
-  fromTime: z.string().min(1, "From time is required"),
-  toDate: z.date(),
-  toTime: z.string().min(1, "To time is required"),
+  name: z.string().optional(),
+  location: z.string().optional(),
+  fromDate: z.date().optional(),
+  fromTime: z.string().optional(),
+  toDate: z.date().optional(),
+  toTime: z.string().optional(),
   amenities: z.array(z.string()).optional(),
   minSeats: z.number().int().positive().optional(),
   maxSeats: z.number().int().positive().optional(),
@@ -124,7 +124,7 @@ export default function SearchRoomForm({
                 value={field.value || ""}
                 onChange={field.onChange}
                 placeholder="Enter name"
-                required={true}
+                required={false}
               />
             </FormControl>
             <FormMessage />
@@ -147,7 +147,7 @@ export default function SearchRoomForm({
                 value={field.value || ""}
                 onChange={field.onChange}
                 placeholder="Select location"
-                required={true}
+                required={false}
               />
             </FormControl>
             <FormMessage />
@@ -170,7 +170,7 @@ export default function SearchRoomForm({
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select date"
-                  required={true}
+                  required={false}
                 />
               </FormControl>
               <FormMessage />
@@ -191,7 +191,7 @@ export default function SearchRoomForm({
                   value={field.value || ""}
                   onChange={field.onChange}
                   placeholder="HH:MM"
-                  required={true}
+                  required={false}
                 />
               </FormControl>
               <FormMessage />
@@ -214,7 +214,7 @@ export default function SearchRoomForm({
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select date"
-                  required={true}
+                  required={false}
                 />
               </FormControl>
               <FormMessage />
@@ -235,7 +235,7 @@ export default function SearchRoomForm({
                   value={field.value || ""}
                   onChange={field.onChange}
                   placeholder="HH:MM"
-                  required={true}
+                  required={false}
                 />
               </FormControl>
               <FormMessage />
