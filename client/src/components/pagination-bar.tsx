@@ -232,14 +232,43 @@ export function SelectRow({
 
 export type PaginationSearchParams = {
   search?: string;
-  nrows: number;
-  page: number;
+  nrows?: number;
+  page?: number;
 };
 
 export function toQueryString(params: PaginationSearchParams) {
-  // Create a new object without undefined/null values
+  // Remove empty values and convert all to string
   const cleanParams = Object.fromEntries(
-    Object.entries(params).filter(([_, v]) => Boolean(v)),
+    Object.entries(params)
+      .filter(([_, v]) => v !== undefined && v !== null && v !== "")
+      .map(([k, v]) => [k, String(v)]), // convert numbers to strings
   );
-  return cleanParams;
+  return new URLSearchParams(cleanParams).toString();
+}
+
+/**
+ * Creates a new object by picking the specified keys from the given object.
+ *
+ * This function allows you to select specific properties from an object and returns a new object
+ * containing only those properties. It uses the provided keys to extract the properties from the
+ * original object and ensures the result is correctly typed.
+ *
+ * @example
+ * const updatedParams = { search: 'test', ordering: 'asc', nrows: 10, page: 1 };
+ * const queryParams = pickKeys(updatedParams, 'search', 'ordering');
+ * // queryParams will be { search: 'test', ordering: 'asc' }
+ *
+ * @link Ref: https://stackoverflow.com/questions/67232195/filter-an-object-based-on-an-interface
+ */
+export function pickKeys<T, K extends keyof T>(
+  obj: T,
+  ...keys: K[]
+): Pick<T, K> {
+  return keys.reduce(
+    (acc, key) => {
+      acc[key] = obj[key];
+      return acc;
+    },
+    {} as Pick<T, K>,
+  );
 }

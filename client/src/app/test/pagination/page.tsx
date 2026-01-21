@@ -1,53 +1,90 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 
-import { PaginationBar } from "@/components/pagination-bar";
+import { DownloadCsvButton } from "@/components/download-csv-button";
+import {
+  PaginationBar,
+  PaginationSearchParams,
+  pickKeys,
+  toQueryString,
+} from "@/components/pagination-bar";
+import { useFetchBookings } from "@/hooks/booking";
+import { useFetchRooms } from "@/hooks/room";
 
+import { FilterPopover } from "./filter";
 import DemoTable from "./table";
 
-const mockData = Array.from({ length: 50 }, (_, i) => ({
-  id: i + 1,
-  name: `Item ${i + 1}`,
-  status: i % 2 === 0 ? "Active" : "Inactive",
-}));
+export type CustomFetchBookingParams = PaginationSearchParams & {
+  room?: string;
+  visitor_email?: string;
+  visitor_name?: string;
+};
 
 export default function PaginationDemo() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const oldSearchParams = useSearchParams();
 
-  const page = Number(searchParams.get("page") ?? 1);
-  const nrows = Number(searchParams.get("nrows") ?? 5);
+  const search = oldSearchParams.get("search") ?? "";
+  const page = Number(oldSearchParams.get("page") ?? 1);
+  const nrows = Number(oldSearchParams.get("nrows") ?? 5);
 
-  const totalRows = mockData.length;
+  const defaultSearchParams: CustomFetchBookingParams = { search, page, nrows };
 
-  const totalPages = Math.max(1, Math.ceil(totalRows / nrows));
+  const [searchParams, setSearchParams] = useState<CustomFetchBookingParams>({
+    room: "",
+    visitor_email: "",
+    visitor_name: "",
+    ...defaultSearchParams,
+  });
 
-  const safePage = Math.min(Math.max(1, page), totalPages);
+  const { data, isLoading, totalPages } = useFetchBookings(searchParams);
+  const { data: rooms = [] } = useFetchRooms({ page: 1, nrows: 1000 }); // fetch all rooms
 
-  const pushParams = (params: Record<string, number>) => {
-    const qs = new URLSearchParams({
-      page: String(params.page ?? safePage),
-      nrows: String(params.nrows ?? nrows),
-    });
+  // Sync URL params to state
+  useEffect(() => {
+    if (!isLoading) {
+      setSearchParams((prev) => ({
+        ...prev,
+        search: search || prev.search,
+        nrows: nrows || prev.nrows,
+        page: page || prev.page,
+      }));
+    }
+  }, [search, nrows, page, isLoading]);
 
-    router.push(`${pathname}?${qs.toString()}`);
+  const pushParams = (params: Partial<CustomFetchBookingParams>) => {
+    const updatedParams = { ...searchParams, ...params };
+    setSearchParams(updatedParams);
+
+    const qs = pickKeys(
+      updatedParams,
+      ...(Object.keys(defaultSearchParams) as []),
+    );
+
+    router.push(`${pathname}?${toQueryString(qs)}`);
   };
-
-  const paginatedData = useMemo(() => {
-    const start = (safePage - 1) * nrows;
-    const end = start + nrows;
-    return mockData.slice(start, end);
-  }, [safePage, nrows]);
 
   return (
     <div className="w-full rounded-xl bg-gray-100 p-6">
-      <DemoTable title="Pagination Display" data={paginatedData} />
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Pagination Display</h2>
+
+        <DownloadCsvButton path="/bookings/" fileName="bookings-export.csv" />
+
+        <FilterPopover
+          rooms={rooms}
+          initialFilters={searchParams}
+          onApply={(filters) => pushParams(filters)}
+        />
+      </div>
+
+      <DemoTable data={data} isLoading={isLoading} />
 
       <PaginationBar
-        page={safePage}
+        page={page}
         totalPages={totalPages}
         onPageChange={(newPage) =>
           pushParams({ page: Math.min(newPage, totalPages) })

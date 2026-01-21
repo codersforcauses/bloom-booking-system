@@ -4,21 +4,16 @@ import { BiCalendarCheck, BiCalendarEdit, BiWindowClose } from "react-icons/bi";
 import { Column, DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Booking } from "@/types/booking";
 
-type TableRow = {
-  id: number;
-  name: string;
-  status: string;
-};
-
-const columns: Column<TableRow>[] = [
+const columns: Column<Booking>[] = [
   {
     key: "id",
     header: "ID with Super Long Header Name To Test Sticky Behavior",
     className: "h-12",
   },
   {
-    key: "name",
+    key: "room.name",
     header: "Name with Super Long Header Name To Test Sticky Behavior",
   },
   {
@@ -26,7 +21,9 @@ const columns: Column<TableRow>[] = [
     header: "Status with Super Long Header Name To Test Sticky Behavior",
     render: (row) => (
       <span
-        className={row.status === "Active" ? "text-green-600" : "text-gray-500"}
+        className={
+          row.status === "COMPLETED" ? "text-green-600" : "text-gray-500"
+        }
       >
         {row.status}
       </span>
@@ -34,8 +31,8 @@ const columns: Column<TableRow>[] = [
   },
 ];
 
-const renderActions = (row: TableRow) => {
-  const isActive = row.status === "Active";
+const renderActions = (row: Booking) => {
+  const isActive = row.status === "COMPLETED";
 
   return (
     <span className="flex space-x-2">
@@ -84,19 +81,18 @@ const renderActions = (row: TableRow) => {
 };
 
 export default function DemoTable({
-  title,
   data,
+  isLoading,
 }: {
-  title?: string;
-  data: TableRow[];
+  data: Booking[];
+  isLoading?: boolean;
 }) {
   return (
     <div className="bg-inherit">
-      {title && <h2 className="mb-4 text-xl font-semibold">{title}</h2>}
-
-      <DataTable<TableRow>
+      <DataTable<Booking>
         data={data}
         columns={columns}
+        isLoading={isLoading}
         actions={renderActions}
       />
     </div>

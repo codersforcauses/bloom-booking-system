@@ -6,10 +6,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { cn, DotNestedKeys, getNestedValue } from "@/lib/utils";
 
 export type Column<T> = {
-  key: keyof T;
+  key: DotNestedKeys<T>;
   header: string;
   render?: (row: T) => React.ReactNode;
   className?: string;
@@ -90,7 +90,9 @@ export function DataTable<T extends { id: number }>({
                       key={String(col.key)}
                       className={cn(col.className, "px-4")}
                     >
-                      {col.render ? col.render(row) : String(row[col.key])}
+                      {col.render
+                        ? col.render(row)
+                        : String(getNestedValue(row, col.key))}
                     </TableCell>
                   ))}
 
