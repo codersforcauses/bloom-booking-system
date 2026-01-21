@@ -1,7 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams } from "next/navigation";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 import AlertDialog from "@/components/alert-dialog";
 import InputField from "@/components/input";
@@ -9,9 +12,287 @@ import ReCAPTCHAV2 from "@/components/recaptcha";
 import { RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Room } from "@/types/card";
+
+function BookRoomForm() {
+  const params = useParams();
+  const room_id = Number(params.room_id);
+
+  const [all_day, setAllDay] = useState(false);
+  const [verified, setVerified] = useState(false);
+
+  /**
+   * Combine a date object and a HH:MM time string to a ISO string
+   * @param date a Date object
+   * @param time a valid time in format HH:MM
+   * @returns a Date object with the same date as date param and time contained in time string
+   */
+  function formatDateTime(date: Date, time: string) {
+    const full_date = new Date(date);
+    const time_split = time.split(":");
+    const hours = Number(time_split[0]);
+    const mins = Number(time_split[1]);
+    full_date.setHours(hours);
+    full_date.setMinutes(mins);
+    const iso_string = full_date.toISOString();
+    return iso_string;
+  }
+
+  const formSchema = z
+    .object({
+      name: z
+        .string("This is a required field.")
+        .min(1, "This is a required field."),
+      email: z.email("Must be a valid email address."),
+      title: z
+        .string("This is a required field.")
+        .min(1, "This is a required field."),
+      description: z.string().optional(),
+      date: z.date("Must be a valid date.").min(
+        new Date().setDate(new Date().getDate() - 1), // Yesterday's date
+        "Cannot be a date in the past.",
+      ),
+      start_time: z.iso.time("Must be a valid time."),
+      end_time: z.iso.time("Must be a valid time."),
+    })
+    .refine(
+      (data) => {
+        const now = new Date();
+        const start_datetime = new Date(
+          Date.parse(formatDateTime(data.date, data.start_time)),
+        );
+        return now < start_datetime;
+      },
+      {
+        message: "Start time must be in the future.",
+        path: ["start_time"],
+      },
+    )
+    .refine(
+      (data) => {
+        const start_datetime = new Date(
+          Date.parse(formatDateTime(data.date, data.start_time)),
+        );
+        const end_datetime = new Date(
+          Date.parse(formatDateTime(data.date, data.end_time)),
+        );
+        return start_datetime < end_datetime;
+      },
+      {
+        message: "End time must be after start time.",
+        path: ["end_time"],
+      },
+    );
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    mode: "onChange",
+  });
+
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    const payload = {
+      room_id: room_id,
+      visitor_name: data.name,
+      visitor_email: data.email,
+      start_datetime: formatDateTime(data.date, data.start_time),
+      end_datetime: formatDateTime(data.date, data.end_time),
+      recurrence_rule: "",
+      /*
+            The below fields are not used by the API (at this point) but are
+            fields of the form so are included here for future use.
+            */
+      booking_title: data.title,
+      booking_description: data.description,
+    };
+    const apiUrl = `bookings/`;
+    api({ url: apiUrl, method: "post", data: payload })
+      .then((response) => {
+        // TODO: Handle response
+        console.log(response);
+      })
+      .catch((error) => {
+        // TODO: Handle error
+        console.error(error);
+      });
+  }
+
+  return (
+    <Form
+      form={form}
+      onSubmit={form.handleSubmit(onSubmit)}
+      className={cn(
+        "h-fit w-full min-w-[32rem] max-w-[56rem] rounded-md",
+        "flex flex-col gap-6 bg-white px-16 py-12",
+      )}
+    >
+      <div className="flex flex-row gap-3">
+        <FormField
+          name="name"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <InputField
+                  kind="text"
+                  required={true}
+                  name="name"
+                  label="Name"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          name="email"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <InputField
+                  kind="text"
+                  required={true}
+                  name="email"
+                  label="Email"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <div className="flex flex-row">
+        <FormField
+          name="title"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <InputField
+                  kind="text"
+                  required={true}
+                  name="title"
+                  label="Title of the booking"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <FormField
+        name="description"
+        control={form.control}
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <InputField
+                kind="text"
+                required={false}
+                name="description"
+                label="Description of the booking (Optional)"
+                value={field.value}
+                onChange={field.onChange}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <div className="flex flex-row gap-3">
+        <FormField
+          name="date"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormControl>
+                <InputField
+                  kind="date"
+                  required={true}
+                  name="date"
+                  label="Date"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          name="start_time"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormControl>
+                <InputField
+                  kind="time-select"
+                  required={true}
+                  name="start_time"
+                  label="Start time"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          name="end_time"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormControl>
+                <InputField
+                  kind="time-select"
+                  required={true}
+                  name="end_time"
+                  label="End time"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <Checkbox
+        className="ml-6"
+        checked={all_day}
+        onCheckedChange={(checked) => setAllDay(checked === true)}
+      >
+        All Day
+      </Checkbox>
+      <ReCAPTCHAV2 setVerified={setVerified} />
+      <AlertDialog title="" successText="" showIcon={true}>
+        <Button
+          type="submit"
+          className="w-1/6 min-w-[8rem] font-bold"
+          disabled={!verified}
+        >
+          Submit
+        </Button>
+      </AlertDialog>
+    </Form>
+  );
+}
 
 export default function BookRoomPage() {
   const params = useParams();
@@ -36,17 +317,6 @@ export default function BookRoomPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Form properties
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState(undefined);
-  const [start_time, setStartTime] = useState("");
-  const [end_time, setEndTime] = useState("");
-  const [all_day, setAllDay] = useState(false);
-  const [verified, setVerified] = useState(false);
-
   /**
    * Fetches the room information for the room with the specified id.
    * @param {Number} room_id Id of the room to fetch infomation about.
@@ -66,9 +336,9 @@ export default function BookRoomPage() {
           location: data.location.name,
           available: data.is_active,
           /*
-                    Unsure how to form the availability string from the 
-                    start_datetime and end_datetime under the rooms api.
-                    */
+          Unsure how to form the availability string from the 
+          start_datetime and end_datetime under the rooms api.
+          */
           availablility: "TODO",
           amenities: data.amenities.map(
             (amenity: { id: number; name: string }) => amenity.name,
@@ -85,7 +355,7 @@ export default function BookRoomPage() {
         setRoom(room);
       })
       .catch((error) => {
-        // TODO: handle error
+        // TODO: handle error (properly)
         console.error("Error fetching room:", error);
         setError(error.message);
 
@@ -108,159 +378,20 @@ export default function BookRoomPage() {
       });
   }
 
-  /**
-   *
-   */
-  async function submitBooking() {
-    // FIX THIS
-    if (date == undefined) return;
-
-    // Probably a better way to do this
-    function formatDateTime(date: Date, time: string) {
-      return (
-        String(date.getFullYear()) +
-        "-" +
-        String(date.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(date.getDate()) +
-        "T" +
-        time.padStart(5, "0") +
-        ":00Z"
-      );
-    }
-
-    const data = {
-      room_id: room_id,
-      visitor_name: name,
-      visitor_email: email,
-      start_datetime: formatDateTime(date, start_time),
-      end_datetime: formatDateTime(date, end_time),
-      recurrence_rule: "",
-      /* The two fields below are not used by the API but are form 
-            elements so are included for probable future use. */
-      booking_title: title,
-      booking_description: description,
-    };
-    const json = JSON.parse(JSON.stringify(data));
-    const params = new URLSearchParams(json);
-
-    const apiUrl = `bookings/`;
-    api({ url: apiUrl, method: "post", data: data })
-      .then((response) => {
-        console.log(response);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }
-
   useEffect(() => {
     fetchRoom(room_id);
   }, []);
 
   return (
     <div className="h-screen w-screen bg-gray-100">
-      <div className="h-[7rem] w-full bg-white">{/* Placeholder navbar */}</div>
       <div className="flex w-full items-center px-[3rem] py-[2rem]">
-        <h1 className="text-lg font-semibold">Book room</h1>
+        <h1 className="text-xl font-semibold">Book room</h1>
       </div>
       <div className="flex h-full w-full items-start justify-center gap-[3rem] p-[1rem]">
         <div className="w-fit max-w-[24rem]">
           <RoomCard room={room} />
         </div>
-        <form
-          className={cn(
-            "h-fit w-full min-w-[32rem] max-w-[56rem] rounded-md",
-            "flex flex-col gap-6 bg-white px-16 py-12",
-          )}
-        >
-          <div className="flex flex-row gap-3">
-            <InputField
-              className="w-1/3"
-              kind="text"
-              required={true}
-              name="name"
-              label="Name"
-              value={name}
-              onChange={setName}
-            />
-            <InputField
-              className="w-1/3"
-              kind="text"
-              required={true}
-              name="email"
-              label="Email"
-              value={email}
-              onChange={setEmail}
-            />
-          </div>
-          <div className="flex flex-row">
-            <InputField
-              className="w-1/3"
-              kind="text"
-              required={true}
-              name="title"
-              label="Title of the booking"
-              value={title}
-              onChange={setTitle}
-            />
-          </div>
-          <InputField
-            className="w-full"
-            kind="text"
-            required={false}
-            name="description"
-            label="Description of the booking (Optional)"
-            value={description}
-            onChange={setDescription}
-          />
-          <div className="flex flex-row gap-3">
-            <InputField
-              className="w-full"
-              kind="date"
-              required={true}
-              name="date"
-              label="Date"
-              value={date}
-              onChange={setDate}
-            />
-            <InputField
-              className="w-full"
-              kind="time-select"
-              required={true}
-              name="start_time"
-              label="Start time"
-              value={start_time}
-              onChange={setStartTime}
-            />
-            <InputField
-              className="w-full"
-              kind="time-select"
-              required={true}
-              name="end_time"
-              label="End time"
-              value={end_time}
-              onChange={setEndTime}
-            />
-          </div>
-          <Checkbox
-            className="ml-6"
-            checked={all_day}
-            onCheckedChange={(checked) => setAllDay(checked === true)}
-          >
-            All Day
-          </Checkbox>
-          <div className="h-8">{/* This is a divider */}</div>
-          <ReCAPTCHAV2 setVerified={setVerified} />
-          <AlertDialog title="" successText="" showIcon={true}>
-            <Button
-              className="w-1/6 min-w-[8rem] font-bold"
-              onClick={submitBooking}
-            >
-              Submit
-            </Button>
-          </AlertDialog>
-        </form>
+        <BookRoomForm />
       </div>
     </div>
   );
