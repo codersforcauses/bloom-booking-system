@@ -33,9 +33,6 @@ export default function Home() {
   const [rooms, setRooms] = useState<any[]>([]); // todo: substitute any with the actual type
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const [locationIdToName, setLocationIdToName] = useState<
-    Record<string, string>
-  >({});
 
   const form = useForm<RoomSearchSchemaValue>({
     resolver: zodResolver(RoomSearchSchema),
@@ -62,9 +59,8 @@ export default function Home() {
     if (data.name) params.name = data.name;
 
     // location search - location id to name
-    if (data.location && locationIdToName[data.location]) {
-      params.location = locationIdToName[data.location];
-    }
+    if (data.location) params.location = data.location;
+
     // amenities - name
     if (data.amenities?.length) {
       params.amenities = data.amenities.join(",");
@@ -125,12 +121,7 @@ export default function Home() {
       <div className="md:col-span-1">
         <h1 className="title mb-4">Booking A Meeting Room</h1>
 
-        <SearchRoomForm
-          form={form}
-          onSubmit={onSubmit}
-          onReset={onReset}
-          onLocationMapReady={setLocationIdToName}
-        />
+        <SearchRoomForm form={form} onSubmit={onSubmit} onReset={onReset} />
       </div>
 
       <div className="md:col-span-2">
