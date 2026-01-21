@@ -16,8 +16,10 @@ export default function AddMeetingRoomForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [value, setValue] = useState<string[]>([]);
-  const [repeat, setRepeat] = useState<string>("none");
+
+  const [repeat, setRepeat] = useState<string>("");
   const [showCustomRepeat, setShowCustomRepeat] = useState(false);
+  const [customRepeat, setCustomRepeat] = useState<any>(null);
 
   const [formData, setFormData] = useState<Partial<Room>>({
     title: "",
@@ -246,30 +248,37 @@ export default function AddMeetingRoomForm() {
                 name="repeat"
                 label="Repeat"
                 placeholder="Does not repeat"
+                value={repeat}
                 options={[
                   { label: "Does not repeat", value: "none" },
                   { label: "Daily", value: "daily" },
                   { label: "Weekly", value: "weekly" },
                   { label: "Custom", value: "custom" },
                 ]}
-                value={repeat}
                 onChange={(value) => {
+                  setRepeat(value);
                   if (value === "custom") {
                     setShowCustomRepeat(true);
-                  } else {
-                    setRepeat(value);
                   }
                 }}
               />
+
+              {/* Custom Repeat Modal */}
+              {showCustomRepeat && (
+                <CustomRepeatModal
+                  open={showCustomRepeat}
+                  onClose={() => {
+                    setShowCustomRepeat(false);
+                    setRepeat(""); // Option 1 reset
+                  }}
+                  onDone={(value) => {
+                    setCustomRepeat(value); // save custom data
+                    setRepeat("custom");
+                    setShowCustomRepeat(false);
+                  }}
+                />
+              )}
             </div>
-            <CustomRepeatModal
-              open={showCustomRepeat}
-              onClose={() => setShowCustomRepeat(false)}
-              onDone={(customValue) => {
-                console.log(customValue); // structured repeat data
-                setRepeat("custom"); // keep dropdown value meaningful
-              }}
-            />
 
             {/* Action Buttons */}
             <div className="flex gap-4 pt-4">
