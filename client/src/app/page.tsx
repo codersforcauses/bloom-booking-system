@@ -137,7 +137,11 @@ export default function Home() {
                   onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
                 />
               ))
-            : !loading && <p>No rooms found. Please try again.</p>}
+            : !loading && (
+                <p className="col-span-1 lg:col-span-3">
+                  No rooms found. Please try again.
+                </p>
+              )}
           {/* an invisible marker that trigger fetch when scrolling into view */}
           <div ref={loadMoreRef} style={{ height: 1 }} />
         </div>

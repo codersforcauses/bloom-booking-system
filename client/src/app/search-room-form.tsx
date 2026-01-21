@@ -30,7 +30,13 @@ const RoomSearchSchemaBase = z.object({
 
 const RoomSearchSchema = RoomSearchSchemaBase.refine(
   (data) => {
-    if (data.fromDate && data.toDate) return data.toDate >= data.fromDate;
+    if (data.fromDate && data.toDate) {
+      const fromDate = new Date(data.fromDate);
+      const toDate = new Date(data.toDate);
+      fromDate.setHours(0, 0, 0, 0);
+      toDate.setHours(0, 0, 0, 0);
+      return toDate >= fromDate;
+    }
     return true;
   },
   { message: "To Date must be on/after From Date", path: ["toDate"] },
