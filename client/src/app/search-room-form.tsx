@@ -70,21 +70,16 @@ interface SearchRoomFormProps {
   form: UseFormReturn<RoomSearchSchemaValue>;
   onSubmit: (data: RoomSearchSchemaValue) => void;
   onReset: () => void;
-  onLocationMapReady?: (map: Record<string, string>) => void;
-  onAmenityMapReady?: (map: Record<string, string>) => void;
 }
 
 export default function SearchRoomForm({
   form,
   onSubmit,
   onReset,
-  onLocationMapReady,
 }: SearchRoomFormProps) {
   const [locations, setLocations] = useState<
     { label: string; value: string }[]
   >([]);
-
-  //
   const [amenityNames, setAmenityNames] = useState<string[]>([]);
 
   useEffect(() => {
@@ -94,28 +89,21 @@ export default function SearchRoomForm({
       setLocations(
         raw.map((loc: any) => ({
           label: loc.name,
-          value: String(loc.id),
+          value: loc.name,
         })),
       );
-      // loc ID to name
-      const locationMap: Record<string, string> = {};
-      raw.forEach((loc: any) => {
-        locationMap[String(loc.id)] = loc.name;
-      });
-      onLocationMapReady?.(locationMap);
     };
 
     const fetchAmenities = async () => {
       const res = await api.get("/amenities/");
       const raw = Array.isArray(res.data) ? res.data : (res.data.results ?? []);
-
       setAmenityNames(raw.map((a: any) => a.name));
     };
 
     Promise.all([fetchLocations(), fetchAmenities()]).catch((e) => {
       console.error("Failed to fetch form options", e);
     });
-  }, [onLocationMapReady]);
+  }, []);
 
   return (
     <Form form={form} onSubmit={form.handleSubmit(onSubmit)}>
