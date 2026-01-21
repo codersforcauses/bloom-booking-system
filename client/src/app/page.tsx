@@ -120,30 +120,24 @@ export default function Home() {
   }, [nextUrl]);
 
   return (
-    <div className="grid h-screen grid-cols-1 gap-4 p-4 md:grid-cols-3 md:gap-8 md:p-8">
-      <div className="md:col-span-1">
+    <div className="grid h-screen grid-cols-1 gap-4 p-4 md:grid-cols-2 md:gap-8 md:p-8 lg:grid-cols-5">
+      <div className="col-span-1 lg:col-span-2">
         <h1 className="title mb-4">Booking A Meeting Room</h1>
         <SearchRoomForm form={form} onSubmit={onSubmit} onReset={onReset} />
       </div>
 
-      <div className="md:col-span-2">
+      <div className="col-span-1 lg:col-span-3">
         <h2 className="title mb-4">Rooms Availability</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {!loading && (
-            <>
-              {rooms.length > 0 ? (
-                rooms.map((room) => (
-                  <BookingRoomCard
-                    key={room.id}
-                    room={room}
-                    onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
-                  />
-                ))
-              ) : (
-                <p>No rooms found. Please try again.</p>
-              )}
-            </>
-          )}
+          {rooms.length > 0
+            ? rooms.map((room) => (
+                <BookingRoomCard
+                  key={room.id}
+                  room={room}
+                  onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
+                />
+              ))
+            : !loading && <p>No rooms found. Please try again.</p>}
           {/* an invisible marker that trigger fetch when scrolling into view */}
           <div ref={loadMoreRef} style={{ height: 1 }} />
         </div>
