@@ -140,13 +140,17 @@ export default function Home() {
       <div className="md:col-span-2">
         <h2 className="title mb-4">Rooms Availability</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {rooms.map((room) => (
-            <BookingRoomCard
-              key={room.id}
-              room={room}
-              onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
-            />
-          ))}
+          {rooms.length > 0 ? (
+            rooms.map((room) => (
+              <BookingRoomCard
+                key={room.id}
+                room={room}
+                onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
+              />
+            ))
+          ) : (
+            <p>No rooms found. Please try again.</p>
+          )}
           {/* an invisible marker that trigger fetch when scrolling into view */}
           <div ref={loadMoreRef} style={{ height: 1 }} />
         </div>
