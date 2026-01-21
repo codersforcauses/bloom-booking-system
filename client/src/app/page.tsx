@@ -36,9 +36,6 @@ export default function Home() {
   const [locationIdToName, setLocationIdToName] = useState<
     Record<string, string>
   >({});
-  const [amenityNameToId, setAmenityNameToId] = useState<
-    Record<string, string>
-  >({});
 
   const form = useForm<RoomSearchSchemaValue>({
     resolver: zodResolver(RoomSearchSchema),
@@ -64,11 +61,11 @@ export default function Home() {
     // name search
     if (data.name) params.name = data.name;
 
-    // location search - location name
+    // location search - location id to name
     if (data.location && locationIdToName[data.location]) {
       params.location = locationIdToName[data.location];
     }
-    // amenities
+    // amenities - name
     if (data.amenities?.length) {
       params.amenities = data.amenities.join(",");
     }
@@ -133,7 +130,6 @@ export default function Home() {
           onSubmit={onSubmit}
           onReset={onReset}
           onLocationMapReady={setLocationIdToName}
-          onAmenityMapReady={setAmenityNameToId}
         />
       </div>
 
