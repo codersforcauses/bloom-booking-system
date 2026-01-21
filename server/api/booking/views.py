@@ -10,7 +10,7 @@ from rest_framework import viewsets, status
 from .google_calendar.events import create_event, update_event, delete_event
 from googleapiclient.errors import HttpError
 from django.db import transaction
-from ..email_utils import send_booking_cancelled_email
+from ..email_utils import send_booking_confirmed_email, send_booking_cancelled_email
 import logging
 
 logger = logging.getLogger(__name__)
@@ -118,6 +118,20 @@ class BookingViewSet(viewsets.ModelViewSet):
 
             # If we get here, both Google Calendar and DB creation succeeded
             response_serializer = self.get_serializer(booking)
+
+            # Send booking confirmation email after successful creation
+            send_booking_confirmed_email(
+                recipients=[booking.visitor_email],
+                context={
+                    "room_name": booking.room,
+                    "start_datetime": booking.start_datetime,
+                    "end_datetime": booking.end_datetime,
+                    "visitor_name": booking.visitor_name,
+                    "location_name": booking.room.location,
+                    "manage_url": request.build_absolute_uri(f"/bookings/{booking.id}/")    # check this? unsure what this provides.
+                }
+            )
+
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
         except ValidationError:
@@ -155,7 +169,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         # Check if this is a cancellation request
         if cancel_reason and cancel_reason.strip():
-            # Handle cancellation with transaction and Google Calendar deletion
+            # Handle cancellation with transaction, Google Calendar deletion and cancellation email
             try:
                 with transaction.atomic():
                     # Delete from Google Calendar first, inside the transaction
@@ -190,13 +204,14 @@ class BookingViewSet(viewsets.ModelViewSet):
                     response_serializer = BookingSerializer(booking, fields=(
                         'id', 'status', 'cancel_reason', 'updated_at'))
 
+                    # Send cancellation email
                     send_booking_cancelled_email(
                         recipients=[visitor_email],
                         context={
                             "room_name": booking.room,
                             "start_datetime": booking.start_datetime,
                             "end_datetime": booking.end_datetime,
-                            "book_room_url": request.build_absolute_uri("/rooms/")}
+                            "book_room_url": request.build_absolute_uri("/rooms/")}     # check this? unsure what this provides.
                         )
 
                     return Response(response_serializer.data)
