@@ -1,4 +1,3 @@
-import { Eye, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { BiCalendarCheck, BiCalendarEdit, BiWindowClose } from "react-icons/bi";
 
@@ -16,6 +15,7 @@ const columns: Column<TableRow>[] = [
   {
     key: "id",
     header: "ID with Super Long Header Name To Test Sticky Behavior",
+    className: "h-12",
   },
   {
     key: "name",
@@ -33,11 +33,13 @@ const columns: Column<TableRow>[] = [
     ),
   },
 ];
+
 const renderActions = (row: TableRow) => {
   const isActive = row.status === "Active";
 
   return (
-    <div className="flex gap-2">
+    <span className="flex space-x-2">
+      <span className="absolute left-0 top-0 h-full border-l-2" />
       {/* View / Edit */}
       <Button
         size="icon"
@@ -76,7 +78,8 @@ const renderActions = (row: TableRow) => {
           <BiWindowClose size={20} />
         </Link>
       </Button>
-    </div>
+      <span />
+    </span>
   );
 };
 

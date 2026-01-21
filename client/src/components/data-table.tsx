@@ -56,33 +56,24 @@ export function DataTable<T extends { id: number }>({
                 <TableHead
                   className={cn(headClass, "sticky right-0 z-10 bg-inherit")}
                 >
-                  Actions
+                  <span className="flex space-x-2">
+                    <span className="absolute left-0 top-0 h-full border-l-2" />
+                    Actions
+                  </span>
                 </TableHead>
               )}
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {/* Loading state */}
-            {isLoading && (
+            {/* Loading OR Empty state */}
+            {(isLoading || data.length === 0) && (
               <TableRow>
                 <TableCell
                   colSpan={columns.length + (showActions ? 1 : 0)}
-                  className="px-4 py-8 text-center text-gray-500"
+                  className="bg-white px-4 py-8 text-center text-gray-500"
                 >
-                  Loading...
-                </TableCell>
-              </TableRow>
-            )}
-
-            {/* Empty state */}
-            {!isLoading && data.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length + (showActions ? 1 : 0)}
-                  className="px-4 py-8 text-center text-gray-500"
-                >
-                  No data available
+                  {isLoading ? "Loading..." : "No data available"}
                 </TableCell>
               </TableRow>
             )}
@@ -97,18 +88,16 @@ export function DataTable<T extends { id: number }>({
                   {columns.map((col) => (
                     <TableCell
                       key={String(col.key)}
-                      className={cn("px-4 py-2", col.className)}
+                      className={cn(col.className, "px-4")}
                     >
                       {col.render ? col.render(row) : String(row[col.key])}
                     </TableCell>
                   ))}
 
                   {showActions && (
-                    <span className="sticky right-0">
-                      <TableCell className="border-l-2 border-inherit bg-white">
-                        {actions?.(row)}
-                      </TableCell>
-                    </span>
+                    <TableCell className="sticky right-0 bg-inherit p-0 hover:bg-inherit">
+                      {actions?.(row)}
+                    </TableCell>
                   )}
                 </TableRow>
               ))}
