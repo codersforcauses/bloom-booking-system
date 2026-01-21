@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback,useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import SearchRoomForm, {
@@ -12,12 +12,15 @@ import SearchRoomForm, {
 import { BookingRoomCard } from "@/components/room-card";
 import api from "@/lib/api";
 
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-family='sans-serif' font-size='20'>No image</text></svg>";
+
 // helper function to bridge the gap between api room data and arguments of BookingRoomCard
-export const normalizedRooms = (apiRooms: any[]) => {
+export function normalizeRooms(apiRooms: any[]) {
   return apiRooms.map((apiRoom) => ({
     id: apiRoom.id,
     title: apiRoom.name,
-    image: apiRoom.img ?? "/placeholder.jpg",
+    image: apiRoom.img ?? PLACEHOLDER_IMAGE,
     location: apiRoom.location.name,
     seats: apiRoom.capacity,
     amenities:
@@ -26,7 +29,7 @@ export const normalizedRooms = (apiRooms: any[]) => {
       ) ?? [],
     available: true, // suppose that availability handled by the backend
   }));
-};
+}
 
 export default function Home() {
   const router = useRouter();
@@ -82,23 +85,32 @@ export default function Home() {
     fetchRooms("/rooms/");
   };
 
-  // Fetch Location Data & Amentities Data
-
   // Fetch Rooms (Scroll down to get next page)
-  const fetchRooms = async (url: string, params?: Record<string, any>) => {
-    setLoading(true);
-    const { data } = await api.get(url, { params });
-    const newRooms = normalizedRooms(data.results);
-    // if it is not the first page, append the data to the previous
-    if (!data.previous) {
-      setRooms(newRooms);
-    } else {
-      setRooms((prev) => [...prev, ...newRooms]);
-    }
-    // set next url to prepare for pagination
-    setNextUrl(data.next);
-    setLoading(false);
-  };
+  const fetchRooms = useCallback(
+    async (url: string, params?: Record<string, any>) => {
+      setLoading(true);
+      try {
+        const { data } = await api.get(url, { params });
+        const newRooms = normalizeRooms(data.results);
+        // if it is not the first page, append the data to the previous
+        if (!data.previous) {
+          setRooms(newRooms);
+        } else {
+          setRooms((prev) => [...prev, ...newRooms]);
+        }
+        // set next url to prepare for pagination
+        setNextUrl(data.next);
+      } catch (error) {
+        console.error("Failed to fetch rooms", error);
+        // Reset to a safe empty state on error
+        setRooms([]);
+        setNextUrl(null);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // initial load
   useEffect(() => {
@@ -110,19 +122,19 @@ export default function Home() {
     if (!loadMoreRef.current) return;
     const observer = new IntersectionObserver((observedItems) => {
       const marker = observedItems[0];
-      if (marker.isIntersecting && nextUrl) {
-        // if the marker is visible and nextUrl exists
+      if (marker.isIntersecting && nextUrl && !loading) {
+        // if the marker is visible, nextUrl exists, and no fetch is in progress
         fetchRooms(nextUrl);
       }
     });
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [nextUrl]);
+  }, [nextUrl, loading, fetchRooms]);
 
   return (
-    <div className="grid h-screen grid-cols-1 gap-4 p-4 md:grid-cols-2 md:gap-8 md:p-8 lg:grid-cols-5">
+    <div className="grid min-h-screen grid-cols-1 gap-4 p-4 md:grid-cols-2 md:gap-8 md:p-8 lg:grid-cols-5">
       <div className="col-span-1 lg:col-span-2">
-        <h1 className="title mb-4">Booking A Meeting Room</h1>
+        <h1 className="title mb-4">Booking a Meeting Room</h1>
         <SearchRoomForm form={form} onSubmit={onSubmit} onReset={onReset} />
       </div>
 

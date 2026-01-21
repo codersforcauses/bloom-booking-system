@@ -19,7 +19,15 @@ const nextConfig = {
       }
     : undefined,
   // allow images from s3 to render
-  images: { domains: ["bloom-images-dev.s3.amazonaws.com"] },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "bloom-images-dev.s3.amazonaws.com",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
