@@ -1,7 +1,6 @@
 "use client";
-
 import * as React from "react";
-import { FormProvider,useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 
 import InputField from "@/components/input";
 import {
@@ -17,6 +16,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import api from "@/lib/api";
 
 type ApiListResponse<T> = {
   count: number;
@@ -31,9 +31,9 @@ type NamedEntity = {
 };
 
 type FilterValues = {
-  location_id: string; // select returns string
-  capacity: string; // keep as string; validate + coerce on submit if needed
-  amenity_ids: number[]; // checkboxes
+  location_id: string;
+  capacity: string;
+  amenity_ids: number[];
   is_active: "" | "true" | "false";
 };
 
@@ -72,29 +72,36 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
 
       try {
         setLoadingLocations(true);
-        const locRes = await fetch("/api/locations", { cache: "no-store" });
-        if (!locRes.ok)
-          throw new Error(`Failed to load locations (${locRes.status})`);
-        const locJson = (await locRes.json()) as ApiListResponse<NamedEntity>;
+        const locRes = await api.get("/locations/");
+        const locJson = locRes.data as ApiListResponse<NamedEntity>;
         if (!cancelled) setLocations(locJson.results ?? []);
       } catch (e: any) {
-        if (!cancelled) setLoadError(e?.message ?? "Failed to load locations");
+        if (!cancelled) {
+          const msg =
+            e?.response?.data?.detail ||
+            e?.response?.data?.message ||
+            e?.message ||
+            "Failed to load locations";
+          setLoadError(msg);
+        }
       } finally {
         if (!cancelled) setLoadingLocations(false);
       }
 
       try {
         setLoadingAmenities(true);
-        const amRes = await fetch("/api/amenities", { cache: "no-store" });
-        if (!amRes.ok)
-          throw new Error(`Failed to load amenities (${amRes.status})`);
-        const amJson = (await amRes.json()) as ApiListResponse<NamedEntity>;
+        const amRes = await api.get("/amenities/");
+        const amJson = amRes.data as ApiListResponse<NamedEntity>;
         if (!cancelled) setAmenities(amJson.results ?? []);
       } catch (e: any) {
-        if (!cancelled)
-          setLoadError(
-            (prev) => prev ?? e?.message ?? "Failed to load amenities",
-          );
+        if (!cancelled) {
+          const msg =
+            e?.response?.data?.detail ||
+            e?.response?.data?.message ||
+            e?.message ||
+            "Failed to load amenities";
+          setLoadError((prev) => prev ?? msg);
+        }
       } finally {
         if (!cancelled) setLoadingAmenities(false);
       }
@@ -108,15 +115,11 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
 
   const toggleAmenity = (id: number) => {
     const cur = form.getValues("amenity_ids") ?? [];
-    if (cur.includes(id)) {
-      form.setValue(
-        "amenity_ids",
-        cur.filter((x) => x !== id),
-        { shouldDirty: true },
-      );
-    } else {
-      form.setValue("amenity_ids", [...cur, id], { shouldDirty: true });
-    }
+    form.setValue(
+      "amenity_ids",
+      cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id],
+      { shouldDirty: true },
+    );
   };
 
   const handleApply = form.handleSubmit((values) => {

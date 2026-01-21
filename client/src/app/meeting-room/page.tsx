@@ -52,24 +52,32 @@ export default function RoomsPage() {
     return (data ?? []).map((r: any) => r?.name || "Untitled Room");
   }
 
-  // Maps /api/rooms response -> your Room card type
   function mapRooms(data: ApiRoom[]): Room[] {
-    return (data ?? []).map((r) => ({
-      title: r?.name || "Untitled Room",
-      image: r?.img || FALLBACK_IMG,
-      location: r?.location?.name || "Unknown",
-      seats: r?.capacity ?? 0,
-      amenities: mapRoomNames(r?.amenities as any[]) || [],
-      available: r?.is_active ?? false,
-      bookings: 0,
-      removed: false,
-      id: r?.id,
-    }));
+    return (data ?? []).map((r) => {
+      const isActive = r?.is_active ?? false;
+
+      // bandaid string until backend provides real "open hours" etc.
+      const availabilityStr = isActive ? "Active" : "Inactive";
+
+      return {
+        id: r.id,
+        title: r.name || "Untitled Room",
+        image: r.img || FALLBACK_IMG,
+        location: r.location?.name || "Unknown",
+        seats: r.capacity ?? 0,
+        amenities: mapRoomNames(r.amenities ?? []),
+        bookings: 0,
+        removed: false,
+
+        available: isActive,
+        availablility: availabilityStr,
+      };
+    });
   }
 
   async function fetchRooms() {
     try {
-      const response = await api({ url: "/api/rooms", method: "get" });
+      const response = await api.get("/rooms/");
       const payload = response.data as ApiListResponse<ApiRoom>;
       const mapped = mapRooms(payload?.results ?? []);
       setAllRooms(mapped);
