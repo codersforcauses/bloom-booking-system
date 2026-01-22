@@ -10,25 +10,29 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Room } from "@/types/card";
+import { cn } from "@/lib/utils";
+import { BookingRoom } from "@/types/booking";
 
 import { CustomFetchBookingParams } from "./page";
 
 type FilterPopoverProps = {
-  rooms: Room[];
+  rooms: BookingRoom[];
   initialFilters?: CustomFetchBookingParams;
   onApply: (filters: CustomFetchBookingParams) => void;
+  className?: string;
 };
 
 export function FilterPopover({
   rooms,
   initialFilters,
   onApply,
+  className,
 }: FilterPopoverProps) {
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
     initialFilters?.room ? initialFilters.room.split(",") : [],
@@ -69,7 +73,10 @@ export function FilterPopover({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="gap-2 border-2 bg-white p-2 hover:bg-muted"
+          className={cn(
+            "gap-2 border-2 bg-white p-2 hover:bg-muted",
+            className,
+          )}
         >
           <FaFilter size={16} />
           Filter
@@ -98,13 +105,13 @@ export function FilterPopover({
                 <div className="space-y-2 pl-1 text-sm">
                   {rooms.map((room) => (
                     <label key={room.id} className="flex items-center gap-2">
-                      <input
+                      <Input
                         type="checkbox"
                         className="h-4 w-4"
                         checked={selectedRooms.includes(String(room.id))}
                         onChange={() => toggleRoom(String(room.id))}
                       />
-                      <span>{room.title}</span>
+                      <span>{room.name}</span>
                     </label>
                   ))}
                 </div>
@@ -117,7 +124,7 @@ export function FilterPopover({
                 Visitor Name
               </AccordionTrigger>
               <AccordionContent>
-                <input
+                <Input
                   type="text"
                   value={visitorName}
                   onChange={(e) => setVisitorName(e.target.value)}
@@ -133,7 +140,7 @@ export function FilterPopover({
                 Visitor Email
               </AccordionTrigger>
               <AccordionContent>
-                <input
+                <Input
                   type="text"
                   value={visitorEmail}
                   onChange={(e) => setVisitorEmail(e.target.value)}
