@@ -1,7 +1,6 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { AxiosError } from "axios";
 import { useState } from "react";
 
 import {
@@ -11,6 +10,7 @@ import {
 } from "@/components/admin-settings-card";
 import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import RoomAPI from "@/hooks/room";
+import { resolveErrorMessage } from "@/lib/utils";
 import { RoomAmenity, RoomLocation } from "@/types/room";
 
 type View =
@@ -95,16 +95,12 @@ export default function AdminSettingsPage() {
         title: "Success",
         description: `${value} saved successfully!`,
       });
-    } catch (err: AxiosError | any) {
+    } catch (err: unknown) {
       setAlert({
         open: true,
         variant: "error",
         title: "Error",
-        description:
-          err?.response?.data?.detail ||
-          err?.response?.data?.message ||
-          err?.message ||
-          "Something went wrong",
+        description: resolveErrorMessage(err),
       });
     }
   };
@@ -128,16 +124,12 @@ export default function AdminSettingsPage() {
         title: "Deleted",
         description: `${item.name} has been deleted.`,
       });
-    } catch (err: AxiosError | any) {
+    } catch (err: unknown) {
       setAlert({
         open: true,
         variant: "error",
         title: "Error",
-        description:
-          err?.response?.data?.detail ||
-          err?.response?.data?.message ||
-          err?.message ||
-          "Failed to delete",
+        description: resolveErrorMessage(err, "Failed to delete"),
       });
     }
   };
