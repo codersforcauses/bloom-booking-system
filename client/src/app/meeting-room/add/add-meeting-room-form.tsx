@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Room } from "@/types/card";
 
+import LocationModal from "./add-location";
+
 export default function AddMeetingRoomForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,6 +22,9 @@ export default function AddMeetingRoomForm() {
   const [repeat, setRepeat] = useState<string>("");
   const [showCustomRepeat, setShowCustomRepeat] = useState(false);
   const [customRepeat, setCustomRepeat] = useState<any>(null);
+
+  const ADD_LOCATION_VALUE = "__add_location__";
+  const [addLocationOpen, setAddLocationOpen] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Room>>({
     title: "",
@@ -123,14 +128,36 @@ export default function AddMeetingRoomForm() {
                 error={errors.title}
               />
               <InputField
-                kind="text"
+                kind="select"
                 name="location"
                 label="Location"
-                placeholder="Location"
-                value={formData.location || ""}
-                onChange={(value) => handleInputChange("location", value)}
+                placeholder="Select location"
+                value={formData.location ?? ""}
+                onChange={(value) => {
+                  if (value === ADD_LOCATION_VALUE) {
+                    setAddLocationOpen(true);
+                    return;
+                  }
+
+                  handleInputChange("location", value);
+                }}
+                options={[
+                  { label: "Crawley", value: "Crawley" },
+                  { label: "Curtin", value: "Curtin" },
+                  {
+                    label: "+ Add location",
+                    value: ADD_LOCATION_VALUE,
+                  },
+                ]}
                 required
                 error={errors.location}
+              />
+              <LocationModal
+                open={addLocationOpen}
+                onOpenChange={setAddLocationOpen}
+                onConfirm={(newLocation) => {
+                  handleInputChange("location", newLocation);
+                }}
               />
               <InputField
                 kind="number"
