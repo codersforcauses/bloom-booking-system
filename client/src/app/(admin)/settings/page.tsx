@@ -212,7 +212,6 @@ export default function AdminSettingsPage() {
           onClose={() => setConfirmDelete(null)}
           onConfirm={async () => {
             await handleDelete(confirmDelete.item, confirmDelete.type);
-            setConfirmDelete(null);
           }}
         />
       )}
