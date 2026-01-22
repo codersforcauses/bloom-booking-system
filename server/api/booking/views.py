@@ -262,6 +262,19 @@ class BookingViewSet(viewsets.ModelViewSet):
                 # If we get here, both Google Calendar and DB updates succeeded
                 response_serializer = BookingSerializer(
                     updated_booking, fields=('id', 'status', 'updated_at'))
+                
+                send_booking_confirmed_email(
+                    recipients=[updated_booking.visitor_email],
+                    context={
+                        "room_name": updated_booking.room,
+                        "start_datetime": updated_booking.start_datetime,
+                        "end_datetime": updated_booking.end_datetime,
+                        "visitor_name": updated_booking.visitor_name,
+                        "location_name": updated_booking.room.location,
+                        "manage_url": request.build_absolute_uri(f"/bookings/{updated_booking.id}/")
+                    }
+                )
+
                 return Response(response_serializer.data)
 
         except ValidationError:
