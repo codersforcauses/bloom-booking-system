@@ -51,13 +51,13 @@ interface AlertDialogProps {
 }
 
 /**
- * AlertDialog component for showing success, error, confirm, and delete dialogs.
+ * AlertDialog component for showing success, error, and confirm dialogs.
  *
  * Features:
- * - Supports `success`, `error`, `confirm`, and `delete` variants.
- * - Shows an icon corresponding to the variant (`FaCheckCircle`, `FaTimesCircle`, `MdOutlineHelpOutline`, `MdDelete`).
+ * - Supports `success`, `error`, and `confirm` variants.
+ * - Shows an icon corresponding to the variant (`FaCheckCircle`, `FaTimesCircle`, `MdOutlineHelpOutline`).
  * - Displays a loading spinner when `onConfirm` is running (`isPending` state).
- * - For `confirm` and `delete` variants, shows a Cancel button alongside the confirm button.
+ * - For `confirm` variants, shows a Cancel button alongside the confirm button.
  * - Fully controlled `open` state if `open` prop is provided.
  * - Calls `onConfirm` when the confirm button is clicked (can be async).
  * - Calls `onClose` when the dialog is closed either via Cancel, outside click, or after confirm.
