@@ -127,7 +127,7 @@ function AlertDialog({
             handleCancel();
           }
         }}
-        className="flex h-auto w-[95%] min-w-[60%] flex-col items-center rounded-lg bg-white p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden"
+        className="flex h-auto flex-col items-center rounded-lg bg-white p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden"
       >
         {showIcon && (
           <div className="mt-6">
@@ -141,7 +141,7 @@ function AlertDialog({
 
         <DialogHeader>
           {title && (
-            <DialogTitle className="my-4 text-center text-[28px] font-semibold tracking-normal">
+            <DialogTitle className="text-title my-4 text-center tracking-normal">
               {title}
             </DialogTitle>
           )}
@@ -152,14 +152,10 @@ function AlertDialog({
           )}
         </DialogHeader>
 
-        <DialogFooter className="flex flex-row justify-center gap-12">
+        <DialogFooter className="mt-4 flex flex-row justify-center gap-12">
           {isConfirmVariant && (
             <Button
-              variant={"warning"}
-              className={cn(
-                "mt-4 h-[41px] w-[72px] border-b-4 text-[14px]",
-                isPending && "bg-gray-300 text-black",
-              )}
+              variant="outline"
               onClick={handleCancel}
               disabled={isPending}
             >
@@ -167,11 +163,7 @@ function AlertDialog({
             </Button>
           )}
           <Button
-            className={cn(
-              "mt-4 h-[41px] w-[72px] border-b-4 text-[14px] text-white",
-              isPending && "bg-gray-300 text-black",
-            )}
-            style={{ backgroundColor: !isPending ? color : undefined }}
+            variant="warning"
             disabled={isPending}
             onClick={handleConfirm}
           >

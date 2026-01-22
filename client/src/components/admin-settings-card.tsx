@@ -50,7 +50,7 @@ function AdminSettingsSummaryCard({
         {displayed.join(", ")}
         {hasMore && (
           <button
-            className="ml-1 text-blue-500 hover:underline"
+            className="ml-2 text-bloom-blue hover:underline"
             onClick={() => setShowAll(!showAll)}
           >
             <span className="flex items-center">
@@ -89,13 +89,7 @@ function AdminSettingsSummaryCard({
           <ListWithViewMore items={items} />
         )}
       </div>
-      <Button
-        variant="outline"
-        className="min-w-20"
-        size="sm"
-        onClick={onEdit}
-        disabled={isLoading}
-      >
+      <Button variant="outline" onClick={onEdit} disabled={isLoading}>
         {isLoading ? "Loading..." : items.length ? "Edit" : "Add"}
       </Button>
     </div>
@@ -110,9 +104,7 @@ function AdminSettingsSummaryCard({
     try {
       logout();
     } catch (error) {
-      setLogoutDescription(
-        "An error occurred during logout. Please consult your system administrator.",
-      );
+      setLogoutDescription("An error occurred during logout.");
       console.error("Logout failed", error);
     }
   };
@@ -132,12 +124,7 @@ function AdminSettingsSummaryCard({
         />
         {/* Logout Row */}
         <div className="flex justify-center py-6">
-          <Button
-            variant="warning"
-            size="sm"
-            className="w-32 font-semibold"
-            onClick={() => setConfirmLogout(true)}
-          >
+          <Button variant="warning" onClick={() => setConfirmLogout(true)}>
             Log out
           </Button>
         </div>
@@ -181,10 +168,10 @@ function AdminSettingsTableCard({
         <p className="font-semibold">{title}</p>
       </div>
       <div className="flex items-center justify-between">
-        <Button variant="outline" className="h-7" onClick={onAdd}>
+        <Button variant="outline" onClick={onAdd}>
           <MdAdd size={16} className="mr-1" /> Add
         </Button>
-        <Button variant="outline" className="h-7" onClick={onBack}>
+        <Button variant="outline" onClick={onBack}>
           Back
         </Button>
       </div>
@@ -205,7 +192,10 @@ function AdminSettingsTableCard({
                 <td className="px-4 py-2 text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant={null} size="sm">
+                      <Button
+                        variant="text"
+                        className="hover:border-transparent hover:text-bloom-gray"
+                      >
                         <MoreHorizontal size={28} />
                       </Button>
                     </DropdownMenuTrigger>
@@ -281,17 +271,12 @@ function AdminSettingsFormCard({
             <Button
               type="button"
               variant="outline"
-              className="w-24 border-bloom-blue text-bloom-blue"
               onClick={onCancel}
               disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="w-20 text-white"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" disabled={isSubmitting}>
               Ok
             </Button>
           </div>

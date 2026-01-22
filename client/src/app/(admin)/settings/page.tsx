@@ -100,7 +100,11 @@ export default function AdminSettingsPage() {
         open: true,
         variant: "error",
         title: "Error",
-        description: err?.message || "Something went wrong",
+        description:
+          err?.response?.data?.detail ||
+          err?.response?.data?.message ||
+          err?.message ||
+          "Something went wrong",
       });
     }
   };
@@ -129,7 +133,11 @@ export default function AdminSettingsPage() {
         open: true,
         variant: "error",
         title: "Error",
-        description: err?.message || "Failed to delete",
+        description:
+          err?.response?.data?.detail ||
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to delete",
       });
     }
   };
