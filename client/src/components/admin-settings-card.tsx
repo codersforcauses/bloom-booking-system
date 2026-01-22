@@ -28,6 +28,41 @@ type SummaryCardProps = {
   onEditAmenities: () => void;
 };
 
+function ListWithViewMore({ items }: { items: string[] }) {
+  const maxItems = 3; // show first 3 items, then view more
+  const [showAll, setShowAll] = useState(false);
+
+  if (!items.length)
+    return <span className="text-sm text-gray-500">Not Provided</span>;
+
+  const displayed = showAll ? items : items.slice(0, maxItems);
+  const hasMore = items.length > maxItems;
+
+  return (
+    <span className="text-sm text-gray-500">
+      {displayed.join(", ")}
+      {hasMore && (
+        <button
+          className="ml-2 text-bloom-blue hover:underline"
+          onClick={() => setShowAll(!showAll)}
+        >
+          <span className="flex items-center">
+            {showAll ? (
+              <>
+                view less <MdExpandLess size={20} />
+              </>
+            ) : (
+              <>
+                view more <MdExpandMore size={20} />
+              </>
+            )}
+          </span>
+        </button>
+      )}
+    </span>
+  );
+}
+
 function AdminSettingsSummaryCard({
   locations,
   amenities,
@@ -35,41 +70,6 @@ function AdminSettingsSummaryCard({
   onEditLocations,
   onEditAmenities,
 }: SummaryCardProps) {
-  const ListWithViewMore = ({ items }: { items: string[] }) => {
-    const maxItems = 3; // show first 3 items, then view more
-    const [showAll, setShowAll] = useState(false);
-
-    if (!items.length)
-      return <span className="text-sm text-gray-500">Not Provided</span>;
-
-    const displayed = showAll ? items : items.slice(0, maxItems);
-    const hasMore = items.length > maxItems;
-
-    return (
-      <span className="text-sm text-gray-500">
-        {displayed.join(", ")}
-        {hasMore && (
-          <button
-            className="ml-2 text-bloom-blue hover:underline"
-            onClick={() => setShowAll(!showAll)}
-          >
-            <span className="flex items-center">
-              {showAll ? (
-                <>
-                  view less <MdExpandLess size={20} />
-                </>
-              ) : (
-                <>
-                  view more <MdExpandMore size={20} />
-                </>
-              )}
-            </span>
-          </button>
-        )}
-      </span>
-    );
-  };
-
   // Reusable row
   const SummaryRow = ({
     title,
