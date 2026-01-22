@@ -128,7 +128,7 @@ function useFetchRoomAmenities(params: PaginationSearchParams) {
 
 function useFetchRoomAmenity(id?: number) {
   return useQuery<RoomAmenity, AxiosError>({
-    queryKey: ["room-Amenity", id],
+    queryKey: ["room-amenity", id],
     enabled: Boolean(id),
     queryFn: async () => {
       const response = await api.get(`/amenities/${id}/`);
