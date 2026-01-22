@@ -12,6 +12,7 @@ type DownloadCsvButtonProps = {
   fileName: string;
 };
 
+// TODO: add alert-dialog once issue #76 merged
 export function DownloadCsvButton({ path, fileName }: DownloadCsvButtonProps) {
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams.toString());
@@ -27,18 +28,22 @@ export function DownloadCsvButton({ path, fileName }: DownloadCsvButtonProps) {
   );
 
   const handleDownload = async () => {
-    const blob = await mutateAsync();
+    try {
+      const blob = await mutateAsync();
 
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
 
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
 
-    a.remove();
-    window.URL.revokeObjectURL(url);
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading CSV:", error);
+    }
   };
 
   return (

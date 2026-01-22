@@ -7,23 +7,32 @@ import { cn } from "@/lib/utils";
 import { Booking } from "@/types/booking";
 
 const columns: Column<Booking>[] = [
+  { key: "id", header: "ID", className: "h-12" },
+  { key: "room.name", header: "Room Name" },
+  { key: "visitor_name", header: "Visitor Name" },
+  { key: "visitor_email", header: "Visitor Email" },
   {
-    key: "id",
-    header: "ID with Super Long Header Name To Test Sticky Behavior",
-    className: "h-12",
+    key: "start_datetime",
+    header: "Start Date & Time",
+    render: (row) => new Date(row.start_datetime).toLocaleString(),
   },
   {
-    key: "room.name",
-    header: "Name with Super Long Header Name To Test Sticky Behavior",
+    key: "end_datetime",
+    header: "End Date & Time",
+    render: (row) => new Date(row.end_datetime).toLocaleString(),
   },
   {
     key: "status",
-    header: "Status with Super Long Header Name To Test Sticky Behavior",
+    header: "Status",
     render: (row) => (
       <span
-        className={
-          row.status === "COMPLETED" ? "text-green-600" : "text-gray-500"
-        }
+        className={cn(
+          row.status === "COMPLETED"
+            ? "text-green-600"
+            : row.status === "CONFIRMED"
+              ? "text-blue-600"
+              : "text-gray-500",
+        )}
       >
         {row.status}
       </span>
