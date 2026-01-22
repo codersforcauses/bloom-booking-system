@@ -93,7 +93,6 @@ function AlertDialog({
   onConfirm,
   onClose,
   open,
-  children,
 }: AlertDialogProps) {
   const [isPending, setIsPending] = useState(false);
 
@@ -118,18 +117,8 @@ function AlertDialog({
   const isConfirmVariant = variant === "confirm";
 
   return (
-    <Dialog open={open}>
-      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-
-      <DialogContent
-        onInteractOutside={handleCancel}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            handleCancel();
-          }
-        }}
-        className="flex h-auto flex-col items-center rounded-lg bg-white p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden"
-      >
+    <Dialog open={open} onOpenChange={(v) => !v && onClose?.()}>
+      <DialogContent className="flex h-auto flex-col items-center rounded-lg bg-white p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden">
         {showIcon && (
           <div className="mt-6">
             {isPending ? (
@@ -164,9 +153,11 @@ function AlertDialog({
             </Button>
           )}
           <Button
-            variant="warning"
+            variant="confirm"
             disabled={isPending}
             onClick={handleConfirm}
+            className={cn(color ? "text-white hover:brightness-90" : "")}
+            style={{ backgroundColor: color }}
           >
             {confirmText}
           </Button>
