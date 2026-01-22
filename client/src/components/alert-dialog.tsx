@@ -104,6 +104,7 @@ function AlertDialog({
       setIsPending(true);
       try {
         await onConfirm();
+        onClose?.();
       } finally {
         setIsPending(false);
       }
