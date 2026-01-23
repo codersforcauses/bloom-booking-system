@@ -1,7 +1,7 @@
 "use client";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-import type { RefreshResponse } from "./apiTypes";
+import type { RefreshResponse } from "./api-types";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
