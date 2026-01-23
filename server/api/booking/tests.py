@@ -332,9 +332,7 @@ class BookingViewTest(APITestCase):
         # No authentication and no visitor_email: 401 Unauthorized (anonymous user)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-
     # ==================== UPDATE TESTS (PATCH /api/bookings/{id}/) ====================
-
     @patch('api.booking.views.update_event')
     def test_booking_update_with_google_calendar(self, mock_update_event):
         """Test successful booking update with Google Calendar sync."""
