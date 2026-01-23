@@ -1,4 +1,4 @@
-// client/src/lib/apiTypes.ts
+// client/src/lib/api-types.ts
 
 export type ISODateTimeString = string;
 
