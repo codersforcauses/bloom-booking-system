@@ -24,8 +24,8 @@ const RoomSearchSchemaBase = z.object({
   toDate: z.date().optional(),
   toTime: z.string().optional(),
   amenities: z.array(z.string()).optional(),
-  minSeats: z.number().int().positive().optional(),
-  maxSeats: z.number().int().positive().optional(),
+  minSeats: z.number().int().min(1).optional(),
+  maxSeats: z.number().int().min(1).optional(),
 });
 
 const RoomSearchSchema = RoomSearchSchemaBase.refine(
@@ -171,7 +171,10 @@ export default function SearchRoomForm({
                   label="From Date"
                   name="fromDate"
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(v) => {
+                    field.onChange(v);
+                    form.trigger(["toTime", "toDate"]);
+                  }}
                   placeholder="Select date"
                   required={false}
                 />
@@ -218,7 +221,10 @@ export default function SearchRoomForm({
                   label="To Date"
                   name="toDate"
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(v) => {
+                    field.onChange(v);
+                    form.trigger(["toTime", "toDate"]);
+                  }}
                   placeholder="Select date"
                   required={false}
                 />
@@ -328,14 +334,14 @@ export default function SearchRoomForm({
 
       <div className="flex justify-end gap-3 pt-4">
         <Button type="button" variant="outline" onClick={onReset}>
-          Cancel
+          Clear
         </Button>
         <Button
           type="submit"
           variant="confirm"
           disabled={!form.formState.isValid}
         >
-          + Search
+          Search
         </Button>
       </div>
     </Form>
