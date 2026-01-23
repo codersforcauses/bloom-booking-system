@@ -12,15 +12,12 @@ import SearchRoomForm, {
 import { BookingRoomCard } from "@/components/room-card";
 import api from "@/lib/api";
 
-const PLACEHOLDER_IMAGE =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-family='sans-serif' font-size='20'>No image</text></svg>";
-
 // helper function to bridge the gap between api room data and arguments of BookingRoomCard
 export function normalizeRooms(apiRooms: any[]) {
   return apiRooms.map((apiRoom) => ({
     id: apiRoom.id,
     title: apiRoom.name,
-    image: apiRoom.img ?? PLACEHOLDER_IMAGE,
+    image: apiRoom.img,
     location: apiRoom.location.name,
     seats: apiRoom.capacity,
     amenities:
@@ -134,7 +131,7 @@ export default function Home() {
   return (
     <div className="grid min-h-screen grid-cols-1 gap-4 p-4 md:grid-cols-2 md:gap-8 md:p-8 lg:grid-cols-5">
       <div className="col-span-1 lg:col-span-2">
-        <h1 className="title mb-4">Booking a Meeting Room</h1>
+        <h1 className="title mb-4">Book a Meeting Room</h1>
         <SearchRoomForm form={form} onSubmit={onSubmit} onReset={onReset} />
       </div>
 
