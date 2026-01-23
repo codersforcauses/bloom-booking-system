@@ -28,12 +28,15 @@ import { cn } from "@/lib/utils";
  * @param color Optional color for the success icon and button (default: `var(--bloom-blue)`)
  * @param showIcon Whether to show the icon above the content (default: `true`)
  * @param children React node used as the DialogTrigger
+ * @param isPending Variable indicating status of event (e.g. form submission) triggered by DialogTrigger
  *
  * @example
+ * const [isPending, setIsPending] = useState(false);
  * <AlertDialog
  *   title="Excel sheet download"
  *   successText="Your request for excel sheet download successfully"
  *   color="var(--bloom-blue)"
+ *   isPending={isPending}
  * >
  *   <Button>Open Dialog</Button>
  * </AlertDialog>
@@ -42,6 +45,7 @@ function AlertDialog({
   title,
   successText,
   children,
+  isPending,
   color = "var(--bloom-blue)",
   showIcon = true,
 }: {
@@ -50,9 +54,8 @@ function AlertDialog({
   color?: string;
   showIcon?: boolean;
   children: React.ReactNode;
+  isPending: boolean;
 }) {
-  const [isPending, setIsPending] = useState(false);
-
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -90,19 +93,6 @@ function AlertDialog({
             </Button>
           </DialogClose>
         </DialogFooter>
-
-        {/* To remove in future: demo button to simulate async work */}
-        <Button
-          variant="outline"
-          onClick={() => {
-            setIsPending(true);
-            // simulate async work
-            setTimeout(() => setIsPending(false), 1200);
-          }}
-          disabled={isPending}
-        >
-          Demo
-        </Button>
       </DialogContent>
     </Dialog>
   );

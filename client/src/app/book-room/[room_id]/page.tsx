@@ -29,6 +29,12 @@ function BookRoomForm() {
 
   const [all_day, setAllDay] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [alertDialogProps, setAlertDialogProps] = useState({
+    title: "",
+    successText: "",
+    showIcon: false,
+    isPending: false,
+  });
 
   /**
    * Combine a date object and a HH:MM time string to a ISO string
@@ -98,7 +104,18 @@ function BookRoomForm() {
     mode: "onChange",
   });
 
+  /**
+   * Uses data from the from to send an POST request to /api/bookings/ endpoint
+   * and sets alertDialogProps and isPending according to server response.
+   * @param data The data from the form.
+   */
   function onSubmit(data: z.infer<typeof formSchema>) {
+    setAlertDialogProps({
+      title: "Submitting booking...",
+      successText: "",
+      showIcon: false,
+      isPending: true,
+    });
     const payload = {
       room_id: room_id,
       visitor_name: data.name,
@@ -107,21 +124,73 @@ function BookRoomForm() {
       end_datetime: formatDateTime(data.date, data.end_time),
       recurrence_rule: "",
       /*
-            The below fields are not used by the API (at this point) but are
-            fields of the form so are included here for future use.
-            */
+      The below fields are not used by the API (at this point) but are
+      fields of the form so are included here for future use.
+      */
       booking_title: data.title,
       booking_description: data.description,
     };
-    const apiUrl = `bookings/`;
-    api({ url: apiUrl, method: "post", data: payload })
+    const alert_dialog_props = {
+      title: "",
+      successText: "",
+      showIcon: false,
+      isPending: false,
+    };
+    api({ url: "bookings/", method: "post", data: payload })
       .then((response) => {
-        // TODO: Handle response
-        console.log(response);
+        const res = response.data;
+        const date = new Date(Date.parse(res.start_datetime));
+        // Substring (0,5) gives just the HH:MM part of the string
+        const start_time = new Date(Date.parse(res.start_datetime))
+          .toTimeString()
+          .substring(0, 5);
+        const end_time = new Date(Date.parse(res.end_datetime))
+          .toTimeString()
+          .substring(0, 5);
+        enum MonthString {
+          Jan,
+          Feb,
+          Mar,
+          Apr,
+          May,
+          Jun,
+          Jul,
+          Aug,
+          Sep,
+          Oct,
+          Nov,
+          Dec,
+        }
+        const success_text = cn(
+          `Your ${res.room.name} Booking for`,
+          `${date.getDate()} ${MonthString[date.getMonth()]} ${date.getFullYear()}`,
+          `from ${start_time} to ${end_time}`,
+          `has been submitted.\n`,
+          `You will receive an email confirmation shortly.`,
+        );
+        alert_dialog_props.title = "Awesome!";
+        alert_dialog_props.successText = success_text;
+        alert_dialog_props.showIcon = true;
       })
       .catch((error) => {
-        // TODO: Handle error
-        console.error(error);
+        alert_dialog_props.title = "Sorry!";
+        alert_dialog_props.showIcon = false;
+        const res = error.response.data;
+        if (res.start_datetime !== undefined) {
+          alert_dialog_props.successText = cn(res.start_datetime);
+        } else if (res.end_datetime !== undefined) {
+          alert_dialog_props.successText = cn(res.end_datetime);
+        } else if (res.non_field_errors !== undefined) {
+          alert_dialog_props.successText = cn(res.non_field_errors);
+        } else if (res.detail !== undefined) {
+          alert_dialog_props.successText = cn(res.detail);
+        } else {
+          alert_dialog_props.successText = "Unknown error.";
+          console.error(error);
+        }
+      })
+      .finally(() => {
+        setAlertDialogProps(alert_dialog_props);
       });
   }
 
@@ -277,11 +346,12 @@ function BookRoomForm() {
         className="ml-6"
         checked={all_day}
         onCheckedChange={(checked) => setAllDay(checked === true)}
+        disabled={true}
       >
-        All Day
+        All Day (Currently not implemented)
       </Checkbox>
       <ReCAPTCHAV2 setVerified={setVerified} />
-      <AlertDialog title="" successText="" showIcon={true}>
+      <AlertDialog {...alertDialogProps}>
         <Button
           type="submit"
           className="w-1/6 min-w-[8rem] font-bold"
