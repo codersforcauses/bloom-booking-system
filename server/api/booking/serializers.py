@@ -95,7 +95,7 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                     'start_datetime': 'Booking start time must be in the future.'
                 })
 
-        # ensure booking start and end on the same day and that the end time is after the start time
+        # ensure booking starts and ends on the same day and that the end time is after the start time
         if start_datetime and end_datetime:
             if end_datetime <= start_datetime:
                 raise serializers.ValidationError({
