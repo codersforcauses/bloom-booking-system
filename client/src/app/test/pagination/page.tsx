@@ -33,13 +33,17 @@ export default function PaginationDemo() {
   const page = Number(oldSearchParams.get("page") ?? 1);
   const nrows = Number(oldSearchParams.get("nrows") ?? 5);
 
-  const defaultSearchParams: CustomFetchBookingParams = { search, page, nrows };
+  const urlVisibleParams: CustomFetchBookingParams = {
+    search,
+    page,
+    nrows,
+  };
 
   const [searchParams, setSearchParams] = useState<CustomFetchBookingParams>({
     room: "",
     visitor_email: "",
     visitor_name: "",
-    ...defaultSearchParams,
+    ...urlVisibleParams,
   });
 
   const { data, isLoading, totalPages } = useFetchBookings(searchParams);
@@ -65,12 +69,12 @@ export default function PaginationDemo() {
     const updatedParams = { ...searchParams, ...params };
     setSearchParams(updatedParams);
 
-    const qs = pickKeys(
+    const urlParams = pickKeys(
       updatedParams,
-      ...(Object.keys(defaultSearchParams) as []),
+      ...(Object.keys(urlVisibleParams) as []),
     );
 
-    router.push(`${pathname}?${toQueryString(qs)}`);
+    router.push(`${pathname}?${toQueryString(urlParams)}`);
   };
 
   return (
@@ -84,9 +88,7 @@ export default function PaginationDemo() {
             label=""
             value={searchParams.search || ""}
             placeholder="Search Name"
-            onSearch={(val) =>
-              setSearchParams((prev) => ({ ...prev, search: val }))
-            }
+            onSearch={(val) => pushParams({ search: val })}
             className="w-80 space-y-0"
           />
 
