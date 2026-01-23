@@ -115,6 +115,7 @@ class BookingSerializer(DynamicFieldsModelSerializer):
 
             # helper: standard interval overlap check for [start, end)
             def _overlaps(a_start, a_end, b_start, b_end):
+                """Return True if half-open intervals [a_start, a_end) and [b_start, b_end) overlap."""
                 return a_start < b_end and a_end > b_start
 
             # helper: same one used in the availability api
