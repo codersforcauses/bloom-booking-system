@@ -50,13 +50,13 @@ export default function LocationModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Custom location</DialogTitle>
+          <DialogTitle className="text-center">Location</DialogTitle>
         </DialogHeader>
 
         <InputField
           name="customLocation"
-          label="Location"
-          placeholder="Enter location"
+          label="Enter location name"
+          placeholder="Name"
           value={location}
           onChange={(value) => {
             setLocation(value);
@@ -67,11 +67,17 @@ export default function LocationModal({
         />
 
         <DialogFooter className="mt-4 flex gap-2">
-          <Button variant="outline" onClick={() => handleClose(false)}>
+          <Button
+            variant="outline"
+            className="border-bloom-blue bg-white text-bloom-blue"
+            onClick={() => handleClose(false)}
+          >
             Cancel
           </Button>
 
-          <Button onClick={handleConfirm}>Use location</Button>
+          <Button className="text-white" onClick={handleConfirm}>
+            Ok
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
