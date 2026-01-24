@@ -128,7 +128,11 @@ function useFetchRoomAmenities(params: PaginationSearchParams) {
 
 function useFetchRoomAmenity(id?: number) {
   return useQuery<RoomAmenity, AxiosError>({
+<<<<<<< HEAD
     queryKey: ["room-amenity", id],
+=======
+    queryKey: ["room-Amenity", id],
+>>>>>>> 471397f (Enhance admin settings page, Add demo login component)
     enabled: Boolean(id),
     queryFn: async () => {
       const response = await api.get(`/amenities/${id}/`);

@@ -8,6 +8,12 @@ const isWindowsDevContainer = () =>
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  // allow localhost images for dev
+  images: {
+    domains: ['localhost'],
+  },
+
   // dumb fix for windows docker
   webpack: isWindowsDevContainer()
     ? (config) => {
