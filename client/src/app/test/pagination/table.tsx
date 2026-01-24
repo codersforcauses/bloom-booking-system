@@ -6,8 +6,20 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Booking } from "@/types/booking";
 
+/**
+ * Table column configuration for Booking data.
+ *
+ * @template Booking
+ * Each column describes how a Booking field should be displayed.
+ *
+ * Generic usage:
+ * - Column<Booking> means each row passed to the table is a Booking object
+ * - `key` must exist on Booking (or be supported dot-notation)
+ * - `render` receives a Booking row
+ */
 const columns: Column<Booking>[] = [
   { key: "id", header: "ID", className: "h-12" },
+  // Nested keys are allowed. This reads booking.room.name
   { key: "room.name", header: "Room Name" },
   { key: "visitor_name", header: "Visitor Name" },
   { key: "visitor_email", header: "Visitor Email" },
@@ -24,6 +36,8 @@ const columns: Column<Booking>[] = [
   {
     key: "status",
     header: "Status",
+    // render is optional and only needed when
+    // you want custom UI instead of raw text
     render: (row) => (
       <span
         className={cn(

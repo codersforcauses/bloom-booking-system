@@ -34,6 +34,8 @@ export function FilterPopover({
   onApply,
   className,
 }: FilterPopoverProps) {
+  const [open, setOpen] = useState(false);
+
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
     initialFilters?.room ? initialFilters.room.split(",") : [],
   );
@@ -52,13 +54,13 @@ export function FilterPopover({
     );
   };
 
-  const handleApply = (close: () => void) => {
+  const handleApply = () => {
     onApply({
       room: selectedRooms.length ? selectedRooms.join(",") : undefined,
       visitor_name: visitorName || undefined,
       visitor_email: visitorEmail || undefined,
     });
-    close(); // close the popover after applying
+    setOpen(false);
   };
 
   // Automatically open sections that have active filters
@@ -69,7 +71,7 @@ export function FilterPopover({
   ];
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -154,8 +156,10 @@ export function FilterPopover({
 
         {/* Footer */}
         <div className="flex justify-end gap-3 border-t px-4 py-3">
-          <Button variant="outline">Cancel</Button>
-          <Button onClick={() => handleApply(() => {})}>Apply</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleApply}>Apply</Button>
         </div>
       </PopoverContent>
     </Popover>

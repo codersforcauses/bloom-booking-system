@@ -214,4 +214,5 @@ const RoomAPI = {
   useDeleteRoomAmenity,
 };
 
+export { useFetchRooms };
 export default RoomAPI;

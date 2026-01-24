@@ -18,6 +18,15 @@ import { BookingRoom } from "@/types/booking";
 import { FilterPopover } from "./filter";
 import DemoTable from "./table";
 
+/**
+ * CustomFetchBookingParams
+ *
+ * This type extends PaginationSearchParams using a GENERIC idea:
+ * - PaginationSearchParams defines common pagination fields (page, nrows, search)
+ * - We extend it with booking specific filters
+ *
+ * This allows reuse across FE and BE while keeping strong typing.
+ */
 export type CustomFetchBookingParams = PaginationSearchParams & {
   room?: string;
   visitor_email?: string;
@@ -33,12 +42,29 @@ export default function PaginationDemo() {
   const page = Number(oldSearchParams.get("page") ?? 1);
   const nrows = Number(oldSearchParams.get("nrows") ?? 5);
 
+  /**
+   * urlVisibleParams
+   *
+   * This object defines which params are allowed to be shown in the URL.
+   * It acts as a WHITELIST.
+   *
+   * Purpose:
+   * - Keep URLs clean
+   * - Prevent leaking filter data into query strings
+   * - Still allow backend to receive full params
+   */
   const urlVisibleParams: CustomFetchBookingParams = {
     search,
     page,
     nrows,
   };
 
+  /**
+   * Local state for all search params
+   *
+   * - Includes both URL-visible params AND internal-only filters
+   * - This state is what we send to the backend
+   */
   const [searchParams, setSearchParams] = useState<CustomFetchBookingParams>({
     room: "",
     visitor_email: "",
@@ -65,6 +91,13 @@ export default function PaginationDemo() {
     }
   }, [search, nrows, page, isLoading]);
 
+  /**
+   * pushParams
+   *
+   * This function updates:
+   * 1. Local state (used for backend fetching)
+   * 2. URL query string (only allowed keys)
+   */
   const pushParams = (params: Partial<CustomFetchBookingParams>) => {
     const updatedParams = { ...searchParams, ...params };
     setSearchParams(updatedParams);
