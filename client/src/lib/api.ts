@@ -176,7 +176,7 @@ const logout = () => {
 };
 
 export default api;
-export { setAccessToken };
+export { logout, setAccessToken };
 
 // Helper functions for typed API calls
 export async function apiGet<T>(url: string, config?: object): Promise<T> {
