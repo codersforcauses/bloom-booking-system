@@ -52,7 +52,7 @@ const Textarea: React.FC<TextareaProps> = ({
     <>
       <label htmlFor={name} className={"body-sm-bold mb-1 block"}>
         {label ? label : capitalizeFirstLetter(name)}
-        {required && <span className={"text-[var(--bloom-red)]"}> *</span>}
+        {required && <span className={"text-bloom-red"}> *</span>}
       </label>
       <textarea
         id={id ? id : name}
