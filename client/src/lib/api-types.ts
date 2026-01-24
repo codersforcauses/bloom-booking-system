@@ -1,7 +1,5 @@
 // client/src/lib/api-types.ts
 
-export type ISODateTimeString = string;
-
 // ---------- Auth ----------
 export type LoginResponse = {
   access: string;
@@ -13,43 +11,49 @@ export type RefreshResponse = {
 };
 
 // ---------- Shared ----------
-export type Location = {
+export type LocationResponse = {
   id: number;
   name: string;
 };
 
-export type Amenity = {
+export type AmenityResponse = {
   id: number;
   name: string;
 };
 
 // ---------- Rooms ----------
-export type Room = {
+export type RoomResponse = {
   id: number;
   name: string;
   img: string;
-  location: Location;
+  location: LocationResponse;
   capacity: number;
-  amenities: Amenity[];
-  start_datetime: ISODateTimeString;
-  end_datetime: ISODateTimeString;
+  amenities: AmenityResponse[];
+  start_datetime: string;
+  end_datetime: string;
   recurrence_rule: string;
   is_active: boolean;
 };
 
-export type RoomCreateRequest = {
+type RoomShortResponse = {
+  id: number;
   name: string;
-  img: File | Blob;
-  location_id: number;
-  capacity: number;
-  amenities_id: number[];
-  start_datetime: ISODateTimeString;
-  end_datetime: ISODateTimeString;
-  recurrence_rule: string;
-  is_active: boolean;
 };
 
-export type RoomUpdateRequest = Partial<RoomCreateRequest>;
+type RoomStatus = "CONFIRMED" | "CANCELLED" | "COMPLETED";
+
+export type BookingResponse = {
+  id: number;
+  room: RoomShortResponse;
+  visitor_name: string;
+  visitor_email: string;
+  start_datetime: string;
+  end_datetime: string;
+  recurrence_rule: string;
+  status: RoomStatus;
+  google_event_id: string;
+  created_at: string;
+};
 
 export type PaginatedResponse<T> = {
   count: number;
@@ -58,6 +62,7 @@ export type PaginatedResponse<T> = {
   results: T[];
 };
 
-export type RoomListResponse = PaginatedResponse<Room>;
+export type PaginatedRoomResponse = PaginatedResponse<RoomResponse>;
+export type PaginatedBookingResponse = PaginatedResponse<BookingResponse>;
 
 export type PingResponse = string;
