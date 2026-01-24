@@ -90,26 +90,33 @@ const Amenities = ({
  */
 function RoomCard({ room }: { room: Room; hideIcon?: boolean }) {
   const roomDetailsGroups = [
-    { label: "Room Name", value: room.title },
+    { label: "Room Name", value: room.name },
     { label: "Location", value: room.location },
-    { label: "No of Seats", value: room.seats },
+    { label: "No of Seats", value: room.capacity },
     {
       label: "Amenities",
       value: <Amenities amenities={room.amenities} hideIcon />,
     },
-    { label: "Availability", value: room.availablility },
+    {
+      label: "Availability",
+      value: room.is_active ? "Available" : "Not Available",
+    },
   ];
 
   return (
     <div className="flex w-full flex-col bg-white shadow-sm">
       <div className="w-full p-4">
         <div className="relative h-40 w-full">
+<<<<<<< HEAD
           <Image
             src={room.image || PLACEHOLDER_IMAGE} //  if room.image is null, render PLACEHOLDER_IMAGE
             alt={room.title}
             fill
             className="object-cover"
           />
+=======
+          <Image src={room.img} alt={room.name} fill className="object-cover" />
+>>>>>>> b2398fe (Fix room type to match api response)
         </div>
       </div>
 
@@ -162,24 +169,36 @@ function BookingRoomCard({ room, onBook }: BookingRoomProps) {
   return (
     <Card className="flex w-full flex-col overflow-hidden rounded-xl border-black bg-white shadow-md">
       <div className="relative h-40 w-full">
+<<<<<<< HEAD
         <Image
           src={room.image || PLACEHOLDER_IMAGE} //  if room.image is null, render PLACEHOLDER_IMAGE
           alt={room.title}
           fill
           className="object-cover"
         />
+=======
+        <Image src={room.img} alt={room.name} fill className="object-cover" />
+>>>>>>> b2398fe (Fix room type to match api response)
       </div>
 
       <div className="flex flex-col gap-1 px-4 py-3">
-        <span className="text-[14px] font-bold">{room.title}</span>
+        <span className="text-[14px] font-bold">{room.name}</span>
         <span className="text-[13px] font-semibold text-gray-400">
           {room.location}
         </span>
       </div>
 
       <div className="mt-auto flex justify-start px-4 pb-4">
+<<<<<<< HEAD
         <Button variant="outline" onClick={onBook}>
           Book
+=======
+        <Button
+          className="h-[38px] w-[88px] rounded-[10px] border border-black bg-white py-2 text-black hover:bg-gray-100"
+          onClick={onBook}
+        >
+          {room.is_active ? "Book" : "Booked"}
+>>>>>>> b2398fe (Fix room type to match api response)
         </Button>
       </div>
     </Card>
@@ -197,7 +216,7 @@ type AdminRoomCardProps = {
 /**
  * Admin card for managing room details.
  *
- * Displays full room info: name, location, seats, amenities, and bookings.
+ * Displays full room info: name, location, capacity, amenities, and bookings.
  * Includes admin action buttons: View Bookings, Edit, Remove.
  * Supports disabling the Remove button if room is already removed.
  *
@@ -234,23 +253,45 @@ function AdminRoomCard({
   onRemove,
 }: AdminRoomCardProps) {
   const roomDetails = [
-    { label: "Room Name", value: room.title },
-    { label: "Location", value: room.location },
-    { label: "No of Seats", value: room.seats },
+    { label: "Room Name", value: room.name },
+    { label: "Location", value: room.location?.name ?? "N/A" },
+    { label: "No of Seats", value: room.capacity },
     {
       label: "Amenities",
-      value: <Amenities amenities={room.amenities} hideIcon={hideIcon} />,
+      value: (
+        <Amenities
+          amenities={room.amenities.map((a) => a.name)}
+          hideIcon={hideIcon}
+        />
+      ),
     },
-    { label: "Bookings", value: room.bookings },
+    // { label: "Bookings", value: room.bookings },
   ];
+
+  const FALLBACK_IMG =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="800" height="500">
+      <rect width="100%" height="100%" fill="#f2f2f2"/>
+      <rect x="60" y="70" width="680" height="360" rx="18" fill="#e6e6e6"/>
+      <text x="50%" y="52%" text-anchor="middle" font-family="Arial" font-size="36" fill="#9a9a9a">
+        Room
+      </text>
+    </svg>
+  `);
 
   return (
     <div className="flex w-full flex-col overflow-hidden bg-white p-4 shadow-sm">
       {/* Room Image */}
       <div className="relative h-40 w-full">
         <Image
+<<<<<<< HEAD
           src={room.image || PLACEHOLDER_IMAGE} //  if room.image is null, render PLACEHOLDER_IMAGE
           alt={room.title}
+=======
+          src={room.img ?? FALLBACK_IMG}
+          alt={room.name}
+>>>>>>> b2398fe (Fix room type to match api response)
           fill
           className="object-cover"
         />
@@ -286,12 +327,13 @@ function AdminRoomCard({
         <Button
           className={cn(
             "caption h-6 bg-bloom-red text-white hover:bg-bloom-red-light",
-            room.removed && "cursor-not-allowed bg-gray-400 hover:bg-gray-400",
+            room.is_active &&
+              "cursor-not-allowed bg-gray-400 hover:bg-gray-400",
           )}
           onClick={onRemove}
-          disabled={room.removed}
+          disabled={room.is_active}
         >
-          {room.removed ? "Removed" : "Remove"}
+          {room.is_active ? "Removed" : "Remove"}
         </Button>
       </div>
     </div>
