@@ -53,7 +53,7 @@ export default function Navbar() {
           <Link href="/find-my-booking">
             <Button variant="text">Find my booking</Button>
           </Link>
-          <Link href="/admin">
+          <Link href="/login">
             <Button variant="login">
               <HiOutlineUser className="h-5 w-5" />
               Admin login
@@ -76,7 +76,7 @@ export default function Navbar() {
               <Button variant="text">Find my booking</Button>
             </Link>
             <div className="-mx-2 mt-20">
-              <Link href="/admin">
+              <Link href="/login">
                 <Button variant="login">
                   <HiOutlineUser className="h-5 w-5" />
                   Admin login
