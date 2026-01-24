@@ -136,21 +136,18 @@
     mask-repeat: no-repeat;
   }
   .animate-float {
-      animation: animateFloat 3s ease-in-out infinite;
+    animation: animateFloat 3s ease-in-out infinite;
   }
 }
 
 @keyframes animateFloat {
-    0% {
-        transform: translateY(-20px);
-    }
-    50% {
-        transform: translateY(20px);
-    }
-    100%{
-        transform: translateY(-20px);
-    }
-
+  0% {
+    transform: translateY(-20px);
+  }
+  50% {
+    transform: translateY(20px);
+  }
+  100% {
+    transform: translateY(-20px);
+  }
 }
-
-
