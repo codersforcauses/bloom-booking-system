@@ -18,122 +18,29 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import api from "@/lib/api";
+import { Room } from "@/types/card";
 
 import RoomContext from "./roomContext";
 
-type ApiListResponse<T> = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-};
-
-type NamedEntity = {
-  id: number;
-  name: string;
-};
-
-type FilterValues = {
-  location_id: string;
-  capacity: string;
-  amenity_ids: string[];
-  is_active: "" | "true" | "false";
-};
-
-type Props = {
-  onApply?: (filters: {
-    location_id?: number;
-    capacity?: number;
-    amenity_ids?: string[];
-    is_active?: boolean;
-  }) => void;
-  onCancel?: () => void;
-};
-
-export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
-  const { setRooms } = React.useContext(RoomContext);
-  const form = useForm<FilterValues>({
+export default function RoomFilterAccordion() {
+  const { setRooms, locations, amenities } = React.useContext(RoomContext);
+  const form = useForm<Room>({
     defaultValues: {
-      location_id: "",
-      capacity: "",
-      amenity_ids: [],
-      is_active: "",
+      location: "",
+      capacity: 0,
+      amenities: [],
+      is_active: false,
     },
     mode: "onSubmit",
   });
 
-  const [locations, setLocations] = React.useState<NamedEntity[]>([]);
-  const [amenities, setAmenities] = React.useState<NamedEntity[]>([]);
-  const [loadingLocations, setLoadingLocations] = React.useState(false);
-  const [loadingAmenities, setLoadingAmenities] = React.useState(false);
-  const [loadError, setLoadError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoadError(null);
-
-      try {
-        setLoadingLocations(true);
-        const locRes = await api.get("/locations/");
-        const locJson = locRes.data as ApiListResponse<NamedEntity>;
-        console.log("Fetched locations:", locJson);
-        if (!cancelled) setLocations(locJson.results ?? []);
-      } catch (e: any) {
-        if (!cancelled) {
-          const msg =
-            e?.response?.data?.detail ||
-            e?.response?.data?.message ||
-            e?.message ||
-            "Failed to load locations";
-          setLoadError(msg);
-        }
-      } finally {
-        if (!cancelled) setLoadingLocations(false);
-      }
-
-      try {
-        setLoadingAmenities(true);
-        const amRes = await api.get("/amenities/");
-        const amJson = amRes.data as ApiListResponse<NamedEntity>;
-        if (!cancelled) setAmenities(amJson.results ?? []);
-      } catch (e: any) {
-        if (!cancelled) {
-          const msg =
-            e?.response?.data?.detail ||
-            e?.response?.data?.message ||
-            e?.message ||
-            "Failed to load amenities";
-          setLoadError((prev) => prev ?? msg);
-        }
-      } finally {
-        if (!cancelled) setLoadingAmenities(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const toggleAmenity = (name: string) => {
-    const cur = form.getValues("amenity_ids") ?? [];
-    form.setValue(
-      "amenity_ids",
-      cur.includes(name) ? cur.filter((x) => x !== name) : [...cur, name],
-      { shouldDirty: true },
-    );
-  };
-
-  async function filterapply(values: FilterValues) {
+  async function onSubmit(values: Room) {
     const apiUrl: string[] = [];
 
-    if (values.location_id) apiUrl.push(`location=${values.location_id}`);
+    if (values.location) apiUrl.push(`location=${values.location}`);
     if (values.capacity) apiUrl.push(`min_capacity=${values.capacity}`);
-    if (values.amenity_ids.length) {
-      apiUrl.push(`amenities=${values.amenity_ids.join(",")}`);
+    if (values.amenities.length) {
+      apiUrl.push(`amenities=${values.amenities.join(",")}`);
     }
 
     console.log("API URL:", apiUrl.join("&"));
@@ -149,16 +56,10 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
   return (
     <div className="flex items-center justify-center">
       <div className="w-[360px] rounded-xl border bg-white p-4 shadow-sm">
-        <h2 className="mb-2 text-base font-semibold">Filter</h2>
-
-        {loadError ? (
-          <div className="mb-3 rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700">
-            {loadError}
-          </div>
-        ) : null}
+        <h2 className="font-semib old mb-2 text-base">Filter</h2>
 
         <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(filterapply)}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <Accordion
               type="multiple"
               defaultValue={["location", "capacity"]}
@@ -171,7 +72,7 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
                 </AccordionTrigger>
                 <AccordionContent>
                   <FormField
-                    name="location_id"
+                    name="location"
                     control={form.control}
                     render={({ field }) => (
                       <FormItem>
@@ -179,11 +80,11 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
                           <InputField
                             kind="select"
                             label=""
-                            name="location_id"
+                            name="location"
                             value={field.value || ""}
                             onChange={field.onChange}
                             placeholder={
-                              loadingLocations
+                              locations.length === 0
                                 ? "Loading..."
                                 : "Select location"
                             }
@@ -227,7 +128,7 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
                             kind="number"
                             label=""
                             name="capacity"
-                            value={field.value ?? ""}
+                            value={field.value ?? 0}
                             onChange={field.onChange}
                             placeholder="0–999"
                             min={0}
@@ -248,31 +149,45 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="mt-1 space-y-2 pl-1 text-sm">
-                    {loadingAmenities ? (
+                    {amenities.length === 0 ? (
                       <div className="text-sm text-muted-foreground">
                         Loading...
                       </div>
-                    ) : amenities.length ? (
+                    ) : (
                       amenities.map((a) => {
                         const selected = (
-                          form.watch("amenity_ids") ?? []
+                          form.watch("amenities") ?? []
                         ).includes(a.name);
+
                         return (
                           <label key={a.id} className="flex items-center gap-2">
                             <input
                               type="checkbox"
                               className="h-4 w-4"
                               checked={selected}
-                              onChange={() => toggleAmenity(a.name)}
+                              onChange={() => {
+                                const current = form.watch("amenities") ?? [];
+                                if (selected) {
+                                  // Remove if already selected
+                                  form.setValue(
+                                    "amenities",
+                                    current.filter(
+                                      (id: string) => id !== a.name,
+                                    ),
+                                  );
+                                } else {
+                                  // Add if not selected
+                                  form.setValue("amenities", [
+                                    ...current,
+                                    a.name,
+                                  ]);
+                                }
+                              }}
                             />
                             <span>{a.name}</span>
                           </label>
                         );
                       })
-                    ) : (
-                      <div className="text-sm text-muted-foreground">
-                        No amenities found.
-                      </div>
                     )}
                   </div>
                 </AccordionContent>
@@ -294,11 +209,9 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
                             kind="select"
                             label=""
                             name="is_active"
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                            placeholder="Any"
+                            onChange={(val: string) => field.onChange(val)}
+                            placeholder="Active"
                             options={[
-                              { label: "Any", value: "test" },
                               { label: "Active", value: "true" },
                               { label: "Inactive", value: "false" },
                             ]}

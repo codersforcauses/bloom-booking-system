@@ -15,16 +15,24 @@ import RoomContext from "./roomContext";
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [allRooms, setAllRooms] = useState<Room[]>([]);
-  const [searchValue, setSearchValue] = useState("");
-  const roomContext = useContext(RoomContext);
+
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
+  const [locations, setLocations] = useState([]);
+  const [amenities, setAmenities] = useState([]);
 
   async function fetchRooms() {
     try {
       const response = await api.get("/rooms/");
       const payload = response.data.results;
-      console.log("Fetched rooms:", payload);
       setAllRooms(payload);
       setRooms(payload);
+
+      const locResponse = await api.get("/locations/");
+      setLocations(locResponse.data.results);
+
+      const amenityResponse = await api.get("/amenities/");
+      setAmenities(amenityResponse.data.results);
     } catch (error) {
       console.error("Error fetching rooms:", error);
       setAllRooms([]);
@@ -33,17 +41,15 @@ export default function RoomsPage() {
   }
 
   function handleSearchChange(input: any) {
-    const value =
-      typeof input === "string" ? input : (input?.target?.value ?? "");
+    input = typeof input === "string" ? input : (input?.target?.value ?? "");
+    setSearchTerm(input);
 
-    setSearchValue(value);
-
-    if (!value) {
+    if (!input) {
       setRooms(allRooms);
       return;
     }
 
-    const v = value.toLowerCase();
+    const v = input.toLowerCase();
     setRooms(allRooms.filter((room) => room.name.toLowerCase().includes(v)));
   }
 
@@ -54,7 +60,7 @@ export default function RoomsPage() {
   }, []);
 
   return (
-    <RoomContext.Provider value={{ roomNames, setRooms }}>
+    <RoomContext.Provider value={{ roomNames, setRooms, locations, amenities }}>
       <div className="">
         <div className="bg-red-500"> Navbar here </div>
 
@@ -73,12 +79,12 @@ export default function RoomsPage() {
                 kind="text"
                 label=""
                 name="search"
-                value={searchValue}
+                value={searchTerm}
                 onChange={handleSearchChange}
                 placeholder="Search here"
               />
 
-              <FilterPopOver roomNames={roomNames} />
+              <FilterPopOver />
 
               <a href="/meeting-room/add">
                 <Button variant="confirm">Add Room</Button>
