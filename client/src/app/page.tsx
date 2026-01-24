@@ -11,9 +11,11 @@ import SearchRoomForm, {
 } from "@/app/search-room-form";
 import { BookingRoomCard } from "@/components/room-card";
 import api from "@/lib/api";
+import { RoomResponse } from "@/lib/api-types";
+import { Room } from "@/types/card";
 
 // helper function to bridge the gap between api room data and arguments of BookingRoomCard
-export function normalizeRooms(apiRooms: any[]) {
+export function normalizeRooms(apiRooms: RoomResponse[]) {
   return apiRooms.map((apiRoom) => ({
     id: apiRoom.id,
     title: apiRoom.name,
@@ -22,7 +24,7 @@ export function normalizeRooms(apiRooms: any[]) {
     seats: apiRoom.capacity,
     amenities:
       apiRoom.amenities?.map(
-        (amenity: Record<string, string>) => amenity.name,
+        (amenity: Record<string, unknown>) => amenity.name as string,
       ) ?? [],
     available: true, // suppose that availability handled by the backend
   }));
@@ -31,7 +33,7 @@ export function normalizeRooms(apiRooms: any[]) {
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [rooms, setRooms] = useState<any[]>([]); // todo: substitute any with the actual type
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -54,7 +56,7 @@ export default function Home() {
   // Handle search form submission
 
   async function onSubmit(data: RoomSearchSchemaValue) {
-    const params: Record<string, any> = {};
+    const params: Record<string, unknown> = {};
 
     // name search
     if (data.name) params.name = data.name;
@@ -84,7 +86,7 @@ export default function Home() {
 
   // Fetch Rooms (Scroll down to get next page)
   const fetchRooms = useCallback(
-    async (url: string, params?: Record<string, any>) => {
+    async (url: string, params?: Record<string, unknown>) => {
       setLoading(true);
       try {
         const { data } = await api.get(url, { params });

@@ -93,7 +93,7 @@ export default function SearchRoomForm({
       const res = await api.get("/locations/");
       const raw = Array.isArray(res.data) ? res.data : (res.data.results ?? []);
       setLocations(
-        raw.map((loc: any) => ({
+        raw.map((loc: Record<string, unknown>) => ({
           label: loc.name,
           value: loc.name,
         })),
@@ -103,7 +103,7 @@ export default function SearchRoomForm({
     const fetchAmenities = async () => {
       const res = await api.get("/amenities/");
       const raw = Array.isArray(res.data) ? res.data : (res.data.results ?? []);
-      setAmenityNames(raw.map((a: any) => a.name));
+      setAmenityNames(raw.map((a: Record<string, unknown>) => a.name));
     };
 
     Promise.all([fetchLocations(), fetchAmenities()]).catch((e) => {
