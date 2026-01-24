@@ -50,40 +50,13 @@ export default function RoomsPage() {
   const [searchValue, setSearchValue] = useState("");
   const roomContext = useContext(RoomContext);
 
-  function mapRoomNames(data: any[]): string[] {
-    return (data ?? []).map((r: any) => r?.name || "Untitled Room");
-  }
-
-  function mapRooms(data: ApiRoom[]): Room[] {
-    return (data ?? []).map((r) => {
-      const isActive = r?.is_active ?? false;
-
-      // bandaid string until backend provides real "open hours" etc.
-      const availabilityStr = isActive ? "Active" : "Inactive";
-
-      return {
-        id: r.id,
-        title: r.name || "Untitled Room",
-        image: r.img || FALLBACK_IMG,
-        location: r.location?.name || "Unknown",
-        seats: r.capacity ?? 0,
-        amenities: mapRoomNames(r.amenities ?? []),
-        bookings: 0,
-        removed: false,
-
-        available: isActive,
-        availablility: availabilityStr,
-      };
-    });
-  }
-
   async function fetchRooms() {
     try {
       const response = await api.get("/rooms/");
-      const payload = response.data as ApiListResponse<ApiRoom>;
-      const mapped = mapRooms(payload?.results ?? []);
-      setAllRooms(mapped);
-      setRooms(mapped);
+      const payload = response.data.results;
+      console.log("Fetched rooms:", payload);
+      setAllRooms(payload);
+      setRooms(payload);
     } catch (error) {
       console.error("Error fetching rooms:", error);
       setAllRooms([]);
@@ -103,10 +76,10 @@ export default function RoomsPage() {
     }
 
     const v = value.toLowerCase();
-    setRooms(allRooms.filter((room) => room.title.toLowerCase().includes(v)));
+    setRooms(allRooms.filter((room) => room.name.toLowerCase().includes(v)));
   }
 
-  const roomNames = useMemo(() => allRooms.map((r) => r.title), [allRooms]);
+  const roomNames = useMemo(() => allRooms.map((r) => r.name), [allRooms]);
 
   useEffect(() => {
     fetchRooms();
