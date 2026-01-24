@@ -44,6 +44,7 @@
     --bloom-yellow-light: #f6e6a0ff;
     --bloom-orbit: #2332ffff;
     --bloom-orbit-light: #a5a8e1ff;
+    --bloom-shadow: #D1D5DB;
   }
 
   .dark {
