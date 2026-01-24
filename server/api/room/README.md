@@ -24,7 +24,7 @@
   Example: `?amenity=Projector,Whiteboard`
 
 **Pagination:**  
-Results are paginated (10 per page by default). Use `?page=2` for next page.
+Results are paginated (default page size may vary; check your API configuration) using limit/offset pagination. Use `?limit=10&offset=10` to get the next set of results. `room_id` returned in each page will be the same as /rooms.
 
 **Example Request:**
 
@@ -92,7 +92,7 @@ Returns availability of rooms in a boolean format. A room is available if the ro
 - `end_datetime`: End datetime before or equal to (ISO 8601). Note: Date string is not accepted.
 
 **Pagination:**  
-Results are paginated (10 per page by default). Use `?page=2` for next page. Room_id returned in each page will be the same as /rooms.
+Results are paginated (10 per page by default) using limit/offset pagination. Use `?limit=10&offset=10` to get the next set of results. `room_id` returned in each page will be the same as /rooms.
 
 **Example Request:**
 
