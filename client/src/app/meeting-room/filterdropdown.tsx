@@ -36,7 +36,7 @@ type NamedEntity = {
 type FilterValues = {
   location_id: string;
   capacity: string;
-  amenity_ids: number[];
+  amenity_ids: string[];
   is_active: "" | "true" | "false";
 };
 
@@ -44,7 +44,7 @@ type Props = {
   onApply?: (filters: {
     location_id?: number;
     capacity?: number;
-    amenity_ids?: number[];
+    amenity_ids?: string[];
     is_active?: boolean;
   }) => void;
   onCancel?: () => void;
@@ -78,6 +78,7 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
         setLoadingLocations(true);
         const locRes = await api.get("/locations/");
         const locJson = locRes.data as ApiListResponse<NamedEntity>;
+        console.log("Fetched locations:", locJson);
         if (!cancelled) setLocations(locJson.results ?? []);
       } catch (e: any) {
         if (!cancelled) {
@@ -117,41 +118,13 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
     };
   }, []);
 
-  const toggleAmenity = (id: number) => {
+  const toggleAmenity = (name: string) => {
     const cur = form.getValues("amenity_ids") ?? [];
     form.setValue(
       "amenity_ids",
-      cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id],
+      cur.includes(name) ? cur.filter((x) => x !== name) : [...cur, name],
       { shouldDirty: true },
     );
-  };
-
-  const handleApply = form.handleSubmit((values) => {
-    const out: {
-      location_id?: number;
-      capacity?: number;
-      amenity_ids?: number[];
-      is_active?: boolean;
-    } = {};
-
-    if (values.location_id) out.location_id = Number(values.location_id);
-
-    if (values.capacity !== "") {
-      const n = Number(values.capacity);
-      if (!Number.isNaN(n)) out.capacity = n;
-    }
-
-    if (values.amenity_ids?.length) out.amenity_ids = values.amenity_ids;
-
-    if (values.is_active === "true") out.is_active = true;
-    if (values.is_active === "false") out.is_active = false;
-
-    onApply?.(out);
-  });
-
-  const handleCancel = () => {
-    form.reset();
-    onCancel?.();
   };
 
   async function filterapply(values: FilterValues) {
@@ -159,6 +132,9 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
 
     if (values.location_id) apiUrl.push(`location=${values.location_id}`);
     if (values.capacity) apiUrl.push(`min_capacity=${values.capacity}`);
+    if (values.amenity_ids.length) {
+      apiUrl.push(`amenities=${values.amenity_ids.join(",")}`);
+    }
 
     console.log("API URL:", apiUrl.join("&"));
     try {
@@ -213,7 +189,7 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
                             }
                             options={locations.map((l) => ({
                               label: l.name,
-                              value: String(l.id),
+                              value: String(l.name),
                             }))}
                           />
                         </FormControl>
@@ -280,14 +256,14 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
                       amenities.map((a) => {
                         const selected = (
                           form.watch("amenity_ids") ?? []
-                        ).includes(a.id);
+                        ).includes(a.name);
                         return (
                           <label key={a.id} className="flex items-center gap-2">
                             <input
                               type="checkbox"
                               className="h-4 w-4"
                               checked={selected}
-                              onChange={() => toggleAmenity(a.id)}
+                              onChange={() => toggleAmenity(a.name)}
                             />
                             <span>{a.name}</span>
                           </label>
@@ -341,7 +317,7 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
                 type="button"
                 variant="outline"
                 className="px-6"
-                onClick={handleCancel}
+                onClick={() => {}}
               >
                 Cancel
               </Button>
