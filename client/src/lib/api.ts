@@ -1,11 +1,7 @@
 "use client";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-<<<<<<< HEAD
 import type { RefreshResponse } from "./api-types";
-=======
-import type { RefreshResponse } from "./apiTypes";
->>>>>>> 625ecba (Type refresh token API response in axios interceptor)
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -184,10 +180,6 @@ const logout = () => {
 
 export default api;
 export { logout, setAccessToken };
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 625ecba (Type refresh token API response in axios interceptor)
 
 // Helper functions for typed API calls
 export async function apiGet<T>(url: string, config?: object): Promise<T> {
@@ -203,8 +195,3 @@ export async function apiPost<T, B = unknown>(
   const res = await api.post<T>(url, body, config);
   return res.data;
 }
-<<<<<<< HEAD
-=======
->>>>>>> 471397f (Enhance admin settings page, Add demo login component)
-=======
->>>>>>> 625ecba (Type refresh token API response in axios interceptor)
