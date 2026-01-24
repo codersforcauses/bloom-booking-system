@@ -7,7 +7,7 @@ export type Room = {
   availablility: string;
   seats: number;
   amenities: string[];
-  bookings: number;
+  bookings?: number;
   removed?: boolean;
 };
 
