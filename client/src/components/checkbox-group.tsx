@@ -63,8 +63,9 @@ CheckboxGroup.displayName = "CheckboxGroup";
 /**
  * CheckboxItem component for rendering a single checkbox. Must used within CheckboxGroup.
  */
-interface CheckboxItemProps
-  extends React.ComponentPropsWithoutRef<typeof Checkbox> {
+interface CheckboxItemProps extends React.ComponentPropsWithoutRef<
+  typeof Checkbox
+> {
   value: string;
 }
 
