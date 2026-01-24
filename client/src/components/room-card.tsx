@@ -178,8 +178,8 @@ function BookingRoomCard({ room, onBook }: BookingRoomProps) {
       </div>
 
       <div className="mt-auto flex justify-start px-4 pb-4">
-        <Button variant="outline" onClick={onBook} disabled={!room.available}>
-          {room.available ? "Book" : "Booked"}
+        <Button variant="outline" onClick={onBook}>
+          Book
         </Button>
       </div>
     </Card>
