@@ -118,18 +118,6 @@ export default function CustomRepeatModal({
           </div>
         )}
 
-        {/* Starts section */}
-        <div className="mb-4">
-          <InputField
-            kind="date"
-            name="startDate"
-            label="Starts"
-            value={startDate}
-            onChange={setStartDate}
-            placeholder="Fri 03/12/2021"
-          />
-        </div>
-
         {/* Ends section */}
         <div className="mb-4">
           <div className="body-sm-bold mb-2 block">Ends</div>
