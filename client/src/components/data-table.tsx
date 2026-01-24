@@ -71,7 +71,7 @@ export function DataTable<T extends { id: number }>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length + (showActions ? 1 : 0)}
-                  className="bg-white px-4 py-8 text-center text-gray-500"
+                  className="bg-white px-4 py-8 text-center text-2xl text-gray-500"
                 >
                   {isLoading ? "Loading..." : "No data available"}
                 </TableCell>
