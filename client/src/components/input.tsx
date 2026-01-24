@@ -10,8 +10,8 @@
 import { format } from "date-fns";
 import React from "react";
 
-import { Calendar } from "@/components/calendar";
 import Badge from "@/components/badge";
+import { Calendar } from "@/components/calendar";
 import {
   Popover,
   PopoverContent,
@@ -137,7 +137,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
   const wrapperClasses = ["space-y-1", className].filter(Boolean).join(" ");
   const fieldClasses = [
     "rounded-md border bg-background",
-    "shadow-[0_4px_0_0_#D1D5DB]",
+    "shadow-bloom-input",
     fieldClassName,
   ]
     .filter(Boolean)
