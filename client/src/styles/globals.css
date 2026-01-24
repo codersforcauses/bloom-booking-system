@@ -121,7 +121,7 @@
     @apply text-xs font-normal leading-5 tracking-wider underline;
   }
 
-   /* Used to offset the height of the navbar if centering a whole page */
+  /* Used to offset the height of the navbar if centering a whole page */
   .min-h-layout-header {
     min-height: calc(100vh - var(--layout-header-height));
   }
