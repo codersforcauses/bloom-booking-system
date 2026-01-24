@@ -362,9 +362,7 @@ class BookingViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("recurrence_rule", response.json())
 
-
     # ==================== PAGINATION TESTS ====================
-
     @patch('api.booking.views.create_event')
     def test_booking_listing_pagination(self, mock_create_event):
         """Test that booking listing supports pagination."""
@@ -425,7 +423,6 @@ class BookingViewTest(APITestCase):
         response = self.client.post('/api/bookings/', payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-
     def test_non_overlapping_recurring_bookings_allowed(self):
         Booking.objects.create(
             room=self.room,
@@ -449,7 +446,6 @@ class BookingViewTest(APITestCase):
         response = self.client.post('/api/bookings/', payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-
     def test_recurring_conflicts_with_one_time_booking(self):
         Booking.objects.create(
             room=self.room,
@@ -471,7 +467,6 @@ class BookingViewTest(APITestCase):
 
         response = self.client.post('/api/bookings/', payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
 
     def test_recurring_collision_within_366_day_window(self):
         start = future_date.replace(hour=10) + timedelta(days=350)
@@ -497,7 +492,6 @@ class BookingViewTest(APITestCase):
 
         response = self.client.post('/api/bookings/', payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
 
     def test_same_time_different_recurrence_patterns_conflict(self):
         Booking.objects.create(
