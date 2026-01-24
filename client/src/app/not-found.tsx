@@ -3,12 +3,12 @@ import Link from "next/link";
 
 const NotFound = () => {
   return (
-    <div className="min-h-layout-header left-0 top-0 flex w-screen flex-col items-center justify-center space-y-4 bg-white">
-      <div className="relative my-20 flex items-center justify-center">
+    <div className="min-h-layout-header left-0 top-0 flex w-screen flex-col items-center justify-center space-y-4 bg-white px-8 text-center">
+      <div className="relative flex items-center justify-center md:my-20">
         <h1 className="animate-float my-10 text-[120px] font-semibold leading-none text-primary">
           Oops!
         </h1>
-        <h1 className="absolute text-[250px] font-bold leading-none text-primary/5">
+        <h1 className="absolute hidden text-[250px] font-bold leading-none text-primary/5 md:block">
           404
         </h1>
       </div>
