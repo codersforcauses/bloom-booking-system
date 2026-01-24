@@ -12,38 +12,6 @@ import { Room } from "@/types/card";
 import FilterPopOver from "./filterbutton";
 import RoomContext from "./roomContext";
 
-type ApiListResponse<T> = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-};
-
-type ApiRoom = {
-  id: number;
-  name: string;
-  img: string | null;
-  location: { id: number; name: string } | null;
-  capacity: number | null;
-  amenities: { id: number; name: string }[];
-  is_active: boolean;
-  start_datetime?: string;
-  end_datetime?: string;
-  recurrence_rule?: string | null;
-};
-
-const FALLBACK_IMG =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="800" height="500">
-      <rect width="100%" height="100%" fill="#f2f2f2"/>
-      <rect x="60" y="70" width="680" height="360" rx="18" fill="#e6e6e6"/>
-      <text x="50%" y="52%" text-anchor="middle" font-family="Arial" font-size="36" fill="#9a9a9a">
-        Room
-      </text>
-    </svg>
-  `);
-
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [allRooms, setAllRooms] = useState<Room[]>([]);
