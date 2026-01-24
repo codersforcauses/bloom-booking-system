@@ -4,11 +4,8 @@ export type Room = {
   img: string;
   location: string;
   is_active: boolean;
-  // availablility: string;
   capacity: number;
   amenities: string[];
-  // bookings: number;
-  // removed?: boolean;
 };
 
 const defaultImage =
@@ -22,10 +19,7 @@ export const roomsMock: Room[] = [
     capacity: 4,
     location: "Pune Hinjewadi",
     is_active: true,
-    // availablility: "8:00am - 5:00pm, Mon - Fri",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
-    // bookings: 10,
-    // removed: true,
   },
   {
     id: 2,
@@ -34,9 +28,7 @@ export const roomsMock: Room[] = [
     capacity: 8,
     location: "St Catherine's college, 2 Park Road",
     is_active: false,
-    // availablility: "8:00am - 7:00pm, Mon - Fri",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
-    // bookings: 5,
   },
   {
     id: 3,
@@ -45,9 +37,7 @@ export const roomsMock: Room[] = [
     capacity: 8,
     location: "UNIT-1B PNQ- HJ",
     is_active: true,
-    // availablility: "9:00am - 5:00pm, Mon - Fri",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
-    // bookings: 3,
   },
   {
     id: 4,
@@ -56,10 +46,7 @@ export const roomsMock: Room[] = [
     capacity: 4,
     location: "St Catherine's college, 2 Park Road",
     is_active: true,
-    // availablility: "12;00pm - 7:00pm, Wed - Fri",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
-    // bookings: 8,
-    // removed: true,
   },
   {
     id: 5,
@@ -68,9 +55,7 @@ export const roomsMock: Room[] = [
     capacity: 4,
     location: "UNIT-1B PNQ- HJ",
     is_active: false,
-    // availablility: "10:00am - 4:00pm, Mon - Tues",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
-    // bookings: 7,
   },
   {
     id: 6,
@@ -79,8 +64,6 @@ export const roomsMock: Room[] = [
     capacity: 4,
     location: "Pune Hinjewadi",
     is_active: true,
-    // availablility: "9:00am - 3:00pm, Mon - Thurs",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
-    // bookings: 5,
   },
 ];
