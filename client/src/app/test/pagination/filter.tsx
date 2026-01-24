@@ -36,18 +36,25 @@ export function FilterPopover({
 }: FilterPopoverProps) {
   const [open, setOpen] = useState(false);
 
-  const [selectedRooms, setSelectedRooms] = useState<string[]>(
-    initialFilters?.room_ids ? initialFilters.room_ids.split(",") : [],
-  );
-  const [visitorName, setVisitorName] = useState(
-    initialFilters?.visitor_name ?? "",
-  );
-  const [visitorEmail, setVisitorEmail] = useState(
-    initialFilters?.visitor_email ?? "",
-  );
+  // Temporary state inside the popover
+  const [tempRooms, setTempRooms] = useState<string[]>([]);
+  const [tempVisitorName, setTempVisitorName] = useState("");
+  const [tempVisitorEmail, setTempVisitorEmail] = useState("");
+
+  // Sync temp state when popover opens
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) {
+      setTempRooms(
+        initialFilters?.room_ids ? initialFilters.room_ids.split(",") : [],
+      );
+      setTempVisitorName(initialFilters?.visitor_name ?? "");
+      setTempVisitorEmail(initialFilters?.visitor_email ?? "");
+    }
+    setOpen(isOpen);
+  };
 
   const toggleRoom = (roomId: string) => {
-    setSelectedRooms((prev) =>
+    setTempRooms((prev) =>
       prev.includes(roomId)
         ? prev.filter((id) => id !== roomId)
         : [...prev, roomId],
@@ -56,21 +63,21 @@ export function FilterPopover({
 
   const handleApply = () => {
     onApply({
-      room_ids: selectedRooms.length ? selectedRooms.join(",") : undefined,
-      visitor_name: visitorName || undefined,
-      visitor_email: visitorEmail || undefined,
+      room_ids: tempRooms.length ? tempRooms.join(",") : undefined,
+      visitor_name: tempVisitorName || undefined,
+      visitor_email: tempVisitorEmail || undefined,
     });
   };
 
   // Automatically open sections that have active filters
   const defaultValue = [
-    ...(selectedRooms.length ? ["room"] : []),
-    ...(visitorName ? ["visitor_name"] : []),
-    ...(visitorEmail ? ["visitor_email"] : []),
+    ...(tempRooms.length ? ["room"] : []),
+    ...(tempVisitorName ? ["visitor_name"] : []),
+    ...(tempVisitorEmail ? ["visitor_email"] : []),
   ];
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -109,7 +116,7 @@ export function FilterPopover({
                       <Input
                         type="checkbox"
                         className="h-4 w-4"
-                        checked={selectedRooms.includes(String(room.id))}
+                        checked={tempRooms.includes(String(room.id))}
                         onChange={() => toggleRoom(String(room.id))}
                       />
                       <span>{room.name}</span>
@@ -127,8 +134,8 @@ export function FilterPopover({
               <AccordionContent>
                 <Input
                   type="text"
-                  value={visitorName}
-                  onChange={(e) => setVisitorName(e.target.value)}
+                  value={tempVisitorName}
+                  onChange={(e) => setTempVisitorName(e.target.value)}
                   placeholder="Visitor Name"
                   className="w-full rounded border px-2 py-1 text-sm"
                 />
@@ -143,8 +150,8 @@ export function FilterPopover({
               <AccordionContent>
                 <Input
                   type="text"
-                  value={visitorEmail}
-                  onChange={(e) => setVisitorEmail(e.target.value)}
+                  value={tempVisitorEmail}
+                  onChange={(e) => setTempVisitorEmail(e.target.value)}
                   placeholder="Visitor Email"
                   className="w-full rounded border px-2 py-1 text-sm"
                 />
