@@ -154,45 +154,6 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
     onCancel?.();
   };
 
-  const FALLBACK_IMG =
-    "data:image/svg+xml;utf8," +
-    encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="800" height="500">
-      <rect width="100%" height="100%" fill="#f2f2f2"/>
-      <rect x="60" y="70" width="680" height="360" rx="18" fill="#e6e6e6"/>
-      <text x="50%" y="52%" text-anchor="middle" font-family="Arial" font-size="36" fill="#9a9a9a">
-        Room
-      </text>
-    </svg>
-  `);
-
-  function mapRoomNames(data: any[]): string[] {
-    return (data ?? []).map((r: any) => r?.name || "Untitled Room");
-  }
-
-  function mapRooms(data: ApiRoom[]): Room[] {
-    return (data ?? []).map((r) => {
-      const isActive = r?.is_active ?? false;
-
-      // bandaid string until backend provides real "open hours" etc.
-      const availabilityStr = isActive ? "Active" : "Inactive";
-
-      return {
-        id: r.id,
-        title: r.name || "Untitled Room",
-        image: r.img || FALLBACK_IMG,
-        location: r.location?.name || "Unknown",
-        seats: r.capacity ?? 0,
-        amenities: mapRoomNames(r.amenities ?? []),
-        bookings: 0,
-        removed: false,
-
-        available: isActive,
-        availablility: availabilityStr,
-      };
-    });
-  }
-
   async function filterapply(values: FilterValues) {
     const apiUrl: string[] = [];
 
@@ -203,7 +164,7 @@ export default function RoomFilterAccordion({ onApply, onCancel }: Props) {
     try {
       const res = await api.get(`/rooms/?${apiUrl.join("&")}`);
       console.log(res.data.results);
-      setRooms(mapRooms(res.data.results));
+      setRooms(res.data.results);
     } catch (err) {
       console.error(err);
     }
