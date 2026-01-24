@@ -168,14 +168,16 @@ export default function Home() {
       <div className="col-span-1 lg:col-span-3">
         <h2 className="title mb-4">Rooms Availability</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {rooms.length > 0
-            ? rooms.map((room) => (
-                <BookingRoomCard
-                  key={room.id}
-                  room={room}
-                  onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
-                />
-              ))
+          {rooms.filter((room) => room.available).length > 0
+            ? rooms
+                .filter((room) => room.available)
+                .map((room) => (
+                  <BookingRoomCard
+                    key={room.id}
+                    room={room}
+                    onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
+                  />
+                ))
             : !loading && (
                 <p className="col-span-1 lg:col-span-3">
                   No rooms found. Please try again.
