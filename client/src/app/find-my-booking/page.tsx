@@ -34,7 +34,7 @@ export default function FindMyBookingPage() {
   }
 
   return (
-    <div className="mx-auto flex h-screen flex-col items-center justify-center space-y-6 bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))]">
+    <div className="min-h-layout-header mx-auto flex flex-col items-center justify-center space-y-6 bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))]">
       <form
         className="flex flex-col items-center justify-center gap-8"
         action={searchBookings}
