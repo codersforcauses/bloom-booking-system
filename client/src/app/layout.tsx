@@ -23,9 +23,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         data-gr-ext-disabled="forever"
       >
         <Providers>
-          <Navbar />
-          <BreadcrumbLayout />
-          {children}
+          <div className="h-full min-h-screen">
+            <Navbar />
+            <BreadcrumbLayout />
+            {children}
+          </div>
         </Providers>
       </body>
     </html>

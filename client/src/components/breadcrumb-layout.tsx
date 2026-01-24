@@ -23,5 +23,5 @@ export default function BreadcrumbLayout() {
   const pathname = usePathname();
   const breadcrumbs = generateBreadcrumbs(pathname);
 
-  return <Breadcrumb items={breadcrumbs} className="px-6 py-4" />;
+  return <Breadcrumb items={breadcrumbs} className="px-6 pt-4" />;
 }
