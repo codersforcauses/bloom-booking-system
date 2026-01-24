@@ -1,6 +1,8 @@
 "use client";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
+import type { RefreshResponse } from "./api-types";
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 if (!BACKEND_URL) {
@@ -116,9 +118,11 @@ api.interceptors.response.use(
       }
 
       // IMPORTANT: use axios here to avoid interceptor loops
-      const res = await axios.post(`${BACKEND_URL}/users/refresh/`, {
-        refresh: refreshToken,
-      });
+      // CHANGED: type the refresh response
+      const res = await axios.post<RefreshResponse>(
+        `${BACKEND_URL}/users/refresh/`,
+        { refresh: refreshToken },
+      );
 
       const newAccessToken = res.data.access;
       if (!newAccessToken) {
@@ -173,3 +177,18 @@ const logout = () => {
 
 export default api;
 export { logout, setAccessToken };
+
+// Helper functions for typed API calls
+export async function apiGet<T>(url: string, config?: object): Promise<T> {
+  const res = await api.get<T>(url, config);
+  return res.data;
+}
+
+export async function apiPost<T, B = unknown>(
+  url: string,
+  body?: B,
+  config?: object,
+): Promise<T> {
+  const res = await api.post<T>(url, body, config);
+  return res.data;
+}
