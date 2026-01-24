@@ -64,8 +64,8 @@ export default function Navbar() {
 
       {/* mobile hamburger */}
       {open && (
-        <div className="absolute left-0 top-full max-h-screen w-full overflow-y-auto bg-white md:hidden">
-          <div className="flex h-full flex-col items-end gap-6 px-8 py-6">
+        <div className="absolute left-0 top-full min-h-screen w-full overflow-y-auto bg-white md:hidden">
+          <div className="flex min-h-screen flex-col items-center gap-6 px-8 py-6">
             <Link href="/">
               <Button variant="outline">Book room</Button>
             </Link>
