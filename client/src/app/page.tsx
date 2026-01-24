@@ -15,7 +15,14 @@ import { RoomResponse } from "@/lib/api-types";
 import { Room } from "@/types/card";
 
 // helper function to bridge the gap between api room data and arguments of BookingRoomCard
-export function normalizeRooms(apiRooms: RoomResponse[]) {
+export function normalizeRooms(
+  apiRooms: RoomResponse[],
+  apiAvailabilities: Record<string, unknown>[],
+) {
+  // turn list to map
+  const availabilityMap = Object.fromEntries(
+    apiAvailabilities.map((a: any) => [a.room_id, a.availability]),
+  );
   return apiRooms.map((apiRoom) => ({
     id: apiRoom.id,
     title: apiRoom.name,
@@ -26,7 +33,7 @@ export function normalizeRooms(apiRooms: RoomResponse[]) {
       apiRoom.amenities?.map(
         (amenity: Record<string, unknown>) => amenity.name as string,
       ) ?? [],
-    available: true, // suppose that availability handled by the backend
+    available: availabilityMap[apiRoom.id] ?? true,
   }));
 }
 
@@ -35,6 +42,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [nextAvailabilityUrl, setNextAvailabilityUrl] = useState<string | null>(
+    null,
+  );
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const form = useForm<RoomSearchSchemaValue>({
@@ -54,7 +64,6 @@ export default function Home() {
   });
 
   // Handle search form submission
-
   async function onSubmit(data: RoomSearchSchemaValue) {
     const params: Record<string, unknown> = {};
 
@@ -73,24 +82,42 @@ export default function Home() {
     if (data.minSeats != null) params.min_capacity = data.minSeats;
     if (data.maxSeats != null) params.max_capacity = data.maxSeats;
 
-    // to do: date & time filtering logic to be confirmed with backend team
+    if (data.fromDate && data.fromTime) {
+      const fromDateStr = data.fromDate.toLocaleDateString("en-CA");
+      params.start_datetime = fromDateStr + "T" + data.fromTime + ":00";
+    }
 
-    await fetchRooms("/rooms/", params);
+    if (data.toDate && data.toTime) {
+      const toDateStr = data.toDate.toLocaleDateString("en-CA");
+      params.end_datetime = toDateStr + "T" + data.toTime + ":00";
+    }
+
+    await fetchRooms("/rooms/", "/rooms/availability/", params);
   }
 
   // Reset search form and initial roomlist
   const onReset = () => {
     form.reset();
-    fetchRooms("/rooms/");
+    fetchRooms("/rooms/", "/rooms/availability/");
   };
 
   // Fetch Rooms (Scroll down to get next page)
   const fetchRooms = useCallback(
-    async (url: string, params?: Record<string, unknown>) => {
+    async (
+      url: string,
+      availabilityUrl: string,
+      params?: Record<string, unknown>,
+    ) => {
       setLoading(true);
       try {
-        const { data } = await api.get(url, { params });
-        const newRooms = normalizeRooms(data.results);
+        // fetch room data and availability data parallelly
+        const [roomsRes, availabilityRes] = await Promise.all([
+          api.get(url, { params }),
+          api.get(availabilityUrl, { params }),
+        ]);
+        const data = roomsRes.data;
+        const availabilityData = availabilityRes.data;
+        const newRooms = normalizeRooms(data.results, availabilityData.results);
         // if it is not the first page, append the data to the previous
         if (!data.previous) {
           setRooms(newRooms);
@@ -99,6 +126,7 @@ export default function Home() {
         }
         // set next url to prepare for pagination
         setNextUrl(data.next);
+        setNextAvailabilityUrl(availabilityData.next);
       } catch (error) {
         console.error("Failed to fetch rooms", error);
         // Reset to a safe empty state on error
@@ -113,7 +141,7 @@ export default function Home() {
 
   // initial load
   useEffect(() => {
-    fetchRooms("/rooms/");
+    fetchRooms("/rooms/", "/rooms/availability/");
   }, []);
 
   // handle pagination
@@ -121,9 +149,9 @@ export default function Home() {
     if (!loadMoreRef.current) return;
     const observer = new IntersectionObserver((observedItems) => {
       const marker = observedItems[0];
-      if (marker.isIntersecting && nextUrl && !loading) {
+      if (marker.isIntersecting && nextUrl && nextAvailabilityUrl && !loading) {
         // if the marker is visible, nextUrl exists, and no fetch is in progress
-        fetchRooms(nextUrl);
+        fetchRooms(nextUrl, nextAvailabilityUrl);
       }
     });
     observer.observe(loadMoreRef.current);
