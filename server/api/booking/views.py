@@ -332,5 +332,11 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "dateTime": booking.end_datetime.isoformat(),
                 "timeZone": "Australia/Perth",
             },
-            "recurrence": [f"RRULE:{booking.recurrence_rule}"] if booking.recurrence_rule else []
+            "recurrence": [f"RRULE:{booking.recurrence_rule}"] if booking.recurrence_rule else [],
+            # Add for the filtering of events to render in frontend calendar
+            "extendedProperties": {
+                "private": {       # frontend and backend must use the same service account. Else, change to 'shared'.
+                    "roomId": str(booking.room.id)
+                }
+            }
         }
