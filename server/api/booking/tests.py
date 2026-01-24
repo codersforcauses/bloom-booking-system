@@ -315,23 +315,53 @@ class BookingViewTest(APITestCase):
 
     # ==================== VALIDATION TESTS ====================
 
-    def test_booking_create_fails_with_end_before_start(self):
-        """Test that booking creation fails when end_datetime is before start_datetime."""
-        payload = {
+    def _base_payload(self):
+        return {
             "room_id": self.room.id,
-            "visitor_name": "Test User",
-            "visitor_email": "test@example.com",
-            "start_datetime": future_date.replace(hour=14, minute=0, second=0, microsecond=0) + timedelta(days=3),
-            # Before start
-            "end_datetime": future_date.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=3),
-            "recurrence_rule": ""
+            "visitor_name": "RRULE User",
+            "visitor_email": "rrule@example.com",
+            "start_datetime": future_date.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=10),
+            "end_datetime": future_date.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=10),
         }
 
-        url = '/api/bookings/'
-        response = self.client.post(url, payload, format='json')
+    def test_rrule_with_count_is_valid(self):
+        payload = self._base_payload()
+        payload["recurrence_rule"] = "FREQ=WEEKLY;COUNT=5"
 
+        response = self.client.post('/api/bookings/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_rrule_with_until_is_valid(self):
+        payload = self._base_payload()
+        payload["recurrence_rule"] = "FREQ=WEEKLY;UNTIL=20260501T000000Z"
+
+        response = self.client.post('/api/bookings/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_rrule_with_count_and_until_fails(self):
+        payload = self._base_payload()
+        payload["recurrence_rule"] = "FREQ=WEEKLY;COUNT=5;UNTIL=20260501T000000Z"
+
+        response = self.client.post('/api/bookings/', payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("end_datetime", response.json())
+        self.assertIn("recurrence_rule", response.json())
+
+    def test_rrule_without_count_or_until_fails(self):
+        payload = self._base_payload()
+        payload["recurrence_rule"] = "FREQ=WEEKLY"
+
+        response = self.client.post('/api/bookings/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("recurrence_rule", response.json())
+
+    def test_rrule_with_invalid_freq_fails(self):
+        payload = self._base_payload()
+        payload["recurrence_rule"] = "FREQ=HOURLY;COUNT=5"
+
+        response = self.client.post('/api/bookings/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("recurrence_rule", response.json())
+
 
     # ==================== PAGINATION TESTS ====================
 
@@ -369,3 +399,125 @@ class BookingViewTest(APITestCase):
 
         # Should limit results (default pagination is typically 10-20)
         self.assertLessEqual(len(data["results"]), 20)
+
+    # ==================== RECURRING COLLISION TESTS ====================
+
+    def test_overlapping_recurring_bookings_detected(self):
+        Booking.objects.create(
+            room=self.room,
+            visitor_name="Recurring A",
+            visitor_email="a@test.com",
+            start_datetime=future_date.replace(hour=10),
+            end_datetime=future_date.replace(hour=11),
+            recurrence_rule="FREQ=WEEKLY;COUNT=5",
+            status="CONFIRMED"
+        )
+
+        payload = {
+            "room_id": self.room.id,
+            "visitor_name": "Recurring B",
+            "visitor_email": "b@test.com",
+            "start_datetime": future_date.replace(hour=10),
+            "end_datetime": future_date.replace(hour=11),
+            "recurrence_rule": "FREQ=WEEKLY;COUNT=5",
+        }
+
+        response = self.client.post('/api/bookings/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_non_overlapping_recurring_bookings_allowed(self):
+        Booking.objects.create(
+            room=self.room,
+            visitor_name="Recurring A",
+            visitor_email="a@test.com",
+            start_datetime=future_date.replace(hour=9),
+            end_datetime=future_date.replace(hour=10),
+            recurrence_rule="FREQ=WEEKLY;COUNT=5",
+            status="CONFIRMED"
+        )
+
+        payload = {
+            "room_id": self.room.id,
+            "visitor_name": "Recurring B",
+            "visitor_email": "b@test.com",
+            "start_datetime": future_date.replace(hour=11),
+            "end_datetime": future_date.replace(hour=12),
+            "recurrence_rule": "FREQ=WEEKLY;COUNT=5",
+        }
+
+        response = self.client.post('/api/bookings/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+    def test_recurring_conflicts_with_one_time_booking(self):
+        Booking.objects.create(
+            room=self.room,
+            visitor_name="One Time",
+            visitor_email="once@test.com",
+            start_datetime=future_date.replace(hour=14),
+            end_datetime=future_date.replace(hour=15),
+            status="CONFIRMED"
+        )
+
+        payload = {
+            "room_id": self.room.id,
+            "visitor_name": "Recurring",
+            "visitor_email": "rec@test.com",
+            "start_datetime": future_date.replace(hour=14),
+            "end_datetime": future_date.replace(hour=15),
+            "recurrence_rule": "FREQ=WEEKLY;COUNT=3",
+        }
+
+        response = self.client.post('/api/bookings/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_recurring_collision_within_366_day_window(self):
+        start = future_date.replace(hour=10) + timedelta(days=350)
+
+        Booking.objects.create(
+            room=self.room,
+            visitor_name="Far Recurring",
+            visitor_email="far@test.com",
+            start_datetime=start,
+            end_datetime=start + timedelta(hours=1),
+            recurrence_rule="FREQ=WEEKLY;COUNT=5",
+            status="CONFIRMED"
+        )
+
+        payload = {
+            "room_id": self.room.id,
+            "visitor_name": "New Recurring",
+            "visitor_email": "new@test.com",
+            "start_datetime": start,
+            "end_datetime": start + timedelta(hours=1),
+            "recurrence_rule": "FREQ=WEEKLY;COUNT=5",
+        }
+
+        response = self.client.post('/api/bookings/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_same_time_different_recurrence_patterns_conflict(self):
+        Booking.objects.create(
+            room=self.room,
+            visitor_name="Biweekly",
+            visitor_email="bi@test.com",
+            start_datetime=future_date.replace(hour=15),
+            end_datetime=future_date.replace(hour=16),
+            recurrence_rule="FREQ=WEEKLY;INTERVAL=2;COUNT=6",
+            status="CONFIRMED"
+        )
+
+        payload = {
+            "room_id": self.room.id,
+            "visitor_name": "Weekly",
+            "visitor_email": "wk@test.com",
+            "start_datetime": future_date.replace(hour=15),
+            "end_datetime": future_date.replace(hour=16),
+            "recurrence_rule": "FREQ=WEEKLY;COUNT=10",
+        }
+
+        response = self.client.post('/api/bookings/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

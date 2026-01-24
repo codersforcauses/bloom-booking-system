@@ -65,9 +65,14 @@ class BookingSerializer(DynamicFieldsModelSerializer):
             room = room or self.instance.room
             recurrence_rule = recurrence_rule or self.instance.recurrence_rule
 
+        if recurrence_rule == "":
+            recurrence_rule = None
+            data['recurrence_rule'] = None
+
         # validate recurrence_rule (Google Calendar RFC 5545 format)
         if recurrence_rule:
             # MUST start with FREQ= and have valid values for it
+            # This is to keep consistent with other apis. Technically starting with COUNT followed by FREQ is valid.
             if not re.match(r'^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;.*)?$', recurrence_rule):
                 raise serializers.ValidationError({
                     'recurrence_rule': 'RRULE must start with FREQ= and use DAILY/WEEKLY/MONTHLY/YEARLY.'
@@ -120,34 +125,51 @@ class BookingSerializer(DynamicFieldsModelSerializer):
 
             # helper: same one used in the availability api
             def _expand_recurrences(base_start_datetime, rrule_str, rdate_list=None, exdate_list=None):
-                # Convert DTSTART to local timezone (where the recurrence rule apply)
-                start_local = localtime(base_start_datetime)
+                tz = timezone.get_current_timezone()
+                start_local = timezone.localtime(base_start_datetime, tz)
+
                 rrule_set = rruleset()
                 if rrule_str:
                     rrule_set.rrule(rrulestr(rrule_str, dtstart=start_local))
+
                 if rdate_list:
                     for dt in rdate_list:
+                        dt = timezone.localtime(dt, tz) if timezone.is_aware(dt) else timezone.make_aware(dt, tz)
                         rrule_set.rdate(dt)
+
                 if exdate_list:
                     for dt in exdate_list:
+                        dt = timezone.localtime(dt, tz) if timezone.is_aware(dt) else timezone.make_aware(dt, tz)
                         rrule_set.exdate(dt)
+
                 return rrule_set
 
             # helper: returns list[(start,end)] for this booking inside a window
             def _booking_intervals(b_start, b_end, b_rrule, window_start, window_end):
+                tz = timezone.get_current_timezone()
+
+                # Normalise all inputs to the same tz (and ensure aware)
+                b_start = timezone.localtime(b_start, tz)
+                b_end = timezone.localtime(b_end, tz)
+
+                # If window_* are aware, just normalise; if they're dates/naive, make them aware explicitly
+                if isinstance(window_start, datetime):
+                    window_start = timezone.localtime(window_start, tz) if timezone.is_aware(window_start) else timezone.make_aware(window_start, tz)
+                else:
+                    window_start = timezone.make_aware(datetime.combine(window_start, time.min), tz)
+
+                if isinstance(window_end, datetime):
+                    window_end = timezone.localtime(window_end, tz) if timezone.is_aware(window_end) else timezone.make_aware(window_end, tz)
+                else:
+                    window_end = timezone.make_aware(datetime.combine(window_end, time.max), tz)
+
                 duration = b_end - b_start
+
                 if b_rrule:
-                    occ_starts = _expand_recurrences(
-                        localtime(b_start),
-                        b_rrule,
-                    ).between(
-                        make_aware(datetime.combine(
-                            window_start.date(), time.min)),
-                        make_aware(datetime.combine(
-                            window_end.date(), time.max)),
-                    )
-                    return [(localtime(s), localtime(s) + duration) for s in occ_starts]
-                return [(localtime(b_start), localtime(b_end))]
+                    occ_starts = _expand_recurrences(b_start, b_rrule).between(window_start, window_end)
+                    return [(s, s + duration) for s in occ_starts]
+
+                return [(b_start, b_end)]
 
             # build the window for the new booking
             new_duration = end_datetime - start_datetime
@@ -180,9 +202,16 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                 # exclude cancelled bookings
                 status__in=['CONFIRMED', 'COMPLETED'],
             ).filter(
-                Q(recurrence_rule__isnull=False) |
-                # window overlap for one-offs
-                Q(start_datetime__lt=window_end, end_datetime__gt=window_start)
+                Q(
+                    recurrence_rule__isnull=False,
+                    start_datetime__lt=window_end,
+                ) |
+                # one-off bookings: standard window overlap check
+                Q(
+                    recurrence_rule__isnull=True,
+                    start_datetime__lt=window_end,
+                    end_datetime__gt=window_start,
+                )
             )
 
             # For updates, exclude the current booking being updated
