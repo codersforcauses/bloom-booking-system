@@ -82,6 +82,7 @@ type DateFieldProps = BaseFieldProps & {
   kind: "date";
   value: Date | undefined;
   onChange: (value: Date | undefined) => void;
+  disabledDates?: Date[];
 };
 
 type TimeFieldProps = BaseFieldProps & {
@@ -291,6 +292,7 @@ function renderDateFieldControl(props: DateFieldProps) {
           mode="single"
           selected={props.value}
           onSelect={props.onChange}
+          disabled={props.disabledDates}
           initialFocus
         />
       </PopoverContent>
