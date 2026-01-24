@@ -59,10 +59,6 @@ function BookRoomForm() {
         .string("This is a required field.")
         .min(1, "This is a required field."),
       email: z.email("Must be a valid email address."),
-      title: z
-        .string("This is a required field.")
-        .min(1, "This is a required field."),
-      description: z.string().optional(),
       date: z.date("Must be a valid date.").min(
         new Date().setDate(new Date().getDate() - 1), // Yesterday's date
         "Cannot be a date in the past.",
@@ -123,12 +119,6 @@ function BookRoomForm() {
       start_datetime: formatDateTime(data.date, data.start_time),
       end_datetime: formatDateTime(data.date, data.end_time),
       recurrence_rule: "",
-      /*
-      The below fields are not used by the API (at this point) but are
-      fields of the form so are included here for future use.
-      */
-      booking_title: data.title,
-      booking_description: data.description,
     };
     const alert_dialog_props = {
       title: "",
@@ -194,6 +184,25 @@ function BookRoomForm() {
       });
   }
 
+  async function fetchAvailability() {
+    const start_date = new Date().toISOString().substring(0, 10);
+    const end_date = new Date(new Date().setDate(new Date().getDate() + 30))
+      .toISOString()
+      .substring(0, 10);
+    const apiUrl = `rooms/${room_id}/availability/?start_date=${start_date}&end_date=${end_date}`;
+    api({ url: apiUrl, method: "get" })
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
+  useEffect(() => {
+    fetchAvailability();
+  }, []);
+
   return (
     <Form
       form={form}
@@ -243,46 +252,6 @@ function BookRoomForm() {
           )}
         />
       </div>
-      <div className="flex flex-row">
-        <FormField
-          name="title"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <InputField
-                  kind="text"
-                  required={true}
-                  name="title"
-                  label="Title of the booking"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-      <FormField
-        name="description"
-        control={form.control}
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <InputField
-                kind="text"
-                required={false}
-                name="description"
-                label="Description of the booking (Optional)"
-                value={field.value}
-                onChange={field.onChange}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
       <div className="flex flex-row gap-3">
         <FormField
           name="date"
@@ -297,6 +266,7 @@ function BookRoomForm() {
                   label="Date"
                   value={field.value}
                   onChange={field.onChange}
+                  disabledDates={[]}
                 />
               </FormControl>
               <FormMessage />
