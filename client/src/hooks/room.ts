@@ -3,43 +3,32 @@ import { AxiosError } from "axios";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
-import { RoomAmenity, RoomLocation } from "@/types/room";
+import {
+  AmenityResponse,
+  PaginatedAmenityResponse,
+  PaginatedRoomResponse,
+  RoomResponse,
+} from "@/lib/api-types";
 
-// Rooms Locations API hooks
-type FetchRoomLocationsResponse = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: RoomLocation[];
-};
-
-type PaginationResponse<T> = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-};
-
-function useFetchRooms<T>(params: PaginationSearchParams) {
+function useFetchRooms(params: PaginationSearchParams) {
   const { page = 1, nrows = 10, search } = params;
 
   const offset = (page - 1) * nrows;
 
-  const { data, isLoading, isError, error, refetch } = useQuery<
-    PaginationResponse<T>
-  >({
-    queryKey: ["rooms", page, nrows, search, offset],
-    queryFn: async () => {
-      const response = await api.get("/rooms/", {
-        params: {
-          limit: nrows,
-          offset,
-          ...(search ? { search } : {}),
-        },
-      });
-      return response.data;
-    },
-  });
+  const { data, isLoading, isError, error, refetch } =
+    useQuery<PaginatedRoomResponse>({
+      queryKey: ["rooms", page, nrows, search, offset],
+      queryFn: async () => {
+        const response = await api.get("/rooms/", {
+          params: {
+            limit: nrows,
+            offset,
+            ...(search ? { search } : {}),
+          },
+        });
+        return response.data;
+      },
+    });
 
   const totalPages = data ? Math.ceil(data.count / nrows) : 1;
 
@@ -59,7 +48,7 @@ function useFetchRoomLocations(params: PaginationSearchParams) {
   const offset = (page - 1) * nrows;
 
   const { data, isLoading, isError, error, refetch } =
-    useQuery<FetchRoomLocationsResponse>({
+    useQuery<PaginatedRoomResponse>({
       queryKey: ["room-locations", offset, nrows, search, customParams],
       queryFn: async () => {
         const response = await api.get("/locations/", {
@@ -87,7 +76,7 @@ function useFetchRoomLocations(params: PaginationSearchParams) {
 }
 
 function useFetchRoomLocation(id?: number) {
-  return useQuery<RoomLocation, AxiosError>({
+  return useQuery<RoomResponse, AxiosError>({
     queryKey: ["room-location", id],
     enabled: Boolean(id),
     queryFn: async () => {
@@ -98,7 +87,7 @@ function useFetchRoomLocation(id?: number) {
 }
 
 function useCreateRoomLocation() {
-  return useMutation<RoomLocation, AxiosError, { name: string }>({
+  return useMutation<RoomResponse, AxiosError, { name: string }>({
     mutationFn: async (payload) => {
       const response = await api.post("/locations/", payload);
       return response.data;
@@ -107,7 +96,7 @@ function useCreateRoomLocation() {
 }
 
 function useUpdateRoomLocation(id: number) {
-  return useMutation<RoomLocation, AxiosError, { name: string }>({
+  return useMutation<RoomResponse, AxiosError, { name: string }>({
     mutationFn: async (payload) => {
       const response = await api.patch(`/locations/${id}/`, payload);
       return response.data;
@@ -123,20 +112,12 @@ function useDeleteRoomLocation() {
   });
 }
 
-// Amenities Locations API hooks
-type FetchRoomAmenitiesResponse = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: RoomAmenity[];
-};
-
 function useFetchRoomAmenities(params: PaginationSearchParams) {
   const { page = 1, nrows = 5, search, ...customParams } = params;
   const offset = (page - 1) * nrows;
 
   const { data, isLoading, isError, error, refetch } =
-    useQuery<FetchRoomAmenitiesResponse>({
+    useQuery<PaginatedAmenityResponse>({
       queryKey: ["room-amenities", offset, nrows, search, customParams],
       queryFn: async () => {
         const response = await api.get("/amenities/", {
@@ -164,7 +145,7 @@ function useFetchRoomAmenities(params: PaginationSearchParams) {
 }
 
 function useFetchRoomAmenity(id?: number) {
-  return useQuery<RoomAmenity, AxiosError>({
+  return useQuery<AmenityResponse, AxiosError>({
     queryKey: ["room-amenity", id],
     enabled: Boolean(id),
     queryFn: async () => {
@@ -175,7 +156,7 @@ function useFetchRoomAmenity(id?: number) {
 }
 
 function useCreateRoomAmenity() {
-  return useMutation<RoomAmenity, AxiosError, { name: string }>({
+  return useMutation<AmenityResponse, AxiosError, { name: string }>({
     mutationFn: async (payload) => {
       const response = await api.post("/amenities/", payload);
       return response.data;
@@ -184,7 +165,7 @@ function useCreateRoomAmenity() {
 }
 
 function useUpdateRoomAmenity(id: number) {
-  return useMutation<RoomAmenity, AxiosError, { name: string }>({
+  return useMutation<AmenityResponse, AxiosError, { name: string }>({
     mutationFn: async (payload) => {
       const response = await api.patch(`/amenities/${id}/`, payload);
       return response.data;

@@ -16,13 +16,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { RoomResponse } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
-import { BookingRoom } from "@/types/booking";
 
 import { CustomFetchBookingParams } from "./page";
 
 type FilterPopoverProps = {
-  rooms: BookingRoom[];
+  rooms: RoomResponse[];
   initialFilters?: CustomFetchBookingParams;
   onApply: (filters: CustomFetchBookingParams) => void;
   className?: string;
@@ -37,7 +37,7 @@ export function FilterPopover({
   const [open, setOpen] = useState(false);
 
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
-    initialFilters?.room ? initialFilters.room.split(",") : [],
+    initialFilters?.room_ids ? initialFilters.room_ids.split(",") : [],
   );
   const [visitorName, setVisitorName] = useState(
     initialFilters?.visitor_name ?? "",
@@ -56,11 +56,10 @@ export function FilterPopover({
 
   const handleApply = () => {
     onApply({
-      room: selectedRooms.length ? selectedRooms.join(",") : undefined,
+      room_ids: selectedRooms.length ? selectedRooms.join(",") : undefined,
       visitor_name: visitorName || undefined,
       visitor_email: visitorEmail || undefined,
     });
-    setOpen(false);
   };
 
   // Automatically open sections that have active filters
@@ -157,7 +156,7 @@ export function FilterPopover({
         {/* Footer */}
         <div className="flex justify-end gap-3 border-t px-4 py-3">
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            Close
           </Button>
           <Button onClick={handleApply}>Apply</Button>
         </div>

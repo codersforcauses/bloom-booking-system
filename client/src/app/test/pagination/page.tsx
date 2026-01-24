@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import { DownloadCsvButton } from "@/components/download-csv-button";
 import InputField from "@/components/input";
 import {
@@ -13,7 +14,7 @@ import {
 } from "@/components/pagination-bar";
 import { useFetchBookings } from "@/hooks/booking";
 import { useFetchRooms } from "@/hooks/room";
-import { BookingRoom } from "@/types/booking";
+import { resolveErrorMessage } from "@/lib/utils";
 
 import { FilterPopover } from "./filter";
 import DemoTable from "./table";
@@ -28,7 +29,7 @@ import DemoTable from "./table";
  * This allows reuse across FE and BE while keeping strong typing.
  */
 export type CustomFetchBookingParams = PaginationSearchParams & {
-  room?: string;
+  room_ids?: string;
   visitor_email?: string;
   visitor_name?: string;
 };
@@ -66,7 +67,7 @@ export default function PaginationDemo() {
    * - This state is what we send to the backend
    */
   const [searchParams, setSearchParams] = useState<CustomFetchBookingParams>({
-    room: "",
+    room_ids: "",
     visitor_email: "",
     visitor_name: "",
     ...urlVisibleParams,
@@ -74,7 +75,7 @@ export default function PaginationDemo() {
 
   const { data, isLoading, totalPages } = useFetchBookings(searchParams);
   // fetch all rooms
-  const { data: rooms = [] } = useFetchRooms<BookingRoom>({
+  const { data: rooms = [] } = useFetchRooms({
     page: 1,
     nrows: 1000,
   });
@@ -110,6 +111,32 @@ export default function PaginationDemo() {
     router.push(`${pathname}?${toQueryString(urlParams)}`);
   };
 
+  /**
+   * Single page-wide AlertDialog
+   *
+   * - Only one AlertDialog is mounted for the whole page
+   * - State is managed here (open, variant, title, description)
+   * - `showAlert` is passed to child components (buttons, table actions, exports)
+   * - Use it to show success, error, or confirm messages without creating multiple dialogs
+   *
+   * Example:
+   * showAlert("success", "Success", "CSV exported successfully")
+   */
+  const [alert, setAlert] = useState<{
+    open: boolean;
+    variant: AlertDialogVariant;
+    title?: string;
+    description?: string;
+  }>({ open: false, variant: "success" });
+
+  const showAlert = (
+    variant: AlertDialogVariant,
+    title: string,
+    desc: string,
+  ) => setAlert({ open: true, variant, title, description: desc });
+
+  const onClose = () => setAlert((prev) => ({ ...prev, open: false }));
+
   return (
     <div className="w-full rounded-xl bg-gray-100 p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -125,7 +152,16 @@ export default function PaginationDemo() {
             className="w-80 space-y-0"
           />
 
-          <DownloadCsvButton path="/bookings/" fileName="bookings-export.csv" />
+          <DownloadCsvButton
+            path="/bookings/"
+            fileName="bookings-export.csv"
+            onSuccess={() =>
+              showAlert("success", "Success", "CSV exported successfully!")
+            }
+            onError={(err) =>
+              showAlert("error", "Error", resolveErrorMessage(err))
+            }
+          />
 
           <FilterPopover
             rooms={rooms}
@@ -136,7 +172,7 @@ export default function PaginationDemo() {
         </div>
       </div>
 
-      <DemoTable data={data} isLoading={isLoading} />
+      <DemoTable data={data} isLoading={isLoading} showAlert={showAlert} />
 
       <PaginationBar
         page={page}
@@ -148,6 +184,14 @@ export default function PaginationDemo() {
         onRowChange={(newNrows) =>
           pushParams({ nrows: Number(newNrows), page: 1 })
         }
+      />
+      <AlertDialog
+        open={alert.open}
+        variant={alert.variant}
+        title={alert.title}
+        description={alert.description}
+        onConfirm={onClose}
+        onClose={onClose}
       />
     </div>
   );

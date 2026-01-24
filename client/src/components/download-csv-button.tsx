@@ -10,10 +10,16 @@ import { cn } from "@/lib/utils";
 type DownloadCsvButtonProps = {
   path: string;
   fileName: string;
+  onSuccess?: () => void;
+  onError?: (err: unknown) => void;
 };
 
-// TODO: add alert-dialog once issue #76 merged
-export function DownloadCsvButton({ path, fileName }: DownloadCsvButtonProps) {
+export function DownloadCsvButton({
+  path,
+  fileName,
+  onSuccess,
+  onError,
+}: DownloadCsvButtonProps) {
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams.toString());
   // remove pagination params
@@ -41,8 +47,9 @@ export function DownloadCsvButton({ path, fileName }: DownloadCsvButtonProps) {
 
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error downloading CSV:", error);
+      onSuccess?.();
+    } catch (err) {
+      onError?.(err);
     }
   };
 
