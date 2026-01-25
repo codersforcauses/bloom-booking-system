@@ -90,3 +90,19 @@ export type RoomAvailabilityResponse = {
 // for /rooms/availability/ endpoint
 export type PaginatedRoomAvailabilityResponse =
   PaginatedResponse<RoomAvailabilityResponse>;
+
+export type TimeSlot = {
+  start: string;
+  end: string;
+};
+
+export type DayAvailability = {
+  date: string;
+  slots: TimeSlot[];
+};
+
+// for /rooms/{id}/availability/ endpoint
+export type RoomAvailabilityDetailResponse = {
+  room_id: number;
+  availability: DayAvailability[];
+};

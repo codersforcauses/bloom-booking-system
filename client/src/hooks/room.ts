@@ -320,8 +320,10 @@ function useDeleteRoomAmenity() {
   });
 }
 
+type ApiError = { message?: string; detail?: string };
+
 function useFetchRoom(id: number) {
-  return useQuery<RoomResponse, AxiosError>({
+  return useQuery<RoomResponse, AxiosError<ApiError>>({
     queryKey: ["room", id], // for caching
     enabled: Boolean(id),
     queryFn: async () => {
