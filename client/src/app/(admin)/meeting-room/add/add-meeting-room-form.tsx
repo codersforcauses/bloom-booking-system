@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import CustomRepeatModal from "@/app/meeting-room/add/custom-repeat";
+import CustomRepeatModal from "@/app/(admin)/meeting-room/add/custom-repeat";
 import { CheckboxGroup, CheckboxItem } from "@/components/checkbox-group";
 import InputField from "@/components/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import RoomAPI from "@/hooks/room";
 import { Room } from "@/types/card";
 
 import LocationModal from "./add-location";
@@ -47,6 +48,12 @@ export default function AddMeetingRoomForm() {
     "Speaker Phone",
   ];
 
+  // Fetch locations dynamically
+  const { data: locations = [] } = RoomAPI.useFetchRoomLocations({
+    page: 1,
+    nrows: 100,
+  });
+
   const handleInputChange = (field: keyof Room, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -78,9 +85,7 @@ export default function AddMeetingRoomForm() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
 
@@ -91,11 +96,9 @@ export default function AddMeetingRoomForm() {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to add room");
-      }
+      if (!response.ok) throw new Error("Failed to add room");
 
-      router.push("/meeting-room");
+      router.push("/dashboard");
     } catch (error) {
       console.error("Failed to add room:", error);
       alert("Failed to add room. Please try again.");
@@ -105,8 +108,14 @@ export default function AddMeetingRoomForm() {
   };
 
   const handleCancel = () => {
-    router.push("/meeting-room");
+    router.push("/dashboard");
   };
+
+  // Build dynamic location options
+  const locationOptions = [
+    ...locations.map((l) => ({ label: l.name, value: l.name })),
+    { label: "+ Add location", value: ADD_LOCATION_VALUE },
+  ];
 
   return (
     <div className="min-h-screen bg-[hsl(var(--secondary))] py-6">
@@ -127,6 +136,7 @@ export default function AddMeetingRoomForm() {
                 required
                 error={errors.title}
               />
+
               <InputField
                 kind="select"
                 name="location"
@@ -138,27 +148,22 @@ export default function AddMeetingRoomForm() {
                     setAddLocationOpen(true);
                     return;
                   }
-
                   handleInputChange("location", value);
                 }}
-                options={[
-                  { label: "Crawley", value: "Crawley" },
-                  { label: "Curtin", value: "Curtin" },
-                  {
-                    label: "+ Add location",
-                    value: ADD_LOCATION_VALUE,
-                  },
-                ]}
+                options={locationOptions}
                 required
                 error={errors.location}
               />
+
               <LocationModal
                 open={addLocationOpen}
-                onOpenChange={setAddLocationOpen}
-                onConfirm={(newLocation) => {
-                  handleInputChange("location", newLocation);
+                onClose={() => setAddLocationOpen(false)}
+                onSelect={(location) => {
+                  handleInputChange("location", location);
+                  setAddLocationOpen(false);
                 }}
               />
+
               <InputField
                 kind="number"
                 name="seats"
@@ -290,16 +295,15 @@ export default function AddMeetingRoomForm() {
                 }}
               />
 
-              {/* Custom Repeat Modal */}
               {showCustomRepeat && (
                 <CustomRepeatModal
                   open={showCustomRepeat}
                   onClose={() => {
                     setShowCustomRepeat(false);
-                    setRepeat(""); // Option 1 reset
+                    setRepeat("");
                   }}
                   onDone={(value) => {
-                    setCustomRepeat(value); // save custom data
+                    setCustomRepeat(value);
                     setRepeat("custom");
                     setShowCustomRepeat(false);
                   }}
