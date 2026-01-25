@@ -320,15 +320,12 @@ function useDeleteRoomAmenity() {
   });
 }
 
-// copied from issue 115
-type ApiError = { message?: string; detail?: string };
-
-function useFetchRoom(roomId: number) {
-  return useQuery<RoomResponse, AxiosError<ApiError>>({
-    queryKey: ["room", roomId],
-    enabled: roomId > 0,
+function useFetchRoom(id: number) {
+  return useQuery<RoomResponse, AxiosError>({
+    queryKey: ["room", id], // for caching
+    enabled: Boolean(id),
     queryFn: async () => {
-      const response = await api.get(`/rooms/${roomId}/`);
+      const response = await api.get(`/rooms/${id}/`);
       return response.data;
     },
   });
