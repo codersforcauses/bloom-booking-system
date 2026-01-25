@@ -9,7 +9,7 @@ export default function AddMeetingRoomPage() {
       <Breadcrumb
         items={[
           { label: "Dashboard", href: "/dashboard" },
-          { label: "Meeting Room", href: "/meeting-room" },
+          { label: "Meeting Room", href: "/dashboard" },
           { label: "Add Meeting Room" },
         ]}
       />
