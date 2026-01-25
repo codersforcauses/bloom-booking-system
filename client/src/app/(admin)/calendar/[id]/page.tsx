@@ -19,7 +19,7 @@ import {
 } from "date-fns";
 import { enAU } from "date-fns/locale";
 import { useParams, useRouter } from "next/navigation";
-import React, { useCallback,useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Calendar,
   dateFnsLocalizer,
@@ -34,7 +34,7 @@ import { RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import RoomAPI from "@/hooks/room";
 import { useRoomEvents } from "@/hooks/useRoomEvents";
-import { getAvailableSlots,normalizeRoom } from "@/lib/room-utils";
+import { getAvailableSlots, normalizeRoom } from "@/lib/room-utils";
 import { cn } from "@/lib/utils";
 
 const PERTH_TZ = "Australia/Perth";
