@@ -1,12 +1,17 @@
-import fs from "fs";
+import { TZDate } from "@date-fns/tz";
+import { endOfDay, startOfDay } from "date-fns";
 import { calendar_v3, google } from "googleapis";
 import { NextResponse } from "next/server";
 import path from "path";
+
+const PERTH_TZ = "Australia/Perth";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const roomId = searchParams.get("roomId");
+    const startParam = searchParams.get("timeMin");
+    const endParam = searchParams.get("timeMax");
 
     if (
       !process.env.GOOGLE_APPLICATION_CREDENTIALS ||
@@ -46,6 +51,16 @@ export async function GET(request: Request) {
       orderBy: "startTime",
       privateExtendedProperty: [`roomId=${roomId}`], // use sharedExtendedProperty if using different service accounts
     };
+
+    if (startParam) {
+      const perthStart = startOfDay(new TZDate(startParam, PERTH_TZ));
+      queryParams.timeMin = perthStart.toISOString();
+    }
+
+    if (endParam) {
+      const perthEnd = endOfDay(new TZDate(endParam, PERTH_TZ));
+      queryParams.timeMax = perthEnd.toISOString();
+    }
 
     const response = await calendar.events.list(queryParams);
     return NextResponse.json(response.data.items || []);
