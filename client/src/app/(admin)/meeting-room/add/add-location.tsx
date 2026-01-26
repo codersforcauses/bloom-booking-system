@@ -18,7 +18,7 @@ type View = "list" | "form";
 type LocationModalProps = {
   open: boolean;
   onClose: () => void;
-  onSelect: (location: string) => void;
+  onSelect: (location: string | number) => void;
 };
 
 export default function LocationModal({
@@ -50,13 +50,20 @@ export default function LocationModal({
 
   const handleSubmit = async (value: string) => {
     try {
+      let createdLocation;
       if (editingItem) {
         await updateLocation.mutateAsync({ name: value });
       } else {
-        await createLocation.mutateAsync({ name: value });
+        createdLocation = await createLocation.mutateAsync({ name: value });
       }
 
       queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+
+      // If creating a new location, pass the location ID back to parent
+      if (createdLocation && !editingItem) {
+        onSelect(createdLocation.id);
+      }
+
       setView("list");
       setEditingItem(null);
     } catch (err) {
@@ -99,7 +106,7 @@ export default function LocationModal({
           {view === "list" && (
             <AdminSettingsTableCard
               title="Locations"
-              items={locations}
+              items={isLoading ? [] : locations}
               onAdd={() => setView("form")}
               onBack={closeModal}
               onEditItem={(item) => {
