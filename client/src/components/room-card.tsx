@@ -14,6 +14,9 @@ import { Room } from "@/types/card";
 
 import { Button } from "./ui/button";
 
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-family='sans-serif' font-size='20'>No image</text></svg>";
+
 // Mapping amenity string -> React icon component
 const amenityIcons: Record<string, React.JSX.Element> = {
   Default: <GrStatusUnknown size={16} />,
@@ -102,7 +105,7 @@ function RoomCard({ room }: { room: Room; hideIcon?: boolean }) {
       <div className="w-full p-4">
         <div className="relative h-40 w-full">
           <Image
-            src={room.image}
+            src={room.image || PLACEHOLDER_IMAGE} //  if room.image is null, render PLACEHOLDER_IMAGE
             alt={room.title}
             fill
             className="object-cover"
@@ -160,7 +163,7 @@ function BookingRoomCard({ room, onBook }: BookingRoomProps) {
     <Card className="flex w-full flex-col overflow-hidden rounded-xl border-black bg-white shadow-md">
       <div className="relative h-40 w-full">
         <Image
-          src={room.image}
+          src={room.image || PLACEHOLDER_IMAGE} //  if room.image is null, render PLACEHOLDER_IMAGE
           alt={room.title}
           fill
           className="object-cover"
@@ -175,11 +178,8 @@ function BookingRoomCard({ room, onBook }: BookingRoomProps) {
       </div>
 
       <div className="mt-auto flex justify-start px-4 pb-4">
-        <Button
-          className="h-[38px] w-[88px] rounded-[10px] border border-black bg-white py-2 text-black hover:bg-gray-100"
-          onClick={onBook}
-        >
-          {room.available ? "Book" : "Booked"}
+        <Button variant="outline" onClick={onBook}>
+          Book
         </Button>
       </div>
     </Card>
@@ -249,7 +249,7 @@ function AdminRoomCard({
       {/* Room Image */}
       <div className="relative h-40 w-full">
         <Image
-          src={room.image}
+          src={room.image || PLACEHOLDER_IMAGE} //  if room.image is null, render PLACEHOLDER_IMAGE
           alt={room.title}
           fill
           className="object-cover"

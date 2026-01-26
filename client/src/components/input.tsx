@@ -145,10 +145,10 @@ const InputField: React.FC<InputFieldProps> = (props) => {
   const isTimeSelect = kind === "time-select";
   const timeSelectProps = isTimeSelect ? (props as TimeSelectFieldProps) : null;
 
-  const wrapperClasses = ["space-y-1", className].filter(Boolean).join(" ");
+  const wrapperClasses = ["space-y-2", className].filter(Boolean).join(" ");
   const fieldClasses = [
     "rounded-md border bg-background",
-    "shadow-[0_4px_0_0_#D1D5DB]",
+    "shadow-bloom-input",
     fieldClassName,
   ]
     .filter(Boolean)
@@ -180,7 +180,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
     <div className={cn(wrapperClasses)}>
       <label htmlFor={name} className="body-sm-bold block">
         {label}
-        {required && <span className="text-[var(--bloom-red)]"> *</span>}
+        {required && <span className="text-bloom-red"> *</span>}
       </label>
 
       <div className={fieldClasses}>{control}</div>
@@ -214,7 +214,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
         </div>
       )}
 
-      {error && <p className="caption text-[var(--bloom-red)]">{error}</p>}
+      {error && <p className="caption text-bloom-red">{error}</p>}
     </div>
   );
 };
@@ -226,7 +226,7 @@ function renderTextFieldControl(props: TextFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
+      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
       placeholder={props.placeholder ?? "Text"}
@@ -239,7 +239,7 @@ function renderNumberFieldControl(props: NumberFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
+      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
       placeholder={props.placeholder ?? "Number"}
@@ -280,7 +280,7 @@ function renderDateFieldControl(props: DateFieldProps) {
       <PopoverTrigger
         className={
           "body w-full bg-transparent px-3 py-2 text-left outline-none " +
-          (!hasValue ? "text-[var(--bloom-gray)]" : "")
+          (!hasValue ? "text-bloom-gray" : "")
         }
       >
         {label}
@@ -329,7 +329,7 @@ function renderTimeFieldControl(props: TimeFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
+      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
       value={props.value}
       onChange={(e) => handleChange(e.target.value)}
       placeholder={props.placeholder ?? "HH:MM"}
@@ -360,7 +360,7 @@ function renderBadgeFieldControl(props: BadgeFieldProps) {
   return (
     <div className="flex min-h-[38px] flex-wrap items-center gap-2 px-1.5 py-1.5">
       {props.value.length === 0 ? (
-        <span className="body mx-1.5 text-[var(--bloom-gray)] opacity-100">
+        <span className="body mx-1.5 text-bloom-gray opacity-100">
           {props.placeholder ?? "Select amenities"}
         </span>
       ) : (
@@ -372,7 +372,7 @@ function renderBadgeFieldControl(props: BadgeFieldProps) {
               onClick={() =>
                 props.onChange(props.value.filter((v) => v !== item))
               }
-              className="ml-1 text-[var(--bloom-red)] hover:opacity-80"
+              className="ml-1 text-bloom-red hover:opacity-80"
             >
               ×
             </button>
@@ -422,7 +422,7 @@ function renderSearchFieldControl(props: SearchFieldProps, name: string) {
 
 function renderNotImplementedControl(kind: FieldKind) {
   return (
-    <div className="body-sm text-[var(--bloom-red)]">
+    <div className="body-sm text-bloom-red">
       Not implemented yet: <span className="font-mono">{kind}</span>
     </div>
   );
