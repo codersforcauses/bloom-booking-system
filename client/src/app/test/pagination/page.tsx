@@ -13,7 +13,7 @@ import {
   toQueryString,
 } from "@/components/pagination-bar";
 import { useFetchBookings } from "@/hooks/booking";
-import { useFetchRooms } from "@/hooks/room";
+import { RoomShortResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
 import { FilterPopover } from "./filter";
@@ -32,6 +32,7 @@ export type CustomFetchBookingParams = PaginationSearchParams & {
   room_ids?: string;
   visitor_email?: string;
   visitor_name?: string;
+  _selectedRooms?: RoomShortResponse[];
 };
 
 export default function PaginationDemo() {
@@ -70,15 +71,11 @@ export default function PaginationDemo() {
     room_ids: "",
     visitor_email: "",
     visitor_name: "",
+    _selectedRooms: [],
     ...urlVisibleParams,
   });
 
   const { data, isLoading, totalPages } = useFetchBookings(searchParams);
-  // fetch all rooms
-  const { data: rooms = [] } = useFetchRooms({
-    page: 1,
-    nrows: 1000,
-  });
 
   // Sync URL params to state
   useEffect(() => {
@@ -149,7 +146,7 @@ export default function PaginationDemo() {
             value={searchParams.search || ""}
             placeholder="Search Name"
             onSearch={(val) => pushParams({ search: val })}
-            className="w-80 space-y-0"
+            className="w-full space-y-0"
           />
 
           <DownloadCsvButton
@@ -164,9 +161,17 @@ export default function PaginationDemo() {
           />
 
           <FilterPopover
-            rooms={rooms}
             initialFilters={searchParams}
-            onApply={(filters) => pushParams(filters)}
+            selectedRooms={searchParams._selectedRooms || []}
+            onApply={(
+              filters: CustomFetchBookingParams,
+              rooms: RoomShortResponse[],
+            ) => {
+              pushParams({
+                ...filters,
+                _selectedRooms: rooms,
+              });
+            }}
             className="border-bloom-blue text-bloom-blue"
           />
         </div>

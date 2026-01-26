@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FaFilter } from "react-icons/fa";
 
+import { RoomCombobox } from "@/components/room-combobox";
 import {
   Accordion,
   AccordionContent,
@@ -16,57 +17,55 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { RoomResponse } from "@/lib/api-types";
+import { RoomShortResponse } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 
 import { CustomFetchBookingParams } from "./page";
 
 type FilterPopoverProps = {
-  rooms: RoomResponse[];
+  selectedRooms?: RoomShortResponse[];
   initialFilters?: CustomFetchBookingParams;
-  onApply: (filters: CustomFetchBookingParams) => void;
+  onApply: (
+    filters: CustomFetchBookingParams,
+    rooms: RoomShortResponse[],
+  ) => void;
   className?: string;
 };
 
 export function FilterPopover({
-  rooms,
   initialFilters,
+  selectedRooms = [],
   onApply,
   className,
 }: FilterPopoverProps) {
   const [open, setOpen] = useState(false);
 
   // Temporary state inside the popover
-  const [tempRooms, setTempRooms] = useState<string[]>([]);
+  const [tempRooms, setTempRooms] = useState<RoomShortResponse[]>([]);
   const [tempVisitorName, setTempVisitorName] = useState("");
   const [tempVisitorEmail, setTempVisitorEmail] = useState("");
 
   // Sync temp state when popover opens
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
-      setTempRooms(
-        initialFilters?.room_ids ? initialFilters.room_ids.split(",") : [],
-      );
+      setTempRooms(selectedRooms);
       setTempVisitorName(initialFilters?.visitor_name ?? "");
       setTempVisitorEmail(initialFilters?.visitor_email ?? "");
     }
     setOpen(isOpen);
   };
 
-  const toggleRoom = (roomId: string) => {
-    setTempRooms((prev) =>
-      prev.includes(roomId)
-        ? prev.filter((id) => id !== roomId)
-        : [...prev, roomId],
-    );
-  };
-
   const handleApply = () => {
-    onApply({
-      room_ids: tempRooms.length ? tempRooms.join(",") : undefined,
-      visitor_name: tempVisitorName || undefined,
-      visitor_email: tempVisitorEmail || undefined,
-    });
+    onApply(
+      {
+        room_ids: tempRooms.length
+          ? tempRooms.map((r) => String(r.id)).join(",")
+          : undefined,
+        visitor_name: tempVisitorName || undefined,
+        visitor_email: tempVisitorEmail || undefined,
+      },
+      tempRooms,
+    );
     setOpen(false);
   };
 
@@ -92,7 +91,7 @@ export function FilterPopover({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[360px] p-0">
+      <PopoverContent className="w-80 p-0">
         {/* Header */}
         <div className="border-b px-4 py-3">
           <h2 className="text-base font-semibold">Filter</h2>
@@ -111,19 +110,7 @@ export function FilterPopover({
                 Room
               </AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-2 pl-1 text-sm">
-                  {rooms.map((room) => (
-                    <label key={room.id} className="flex items-center gap-2">
-                      <Input
-                        type="checkbox"
-                        className="h-4 w-4"
-                        checked={tempRooms.includes(String(room.id))}
-                        onChange={() => toggleRoom(String(room.id))}
-                      />
-                      <span>{room.name}</span>
-                    </label>
-                  ))}
-                </div>
+                <RoomCombobox value={tempRooms} onChange={setTempRooms} />
               </AccordionContent>
             </AccordionItem>
 

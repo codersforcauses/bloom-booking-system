@@ -9,7 +9,7 @@ import {
   PaginatedAmenityResponse,
   PaginatedLocationResponse,
   PaginatedRoomResponse,
-  RoomResponse,
+  RoomShortResponse,
 } from "@/lib/api-types";
 
 function useFetchRooms(params: PaginationSearchParams) {
@@ -46,7 +46,7 @@ function useFetchRooms(params: PaginationSearchParams) {
 }
 
 function useSearchRooms(search?: string, limit = 20) {
-  return useQuery<RoomResponse[]>({
+  return useQuery<RoomShortResponse[]>({
     queryKey: ["rooms", search, limit],
     queryFn: async () => {
       const response = await api.get("/rooms/", {
@@ -106,7 +106,7 @@ function useFetchRoomLocation(id?: number) {
 
 function useCreateRoomLocation() {
   return useMutation<LocationResponse, AxiosError, { name: string }>({
-    mutationFn: async (payload) => {
+    mutationFn: async (payload: { name: string }) => {
       const response = await api.post("/locations/", payload);
       return response.data;
     },
@@ -115,7 +115,7 @@ function useCreateRoomLocation() {
 
 function useUpdateRoomLocation(id: number) {
   return useMutation<LocationResponse, AxiosError, { name: string }>({
-    mutationFn: async (payload) => {
+    mutationFn: async (payload: { name: string }) => {
       const response = await api.patch(`/locations/${id}/`, payload);
       return response.data;
     },
@@ -124,7 +124,7 @@ function useUpdateRoomLocation(id: number) {
 
 function useDeleteRoomLocation() {
   return useMutation<void, AxiosError, number>({
-    mutationFn: async (id) => {
+    mutationFn: async (id: number) => {
       await api.delete(`/locations/${id}/`);
     },
   });
@@ -175,7 +175,7 @@ function useFetchRoomAmenity(id?: number) {
 
 function useCreateRoomAmenity() {
   return useMutation<AmenityResponse, AxiosError, { name: string }>({
-    mutationFn: async (payload) => {
+    mutationFn: async (payload: { name: string }) => {
       const response = await api.post("/amenities/", payload);
       return response.data;
     },
@@ -184,7 +184,7 @@ function useCreateRoomAmenity() {
 
 function useUpdateRoomAmenity(id: number) {
   return useMutation<AmenityResponse, AxiosError, { name: string }>({
-    mutationFn: async (payload) => {
+    mutationFn: async (payload: { name: string }) => {
       const response = await api.patch(`/amenities/${id}/`, payload);
       return response.data;
     },
@@ -193,7 +193,7 @@ function useUpdateRoomAmenity(id: number) {
 
 function useDeleteRoomAmenity() {
   return useMutation<void, AxiosError, number>({
-    mutationFn: async (id) => {
+    mutationFn: async (id: number) => {
       await api.delete(`/amenities/${id}/`);
     },
   });

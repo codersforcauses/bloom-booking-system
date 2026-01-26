@@ -35,7 +35,7 @@ export type RoomResponse = {
   is_active: boolean;
 };
 
-type RoomShortResponse = {
+export type RoomShortResponse = {
   id: number;
   name: string;
 };

@@ -9,16 +9,21 @@ export function useFetchBookings(params: PaginationSearchParams) {
 
   const offset = (page - 1) * nrows;
 
+  // Exclude keys that start with "_"
+  const filteredParams = Object.fromEntries(
+    Object.entries(customParams).filter(([key]) => !key.startsWith("_")),
+  );
+
   const { data, isLoading, isError, error, refetch } =
     useQuery<PaginatedBookingResponse>({
-      queryKey: ["bookings", page, nrows, search, offset, customParams],
+      queryKey: ["bookings", page, nrows, search, offset, filteredParams],
       queryFn: async () => {
         const response = await api.get("/bookings/", {
           params: {
             limit: nrows,
             offset,
             ...(search ? { search } : {}),
-            ...(customParams ? { ...customParams } : {}),
+            ...(filteredParams ? { ...filteredParams } : {}),
           },
         });
         return response.data;
