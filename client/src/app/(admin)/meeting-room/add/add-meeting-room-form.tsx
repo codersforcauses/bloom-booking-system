@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import CustomRepeatModal from "@/app/(admin)/meeting-room/add/custom-repeat";
-import { CheckboxGroup, CheckboxItem } from "@/components/checkbox-group";
 import InputField from "@/components/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,11 +17,9 @@ export default function AddMeetingRoomForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [value, setValue] = useState<string[]>([]);
 
   const [repeat, setRepeat] = useState<string>("");
   const [showCustomRepeat, setShowCustomRepeat] = useState(false);
-  const [customRepeat, setCustomRepeat] = useState<any>(null);
 
   const ADD_LOCATION_VALUE = "__add_location__";
   const [addLocationOpen, setAddLocationOpen] = useState(false);
@@ -36,6 +33,9 @@ export default function AddMeetingRoomForm() {
     available: true,
     availablility: "",
     bookings: 0,
+    start_datetime: "",
+    end_datetime: "",
+    recurrence_rule: "",
   });
 
   // Available amenities matching the screenshot
@@ -80,6 +80,22 @@ export default function AddMeetingRoomForm() {
       newErrors.seats = "Seat capacity is required";
     }
 
+    if (!formData.start_datetime?.toString().trim()) {
+      newErrors.start_datetime = "Start date/time is required";
+    }
+
+    if (!formData.end_datetime?.toString().trim()) {
+      newErrors.end_datetime = "End date/time is required";
+    }
+
+    if (formData.start_datetime && formData.end_datetime) {
+      const startTime = new Date(formData.start_datetime as string).getTime();
+      const endTime = new Date(formData.end_datetime as string).getTime();
+      if (endTime <= startTime) {
+        newErrors.end_datetime = "End time must be after start time";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -90,10 +106,29 @@ export default function AddMeetingRoomForm() {
     setIsSubmitting(true);
 
     try {
+      // Use FormData for multipart file upload
+      const formDataMultipart = new FormData();
+      formDataMultipart.append("name", formData.title || "");
+      formDataMultipart.append("location", formData.location || "");
+      formDataMultipart.append("capacity", (formData.seats || 0).toString());
+      formDataMultipart.append(
+        "amenities",
+        JSON.stringify(formData.amenities || []),
+      );
+      formDataMultipart.append("start_datetime", formData.start_datetime || "");
+      formDataMultipart.append("end_datetime", formData.end_datetime || "");
+      formDataMultipart.append(
+        "recurrence_rule",
+        formData.recurrence_rule || "",
+      );
+      if (imageFile) {
+        formDataMultipart.append("img", imageFile);
+      }
+
       const response = await fetch("/api/rooms", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: formDataMultipart,
+        // Don't set Content-Type header - browser will set it with boundary
       });
 
       if (!response.ok) throw new Error("Failed to add room");
@@ -113,7 +148,7 @@ export default function AddMeetingRoomForm() {
 
   // Build dynamic location options
   const locationOptions = [
-    ...locations.map((l) => ({ label: l.name, value: l.name })),
+    ...locations.map((l) => ({ label: l.name, value: l.id.toString() })),
     { label: "+ Add location", value: ADD_LOCATION_VALUE },
   ];
 
@@ -217,7 +252,34 @@ export default function AddMeetingRoomForm() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) {
+                        setImageFile(null);
+                        return;
+                      }
+
+                      // Validate file size (5MB limit)
+                      const maxSize = 5 * 1024 * 1024; // 5MB
+                      if (file.size > maxSize) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          image: "Image must be under 5MB",
+                        }));
+                        return;
+                      }
+
+                      // Clear error if file is valid
+                      if (errors.image) {
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.image;
+                          return newErrors;
+                        });
+                      }
+
+                      setImageFile(file);
+                    }}
                   />
                 </div>
 
@@ -236,42 +298,68 @@ export default function AddMeetingRoomForm() {
                 name="date"
                 label="Date"
                 placeholder="DD/MM/YYYY"
-                value={undefined}
+                value={
+                  formData.start_datetime
+                    ? new Date(formData.start_datetime as string)
+                    : undefined
+                }
                 onChange={(value) => {
-                  // Handle date change if needed
+                  if (!value) return;
+                  // Combine with existing time or use 09:00
+                  const dateStr = value.toISOString().split("T")[0];
+                  const time = formData.start_datetime
+                    ? (formData.start_datetime as string).split("T")[1] ||
+                      "09:00"
+                    : "09:00";
+                  const datetime = `${dateStr}T${time}`;
+                  handleInputChange("start_datetime", datetime);
                 }}
               />
 
               <InputField
                 kind="time-select"
                 name="timeSlotStart"
-                label="Time Slot"
+                label="Time Slot Start"
                 placeholder="Select"
-                value=""
+                value={
+                  formData.start_datetime
+                    ? (formData.start_datetime as string)
+                        .split("T")[1]
+                        ?.slice(0, 5) || ""
+                    : ""
+                }
                 onChange={(value) => {
-                  // Handle start time change
+                  // Combine with existing date
+                  const date = formData.start_datetime
+                    ? (formData.start_datetime as string).split("T")[0]
+                    : new Date().toISOString().split("T")[0];
+                  const datetime = `${date}T${value}`;
+                  handleInputChange("start_datetime", datetime);
                 }}
               />
 
               <InputField
                 kind="time-select"
                 name="timeSlotEnd"
-                label="Time Slot"
+                label="Time Slot End"
                 placeholder="Select"
-                value=""
+                value={
+                  formData.end_datetime
+                    ? (formData.end_datetime as string)
+                        .split("T")[1]
+                        ?.slice(0, 5) || ""
+                    : ""
+                }
                 onChange={(value) => {
-                  // Handle end time change
+                  // Use same date as start time
+                  const date = formData.start_datetime
+                    ? (formData.start_datetime as string).split("T")[0]
+                    : new Date().toISOString().split("T")[0];
+                  const datetime = `${date}T${value}`;
+                  handleInputChange("end_datetime", datetime);
                 }}
               />
             </div>
-
-            {/* Row 4: All day checkbox */}
-            <CheckboxGroup value={value} onValueChange={setValue}>
-              <div className="flex items-center gap-2">
-                <CheckboxItem value="allDay" id="allDay" />
-                <label className="body text-black">All day</label>
-              </div>
-            </CheckboxGroup>
 
             {/* Row 5: Repeat dropdown */}
             <div className="max-w-xs">
@@ -289,10 +377,21 @@ export default function AddMeetingRoomForm() {
                 ]}
                 onChange={(value) => {
                   setRepeat(value);
+
+                  // Convert to RRULE format
+                  const rruleMap: Record<string, string> = {
+                    none: "",
+                    daily: "FREQ=DAILY",
+                    weekly: "FREQ=WEEKLY",
+                    custom: "", // Will be set by modal
+                  };
+                  handleInputChange("recurrence_rule", rruleMap[value] || "");
+
                   if (value === "custom") {
                     setShowCustomRepeat(true);
                   }
                 }}
+                error={errors.recurrence_rule}
               />
 
               {showCustomRepeat && (
@@ -303,8 +402,42 @@ export default function AddMeetingRoomForm() {
                     setRepeat("");
                   }}
                   onDone={(value) => {
-                    setCustomRepeat(value);
                     setRepeat("custom");
+
+                    // Convert custom repeat to RRULE format
+                    let rrule = `FREQ=${value.frequency.toUpperCase()}`;
+                    if (value.interval && value.interval !== "1") {
+                      rrule += `;INTERVAL=${value.interval}`;
+                    }
+                    if (value.frequency === "week" && value.days?.length) {
+                      // Convert day abbreviations to RRULE format (MO, TU, WE, etc.)
+                      const dayMap: Record<string, string> = {
+                        mon: "MO",
+                        tue: "TU",
+                        wed: "WE",
+                        thu: "TH",
+                        fri: "FR",
+                        sat: "SA",
+                        sun: "SU",
+                      };
+                      const byday = value.days
+                        .map((d: string) => dayMap[d] || d)
+                        .join(",");
+                      rrule += `;BYDAY=${byday}`;
+                    }
+
+                    // Add end condition
+                    if (value.endType === "on" && value.endDate) {
+                      const endDateStr = new Date(value.endDate)
+                        .toISOString()
+                        .split("T")[0]
+                        .replace(/-/g, "");
+                      rrule += `;UNTIL=${endDateStr}`;
+                    } else if (value.endType === "after" && value.occurrences) {
+                      rrule += `;COUNT=${value.occurrences}`;
+                    }
+
+                    handleInputChange("recurrence_rule", rrule);
                     setShowCustomRepeat(false);
                   }}
                 />
