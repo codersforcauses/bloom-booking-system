@@ -66,3 +66,12 @@ export type PaginatedRoomResponse = PaginatedResponse<RoomResponse>;
 export type PaginatedBookingResponse = PaginatedResponse<BookingResponse>;
 
 export type PingResponse = string;
+
+export type RoomAvailabilityResponse = {
+  room_id: number;
+  availability: boolean;
+};
+
+// for /rooms/availability/ endpoint
+export type PaginatedRoomAvailabilityResponse =
+  PaginatedResponse<RoomAvailabilityResponse>;
