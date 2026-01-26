@@ -23,9 +23,100 @@ import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Room } from "@/types/card";
 
+interface RoomAvailability {
+  recurrence_rule: string;
+  start_datetime: Date;
+  end_datetime: Date;
+}
+
+// Converts google calendar day strings to 3 lettter day strings
+const GCDayConversion = new Map();
+GCDayConversion.set("MO", "Mon");
+GCDayConversion.set("TU", "Tue");
+GCDayConversion.set("WE", "Wed");
+GCDayConversion.set("TH", "Thu");
+GCDayConversion.set("FR", "Fri");
+GCDayConversion.set("SA", "Sat");
+GCDayConversion.set("SU", "Sun");
+
+// Convert between 3 letter day strings and their respective number
+const DayNumber = new Map();
+DayNumber.set("Mon", 0);
+DayNumber.set("Tue", 1);
+DayNumber.set("Wed", 2);
+DayNumber.set("Thu", 3);
+DayNumber.set("Fri", 4);
+DayNumber.set("Sat", 5);
+DayNumber.set("Sun", 6);
+DayNumber.set(0, "Mon");
+DayNumber.set(1, "Tue");
+DayNumber.set(2, "Wed");
+DayNumber.set(3, "Thu");
+DayNumber.set(4, "Fri");
+DayNumber.set(5, "Sat");
+DayNumber.set(6, "Sun");
+
+/**
+ * Combine a date object and a HH:MM time string to a ISO string
+ * @param date a Date object
+ * @param time a valid time in format HH:MM
+ * @returns a Date object with the same date as date param and time contained in time string
+ */
+function formatDateTime(date: Date, time: string) {
+  const full_date = new Date(date);
+  const time_split = time.split(":");
+  const hours = Number(time_split[0]);
+  const mins = Number(time_split[1]);
+  full_date.setHours(hours);
+  full_date.setMinutes(mins);
+  const iso_string = full_date.toISOString();
+  return iso_string;
+}
+
+/**
+ * Extracts the days from the BYDAY argument of a google calendar
+ * reccurence rule into an array.
+ * @param rrule A valid google calendar recurrence rule
+ * @returns An array of google calendar days e.g. ["MO","TU"]
+ */
+function getDaysFromRRule(rrule: string) {
+  if (rrule === undefined) return [];
+  const rule = rrule.startsWith("RRULE:") ? rrule.substring(7) : rrule;
+  const rule_info = rule.split(";");
+  for (let i = 0; i < rule_info.length; i++) {
+    if (rule_info[i].startsWith("BYDAY")) {
+      const days_str = rule_info[i].split("=")[1];
+      const days = days_str.split(",");
+      return days;
+    }
+  }
+  return [];
+}
+
+/**
+ * Return the time in 12 hour hour:minutes am/pm format
+ * @param datetime A valid Date object
+ * @returns a string in AM/PM time e.g. 9:00am, 10:00pm
+ */
+function getAMPMTimeString(datetime: Date) {
+  const hours = datetime.getHours();
+  const hours_str = hours > 12 ? `${hours - 12}` : `${hours}`;
+  const mins_str = datetime.getMinutes().toString().padStart(2, "0");
+  const suffix = hours > 12 ? "pm" : "am";
+  return `${hours_str}:${mins_str}${suffix}`;
+}
+
 function BookRoomForm() {
   const params = useParams();
   const room_id = Number(params.room_id);
+
+  const [roomAvailability, setRoomAvailability] = useState({
+    recurrence_rule: "RRULE:FREQ=WEEKLY;BYDAY:MO,TU,WE,TH,FR",
+    start_datetime: new Date(0).setHours(8),
+    end_datetime: new Date(0).setHours(17),
+  });
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+  const [disabledDates, setDisabledDates] = useState({});
 
   const [all_day, setAllDay] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -35,23 +126,6 @@ function BookRoomForm() {
     showIcon: false,
     isPending: false,
   });
-
-  /**
-   * Combine a date object and a HH:MM time string to a ISO string
-   * @param date a Date object
-   * @param time a valid time in format HH:MM
-   * @returns a Date object with the same date as date param and time contained in time string
-   */
-  function formatDateTime(date: Date, time: string) {
-    const full_date = new Date(date);
-    const time_split = time.split(":");
-    const hours = Number(time_split[0]);
-    const mins = Number(time_split[1]);
-    full_date.setHours(hours);
-    full_date.setMinutes(mins);
-    const iso_string = full_date.toISOString();
-    return iso_string;
-  }
 
   const formSchema = z
     .object({
@@ -182,16 +256,56 @@ function BookRoomForm() {
       });
   }
 
-  // TODO
-  async function fetchAvailability() {
+  /**
+   *
+   * @param rrule
+   */
+  function disableDaysOfWeekFromRRule(rrule: string) {
+    // Assumes availability pattern is weekly
+    const available_days_of_week = getDaysFromRRule(rrule).map((day) =>
+      DayNumber.get(GCDayConversion.get(day)),
+    );
+    const unavailable_days_of_week = [0, 1, 2, 3, 4, 5, 6]
+      .filter((day) => !available_days_of_week.includes(day))
+      .map((day) => (day + 1) % 7); // DayPicker component usees 0=Sunday
+    setDisabledDates({
+      ...disabledDates,
+      dayOfWeek: unavailable_days_of_week,
+    });
+  }
+
+  // Probably best to replace this with a prop to the function to avoid calling the api twice
+  async function fetchRoomAvailability() {
+    const apiUrl = `rooms/${room_id}/`;
+    await api({ url: apiUrl, method: "get" })
+      .then((response) => {
+        const data = response.data;
+        setRoomAvailability({
+          recurrence_rule: data.recurrence_rule,
+          start_datetime: data.start_datetime,
+          end_datetime: data.end_datetime,
+        });
+        disableDaysOfWeekFromRRule(data.recurrence_rule);
+      })
+      .catch((error) => {
+        // TODO : Handle error case
+        console.error(error);
+      });
+  }
+
+  async function fetchAvailableTimeSlots() {
+    const max_range = 42;
     const start_date = new Date().toISOString().substring(0, 10);
-    const end_date = new Date(new Date().setDate(new Date().getDate() + 30))
+    const end_date = new Date(
+      new Date().setDate(new Date().getDate() + max_range),
+    )
       .toISOString()
       .substring(0, 10);
     const apiUrl = `rooms/${room_id}/availability/?start_date=${start_date}&end_date=${end_date}`;
     api({ url: apiUrl, method: "get" })
       .then((response) => {
         console.log(response);
+        console.log(response.data.availability);
       })
       .catch((error) => {
         console.error(error);
@@ -199,7 +313,8 @@ function BookRoomForm() {
   }
 
   useEffect(() => {
-    fetchAvailability();
+    fetchRoomAvailability();
+    fetchAvailableTimeSlots();
   }, []);
 
   return (
@@ -265,7 +380,7 @@ function BookRoomForm() {
                   label="Date"
                   value={field.value}
                   onChange={field.onChange}
-                  disabledDates={[]}
+                  disabledDates={disabledDates}
                 />
               </FormControl>
               <FormMessage />
@@ -285,6 +400,7 @@ function BookRoomForm() {
                   label="Start time"
                   value={field.value}
                   onChange={field.onChange}
+                  disabled={true}
                 />
               </FormControl>
               <FormMessage />
@@ -304,6 +420,7 @@ function BookRoomForm() {
                   label="End time"
                   value={field.value}
                   onChange={field.onChange}
+                  disabled={true}
                 />
               </FormControl>
               <FormMessage />
@@ -372,52 +489,6 @@ export default function BookRoomPage() {
       end_iso_datetime: string,
       recurrence_rule: string,
     ) {
-      // Converts google calendar day strings to 3 lettter day strings
-      const DayConversion = new Map();
-      DayConversion.set("MO", "Mon");
-      DayConversion.set("TU", "Tue");
-      DayConversion.set("WE", "Wed");
-      DayConversion.set("TH", "Thu");
-      DayConversion.set("FR", "Fri");
-      DayConversion.set("SA", "Sat");
-      DayConversion.set("SU", "Sun");
-
-      // Convert between 3 letter day strings and their respective number
-      const DayNumber = new Map();
-      DayNumber.set("Mon", 0);
-      DayNumber.set("Tue", 1);
-      DayNumber.set("Wed", 2);
-      DayNumber.set("Thu", 3);
-      DayNumber.set("Fri", 4);
-      DayNumber.set("Sat", 5);
-      DayNumber.set("Sun", 6);
-      DayNumber.set(0, "Mon");
-      DayNumber.set(1, "Tue");
-      DayNumber.set(2, "Wed");
-      DayNumber.set(3, "Thu");
-      DayNumber.set(4, "Fri");
-      DayNumber.set(5, "Sat");
-      DayNumber.set(6, "Sun");
-
-      /**
-       * Extracts the days from the BYDAY argument of a google calendar
-       * reccurence rule into an array.
-       * @param rrule A valid google calendar recurrence rule
-       * @returns An array of google calendar days e.g. ["MO","TU"]
-       */
-      function getDaysFromRRule(rrule: string) {
-        const rule = rrule.startsWith("RRULE:") ? rrule.substring(7) : rrule;
-        const rule_info = rule.split(";");
-        for (let i = 0; i < rule_info.length; i++) {
-          if (rule_info[i].startsWith("BYDAY")) {
-            const days_str = rule_info[i].split("=")[1];
-            const days = days_str.split(",");
-            return days;
-          }
-        }
-        return [];
-      }
-
       /**
        * Forms ranges of consecutive days from a list of days
        * @param available_days an array of 3 strings representing days (e.g. "Mon")
@@ -472,7 +543,7 @@ export default function BookRoomPage() {
       function getDaysAvailableString(rrule: string) {
         const rrule_days = getDaysFromRRule(rrule);
         const available_days = rrule_days.map((day: string) =>
-          DayConversion.get(day),
+          GCDayConversion.get(day),
         );
         const day_groups = groupConsecutiveDays(available_days);
         const string_parts: string[] = [];
@@ -491,20 +562,6 @@ export default function BookRoomPage() {
         }
         return return_string;
       }
-
-      /**
-       * Return the time in 12 hour hour:minutes am/pm format
-       * @param datetime A valid Date object
-       * @returns a string in AM/PM time e.g. 9:00am, 10:00pm
-       */
-      function getAMPMTimeString(datetime: Date) {
-        const hours = datetime.getHours();
-        const hours_str = hours > 12 ? `${hours - 12}` : `${hours}`;
-        const mins_str = datetime.getMinutes().toString().padStart(2, "0");
-        const suffix = hours > 12 ? "pm" : "am";
-        return `${hours_str}:${mins_str}${suffix}`;
-      }
-
       const start_time = getAMPMTimeString(
         new Date(Date.parse(start_iso_datetime)),
       );
