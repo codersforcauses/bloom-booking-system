@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import AmenityModal from "@/app/(admin)/meeting-room/add/add-amenities";
 import CustomRepeatModal from "@/app/(admin)/meeting-room/add/custom-repeat";
 import InputField from "@/components/input";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,8 @@ export default function AddMeetingRoomForm() {
   const ADD_LOCATION_VALUE = "__add_location__";
   const [addLocationOpen, setAddLocationOpen] = useState(false);
 
+  const [addAmenityOpen, setAddAmenityOpen] = useState(false);
+
   const [formData, setFormData] = useState<Partial<Room>>({
     title: "",
     seats: 0,
@@ -38,20 +41,16 @@ export default function AddMeetingRoomForm() {
     recurrence_rule: "",
   });
 
-  // Available amenities matching the screenshot
-  const availableAmenities = [
-    "Audio",
-    "Video",
-    "White Board",
-    "HDMI",
-    "Projector",
-    "Speaker Phone",
-  ];
-
   // Fetch locations dynamically
   const { data: locations = [] } = RoomAPI.useFetchRoomLocations({
     page: 1,
-    nrows: 100,
+    nrows: 10,
+  });
+
+  // Fetch amenities from API
+  const { data: amenitiesFromAPI = [] } = RoomAPI.useFetchRoomAmenities({
+    page: 1,
+    nrows: 10,
   });
 
   const handleInputChange = (field: keyof Room, value: string | number) => {
@@ -59,10 +58,6 @@ export default function AddMeetingRoomForm() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
-  };
-
-  const handleAmenitiesChange = (value: string[]) => {
-    setFormData((prev) => ({ ...prev, amenities: value }));
   };
 
   const validateForm = () => {
@@ -216,14 +211,76 @@ export default function AddMeetingRoomForm() {
 
             {/* Row 2: Amenities + Upload Image */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <InputField
-                kind="badge"
-                name="amenities"
-                label="Amenities"
-                placeholder="Select amenities"
-                options={availableAmenities}
-                value={formData.amenities || []}
-                onChange={handleAmenitiesChange}
+              {/* Amenities Section - Using Badge Component */}
+              <div>
+                <div className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <InputField
+                      kind="badge"
+                      name="amenities"
+                      label="Amenities"
+                      options={amenitiesFromAPI.map((a) => a.name)}
+                      value={
+                        Array.isArray(formData.amenities)
+                          ? formData.amenities.map((amenityId) => {
+                              const numericId =
+                                typeof amenityId === "string"
+                                  ? parseInt(amenityId, 10)
+                                  : amenityId;
+                              const amenity = amenitiesFromAPI.find(
+                                (a) => a.id === numericId,
+                              );
+                              return amenity?.name || `Amenity ${amenityId}`;
+                            })
+                          : []
+                      }
+                      onChange={(selectedNames) => {
+                        const selectedIds = selectedNames
+                          .map((name) => {
+                            const amenity = amenitiesFromAPI.find(
+                              (a) => a.name === name,
+                            );
+                            return amenity ? amenity.id.toString() : null;
+                          })
+                          .filter((id): id is string => id !== null);
+                        setFormData((prev) => ({
+                          ...prev,
+                          amenities: selectedIds,
+                        }));
+                      }}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => setAddAmenityOpen(true)}
+                    variant="outline"
+                    className="border-bloom-blue text-bloom-blue hover:bg-blue-50"
+                    size="sm"
+                  >
+                    + Add
+                  </Button>
+                </div>
+              </div>
+
+              <AmenityModal
+                open={addAmenityOpen}
+                onClose={() => setAddAmenityOpen(false)}
+                onSelect={(amenityId) => {
+                  const newAmenityId =
+                    typeof amenityId === "number"
+                      ? amenityId.toString()
+                      : amenityId;
+                  setFormData((prev) => {
+                    const currentAmenities = Array.isArray(prev.amenities)
+                      ? prev.amenities
+                      : [];
+                    return {
+                      ...prev,
+                      amenities: [...currentAmenities, newAmenityId],
+                    };
+                  });
+                  setAddAmenityOpen(false);
+                }}
               />
 
               {/* Upload Image */}
