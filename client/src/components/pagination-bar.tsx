@@ -193,7 +193,7 @@ type RowProps = {
   id: string;
   selectedRow: string | number;
   options?: number[];
-  onChange: (role: string) => void;
+  onChange: (value: string) => void;
   className?: string;
 };
 

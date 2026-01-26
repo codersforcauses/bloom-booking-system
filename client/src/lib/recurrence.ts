@@ -7,6 +7,7 @@ export type RecurrenceSummary = {
   text?: string;
 };
 
+const ISO_FORMAT_CLEANUP = /[-:]|\.\d{3}/g;
 /**
  * Parse RRULE string and return a summary.
  *
@@ -25,7 +26,7 @@ export function parseRecurrenceRule(
 
   try {
     const rule = rrulestr(
-      `DTSTART:${dtStart.toISOString().replace(/[-:]|\.\d{3}/g, "")}\nRRULE:${rruleString}`,
+      `DTSTART:${dtStart.toISOString().replace(ISO_FORMAT_CLEANUP, "")}\nRRULE:${rruleString}`,
     );
 
     // Map FREQ to a human-friendly label

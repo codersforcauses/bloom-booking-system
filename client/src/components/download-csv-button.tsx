@@ -29,8 +29,7 @@ export function DownloadCsvButton({
   params.delete("offset");
 
   const { mutateAsync, isPending } = useExportBookingsCsv(
-    path,
-    params.toString(),
+    `${path}?${params.toString()}`,
   );
 
   const handleDownload = async () => {
@@ -61,7 +60,7 @@ export function DownloadCsvButton({
       aria-label="Download"
       disabled={isPending}
       className={cn(
-        "gap-2 border-2 bg-transparent bg-white p-2 hover:bg-muted",
+        "gap-2 border-2 bg-white p-2 hover:bg-muted",
         !isPending
           ? "border-bloom-blue text-bloom-blue"
           : "border-gray-300 text-gray-300",

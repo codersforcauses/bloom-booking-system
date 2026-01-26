@@ -5,7 +5,9 @@ import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
 import {
   AmenityResponse,
+  LocationResponse,
   PaginatedAmenityResponse,
+  PaginatedLocationResponse,
   PaginatedRoomResponse,
   RoomResponse,
 } from "@/lib/api-types";
@@ -43,20 +45,36 @@ function useFetchRooms(params: PaginationSearchParams) {
   };
 }
 
+function useSearchRooms(search?: string, limit = 20) {
+  return useQuery<RoomResponse[]>({
+    queryKey: ["rooms", search, limit],
+    queryFn: async () => {
+      const response = await api.get("/rooms/", {
+        params: {
+          limit,
+          ...(search ? { search } : {}),
+        },
+      });
+      return response.data.results;
+    },
+    enabled: !!search,
+  });
+}
+
 function useFetchRoomLocations(params: PaginationSearchParams) {
   const { page = 1, nrows = 5, search, ...customParams } = params;
   const offset = (page - 1) * nrows;
 
   const { data, isLoading, isError, error, refetch } =
-    useQuery<PaginatedRoomResponse>({
+    useQuery<PaginatedLocationResponse>({
       queryKey: ["room-locations", offset, nrows, search, customParams],
       queryFn: async () => {
         const response = await api.get("/locations/", {
           params: {
             limit: nrows,
             offset,
-            ...(search ? { search } : {}), // Include only if exists,
-            ...(customParams ? { ...customParams } : {}),
+            ...(search ? { search } : {}), // Include search param only if defined
+            ...(customParams ? { ...customParams } : {}), // Spread any additional custom params
           },
         });
         return response.data;
@@ -76,7 +94,7 @@ function useFetchRoomLocations(params: PaginationSearchParams) {
 }
 
 function useFetchRoomLocation(id?: number) {
-  return useQuery<RoomResponse, AxiosError>({
+  return useQuery<LocationResponse, AxiosError>({
     queryKey: ["room-location", id],
     enabled: Boolean(id),
     queryFn: async () => {
@@ -87,7 +105,7 @@ function useFetchRoomLocation(id?: number) {
 }
 
 function useCreateRoomLocation() {
-  return useMutation<RoomResponse, AxiosError, { name: string }>({
+  return useMutation<LocationResponse, AxiosError, { name: string }>({
     mutationFn: async (payload) => {
       const response = await api.post("/locations/", payload);
       return response.data;
@@ -96,7 +114,7 @@ function useCreateRoomLocation() {
 }
 
 function useUpdateRoomLocation(id: number) {
-  return useMutation<RoomResponse, AxiosError, { name: string }>({
+  return useMutation<LocationResponse, AxiosError, { name: string }>({
     mutationFn: async (payload) => {
       const response = await api.patch(`/locations/${id}/`, payload);
       return response.data;
@@ -124,7 +142,7 @@ function useFetchRoomAmenities(params: PaginationSearchParams) {
           params: {
             limit: nrows,
             offset,
-            ...(search ? { search } : {}), // Include only if exists,
+            ...(search ? { search } : {}),
             ...(customParams ? { ...customParams } : {}),
           },
         });
@@ -183,6 +201,7 @@ function useDeleteRoomAmenity() {
 
 const RoomAPI = {
   useFetchRooms,
+  useSearchRooms,
   useFetchRoomLocations,
   useFetchRoomLocation,
   useCreateRoomLocation,
@@ -195,5 +214,5 @@ const RoomAPI = {
   useDeleteRoomAmenity,
 };
 
-export { useFetchRooms };
+export { useFetchRooms, useSearchRooms };
 export default RoomAPI;

@@ -386,6 +386,9 @@ function renderBadgeFieldControl(props: BadgeFieldProps) {
 function renderSearchFieldControl(props: SearchFieldProps, name: string) {
   const [tempValue, setTempValue] = useState(props.value);
 
+  React.useEffect(() => {
+    setTempValue(props.value);
+  }, [props.value]);
   const handleOnBlur = () => props.onSearch(tempValue);
 
   const handleOnKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

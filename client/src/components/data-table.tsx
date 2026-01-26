@@ -92,7 +92,7 @@ export function DataTable<T extends { id: number }>({
                     >
                       {col.render
                         ? col.render(row)
-                        : String(getNestedValue(row, col.key))}
+                        : String(getNestedValue(row, col.key) ?? "-")}
                     </TableCell>
                   ))}
 

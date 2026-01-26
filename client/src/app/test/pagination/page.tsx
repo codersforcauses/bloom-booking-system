@@ -105,7 +105,7 @@ export default function PaginationDemo() {
 
     const urlParams = pickKeys(
       updatedParams,
-      ...(Object.keys(urlVisibleParams) as []),
+      ...(Object.keys(urlVisibleParams) as (keyof typeof urlVisibleParams)[]),
     );
 
     router.push(`${pathname}?${toQueryString(urlParams)}`);

@@ -67,6 +67,7 @@ export function FilterPopover({
       visitor_name: tempVisitorName || undefined,
       visitor_email: tempVisitorEmail || undefined,
     });
+    setOpen(false);
   };
 
   // Automatically open sections that have active filters

@@ -86,7 +86,7 @@ export default function DemoTable({
                   ? `${recurrence.label} (${recurrence.text})`
                   : recurrence.label,
                 recurrence.detail ??
-                  `Cant be defined with Rule: ${row.recurrence_rule}.`,
+                  `Cannot be defined with rule: ${row.recurrence_rule}.`,
               )
             }
           >
