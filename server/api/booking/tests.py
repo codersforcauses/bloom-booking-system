@@ -448,6 +448,7 @@ class BookingViewTest(APITestCase):
         }
 
         response = self.client.post('/api/bookings/', payload, format='json')
+        
         print("STATUS:", response.status_code)
         try:
             print("DATA:", response.data)
