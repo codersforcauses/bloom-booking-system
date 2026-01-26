@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import api from "@/lib/api";
+import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 
 // badge options string[] (name)
 
@@ -93,7 +94,7 @@ export default function SearchRoomForm({
       const res = await api.get("/locations/");
       const raw = Array.isArray(res.data) ? res.data : (res.data.results ?? []);
       setLocations(
-        raw.map((loc: Record<string, unknown>) => ({
+        raw.map((loc: LocationResponse) => ({
           label: loc.name,
           value: loc.name,
         })),
@@ -103,7 +104,7 @@ export default function SearchRoomForm({
     const fetchAmenities = async () => {
       const res = await api.get("/amenities/");
       const raw = Array.isArray(res.data) ? res.data : (res.data.results ?? []);
-      setAmenityNames(raw.map((a: Record<string, unknown>) => a.name));
+      setAmenityNames(raw.map((a: AmenityResponse) => a.name));
     };
 
     Promise.all([fetchLocations(), fetchAmenities()]).catch((e) => {
