@@ -11,11 +11,7 @@ import SearchRoomForm, {
 } from "@/app/search-room-form";
 import { BookingRoomCard } from "@/components/room-card";
 import api from "@/lib/api";
-import {
-  AmenityResponse,
-  RoomAvailabilityResponse,
-  RoomResponse,
-} from "@/lib/api-types";
+import { normaliseRooms } from "@/lib/normalise-room";
 import { Room } from "@/types/card";
 
 type Params = {
@@ -27,30 +23,6 @@ type Params = {
   start_datetime?: string;
   end_datetime?: string;
 };
-
-// helper function to bridge the gap between api room data and arguments of BookingRoomCard
-export function normalizeRooms(
-  apiRooms: RoomResponse[],
-  apiAvailabilities: RoomAvailabilityResponse[],
-) {
-  // turn list to map
-  const availabilityMap = Object.fromEntries(
-    apiAvailabilities.map((a: RoomAvailabilityResponse) => [
-      a.room_id,
-      a.availability,
-    ]),
-  );
-  return apiRooms.map((apiRoom) => ({
-    id: apiRoom.id,
-    title: apiRoom.name,
-    image: apiRoom.img,
-    location: apiRoom.location.name,
-    seats: apiRoom.capacity,
-    amenities:
-      apiRoom.amenities?.map((amenity: AmenityResponse) => amenity.name) ?? [],
-    available: availabilityMap[apiRoom.id] ?? true,
-  }));
-}
 
 export default function Home() {
   const router = useRouter();
@@ -128,7 +100,7 @@ export default function Home() {
         ]);
         const data = roomsRes.data;
         const availabilityData = availabilityRes.data;
-        const newRooms = normalizeRooms(data.results, availabilityData.results);
+        const newRooms = normaliseRooms(data.results, availabilityData.results);
         // if it is not the first page, append the data to the previous
         if (!data.previous) {
           setRooms(newRooms);
