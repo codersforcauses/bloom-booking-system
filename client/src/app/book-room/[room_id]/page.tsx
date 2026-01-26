@@ -55,9 +55,7 @@ function BookRoomForm() {
 
   const formSchema = z
     .object({
-      name: z
-        .string("This is a required field.")
-        .min(1, "This is a required field."),
+      name: z.string().min(1, "This is a required field."),
       email: z.email("Must be a valid email address."),
       date: z.date("Must be a valid date.").min(
         new Date().setDate(new Date().getDate() - 1), // Yesterday's date
@@ -184,6 +182,7 @@ function BookRoomForm() {
       });
   }
 
+  // TODO
   async function fetchAvailability() {
     const start_date = new Date().toISOString().substring(0, 10);
     const end_date = new Date(new Date().setDate(new Date().getDate() + 30))
@@ -217,7 +216,7 @@ function BookRoomForm() {
           name="name"
           control={form.control}
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="w-full">
               <FormControl>
                 <InputField
                   kind="text"
@@ -236,7 +235,7 @@ function BookRoomForm() {
           name="email"
           control={form.control}
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="w-full">
               <FormControl>
                 <InputField
                   kind="text"
@@ -349,7 +348,6 @@ export default function BookRoomPage() {
     availablility: "",
     seats: 0,
     amenities: [],
-    bookings: 0,
     removed: false,
   };
 
@@ -362,6 +360,162 @@ export default function BookRoomPage() {
    * @param {Number} room_id Id of the room to fetch infomation about.
    */
   async function fetchRoom(room_id: number) {
+    /**
+     *
+     * @param start_iso_datetime
+     * @param end_iso_datetime
+     * @param recurrence_rule
+     * @returns
+     */
+    function formAvailabilityString(
+      start_iso_datetime: string,
+      end_iso_datetime: string,
+      recurrence_rule: string,
+    ) {
+      // Converts google calendar day strings to 3 lettter day strings
+      const DayConversion = new Map();
+      DayConversion.set("MO", "Mon");
+      DayConversion.set("TU", "Tue");
+      DayConversion.set("WE", "Wed");
+      DayConversion.set("TH", "Thu");
+      DayConversion.set("FR", "Fri");
+      DayConversion.set("SA", "Sat");
+      DayConversion.set("SU", "Sun");
+
+      // Convert between 3 letter day strings and their respective number
+      const DayNumber = new Map();
+      DayNumber.set("Mon", 0);
+      DayNumber.set("Tue", 1);
+      DayNumber.set("Wed", 2);
+      DayNumber.set("Thu", 3);
+      DayNumber.set("Fri", 4);
+      DayNumber.set("Sat", 5);
+      DayNumber.set("Sun", 6);
+      DayNumber.set(0, "Mon");
+      DayNumber.set(1, "Tue");
+      DayNumber.set(2, "Wed");
+      DayNumber.set(3, "Thu");
+      DayNumber.set(4, "Fri");
+      DayNumber.set(5, "Sat");
+      DayNumber.set(6, "Sun");
+
+      /**
+       * Extracts the days from the BYDAY argument of a google calendar
+       * reccurence rule into an array.
+       * @param rrule A valid google calendar recurrence rule
+       * @returns An array of google calendar days e.g. ["MO","TU"]
+       */
+      function getDaysFromRRule(rrule: string) {
+        const rule = rrule.startsWith("RRULE:") ? rrule.substring(7) : rrule;
+        const rule_info = rule.split(";");
+        for (let i = 0; i < rule_info.length; i++) {
+          if (rule_info[i].startsWith("BYDAY")) {
+            const days_str = rule_info[i].split("=")[1];
+            const days = days_str.split(",");
+            return days;
+          }
+        }
+        return [];
+      }
+
+      /**
+       * Forms ranges of consecutive days from a list of days
+       * @param available_days an array of 3 strings representing days (e.g. "Mon")
+       * @returns An array of [start_day, end_day] pairs representing the groups
+       * of consecutive days e.g. ([["Mon","Wed"],["Fri","Fri"]) for input
+       * ["Mon","Tue","Wed","Fri"]
+       */
+      function groupConsecutiveDays(available_days: string[]) {
+        const day_numbers = available_days.map((day: string) =>
+          DayNumber.get(day),
+        );
+        const day_groups = [];
+        let temp_stack: number[] = [];
+        for (let i = 0; i < day_numbers.length; i++) {
+          const current = day_numbers[i];
+          const last = temp_stack.pop();
+          // Start of new streak
+          if (last === undefined) {
+            temp_stack = [current, current]; // Start and end of range
+            continue;
+          }
+          // Continue streak
+          if (current === last + 1) {
+            temp_stack.push(current);
+          }
+          // End streak
+          else {
+            temp_stack.push(last);
+            day_groups.push([...temp_stack]);
+            temp_stack = [current, current];
+          }
+        }
+        // Clean up remaining streak
+        if (temp_stack.length > 0) {
+          day_groups.push([...temp_stack]);
+        }
+        // Convert back to days
+        for (let i = 0; i < day_groups.length; i++) {
+          day_groups[i] = day_groups[i].map((day_number: number) =>
+            DayNumber.get(day_number),
+          );
+        }
+        return day_groups;
+      }
+
+      /**
+       * Creates a string representing the days that a room is available from
+       * a recurrence rule (e.g. "Mon-Wed, Fri")
+       * @param rrule A valid goolge calendar recurrence rule
+       * @returns A string representing the days a room is available
+       */
+      function getDaysAvailableString(rrule: string) {
+        const rrule_days = getDaysFromRRule(rrule);
+        const available_days = rrule_days.map((day: string) =>
+          DayConversion.get(day),
+        );
+        const day_groups = groupConsecutiveDays(available_days);
+        const string_parts: string[] = [];
+        for (let i = 0; i < day_groups.length; i++) {
+          const start_day = day_groups[i][0];
+          const end_day = day_groups[i][1];
+          if (start_day !== end_day) {
+            string_parts.push(`${start_day}-${end_day}`);
+          } else {
+            string_parts.push(`${start_day}`);
+          }
+        }
+        let return_string = string_parts[0];
+        for (let i = 1; i < string_parts.length; i++) {
+          return_string += ", " + string_parts[i];
+        }
+        return return_string;
+      }
+
+      /**
+       * Return the time in 12 hour hour:minutes am/pm format
+       * @param datetime A valid Date object
+       * @returns a string in AM/PM time e.g. 9:00am, 10:00pm
+       */
+      function getAMPMTimeString(datetime: Date) {
+        const hours = datetime.getHours();
+        const hours_str = hours > 12 ? `${hours - 12}` : `${hours}`;
+        const mins_str = datetime.getMinutes().toString().padStart(2, "0");
+        const suffix = hours > 12 ? "pm" : "am";
+        return `${hours_str}:${mins_str}${suffix}`;
+      }
+
+      const start_time = getAMPMTimeString(
+        new Date(Date.parse(start_iso_datetime)),
+      );
+      const end_time = getAMPMTimeString(
+        new Date(Date.parse(end_iso_datetime)),
+      );
+      const days_available = getDaysAvailableString(recurrence_rule);
+      const availability_string = `${start_time} - ${end_time}, ${days_available}`;
+      return availability_string;
+    }
+
     const defaultImage =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFgwJ/lYpukQAAAABJRU5ErkJggg==";
     const apiUrl = `rooms/${room_id}/`;
@@ -375,22 +529,14 @@ export default function BookRoomPage() {
           seats: data.capacity,
           location: data.location.name,
           available: data.is_active,
-          /*
-          Unsure how to form the availability string from the 
-          start_datetime and end_datetime under the rooms api.
-          */
-          availablility: "TODO",
+          availablility: formAvailabilityString(
+            data.start_datetime,
+            data.end_datetime,
+            data.recurrence_rule,
+          ),
           amenities: data.amenities.map(
             (amenity: { id: number; name: string }) => amenity.name,
           ),
-          /*
-                    Number of bookings for a specific room is not readily 
-                    accessible through the api for non-admin users as the 
-                    endpoint `bookings/?room_id={id}` is Admin only.
-
-                    Only the count of bookings would be required for this prop.
-                    */
-          bookings: -1,
         };
         setRoom(room);
       })
@@ -408,7 +554,6 @@ export default function BookRoomPage() {
           availablility: "",
           seats: 0,
           amenities: [],
-          bookings: 0,
           removed: false,
         };
         setRoom(err_room);
@@ -423,7 +568,7 @@ export default function BookRoomPage() {
   }, []);
 
   return (
-    <div className="h-screen w-screen bg-gray-100">
+    <div className="h-fit min-h-screen w-screen bg-gray-100">
       <div className="flex w-full items-center px-[3rem] py-[2rem]">
         <h1 className="text-xl font-semibold">Book room</h1>
       </div>
