@@ -128,7 +128,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                     "end_datetime": booking.end_datetime,
                     "visitor_name": booking.visitor_name,
                     "location_name": booking.room.location,
-                    "manage_url": request.build_absolute_uri(f"/bookings/{booking.id}/")    # check this? unsure what this provides.
+                    "manage_url": request.build_absolute_uri(f"/bookings/{booking.id}/")    # check this? not sure what pages the frontend uses.
                 }
             )
 
@@ -211,7 +211,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                             "room_name": booking.room,
                             "start_datetime": booking.start_datetime,
                             "end_datetime": booking.end_datetime,
-                            "book_room_url": request.build_absolute_uri("/rooms/")}     # check this? unsure what this provides.
+                            "book_room_url": request.build_absolute_uri("/rooms/")}     # check this? not sure what pages the frontend uses.
                         )
 
                     return Response(response_serializer.data)
@@ -262,7 +262,8 @@ class BookingViewSet(viewsets.ModelViewSet):
                 # If we get here, both Google Calendar and DB updates succeeded
                 response_serializer = BookingSerializer(
                     updated_booking, fields=('id', 'status', 'updated_at'))
-                
+
+                # Send updated booking confirmation email
                 send_booking_confirmed_email(
                     recipients=[updated_booking.visitor_email],
                     context={
@@ -271,7 +272,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                         "end_datetime": updated_booking.end_datetime,
                         "visitor_name": updated_booking.visitor_name,
                         "location_name": updated_booking.room.location,
-                        "manage_url": request.build_absolute_uri(f"/bookings/{updated_booking.id}/")
+                        "manage_url": request.build_absolute_uri(f"/bookings/{updated_booking.id}/")    # check this? not sure what the frontend uses.
                     }
                 )
 
