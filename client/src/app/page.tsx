@@ -11,17 +11,34 @@ import SearchRoomForm, {
 } from "@/app/search-room-form";
 import { BookingRoomCard } from "@/components/room-card";
 import api from "@/lib/api";
-import { RoomResponse } from "@/lib/api-types";
+import {
+  AmenityResponse,
+  RoomAvailabilityResponse,
+  RoomResponse,
+} from "@/lib/api-types";
 import { Room } from "@/types/card";
+
+type Params = {
+  name?: string;
+  location?: string;
+  amenities?: string;
+  min_capacity?: number;
+  max_capacity?: number;
+  start_datetime?: string;
+  end_datetime?: string;
+};
 
 // helper function to bridge the gap between api room data and arguments of BookingRoomCard
 export function normalizeRooms(
   apiRooms: RoomResponse[],
-  apiAvailabilities: Record<string, unknown>[],
+  apiAvailabilities: RoomAvailabilityResponse[],
 ) {
   // turn list to map
   const availabilityMap = Object.fromEntries(
-    apiAvailabilities.map((a: any) => [a.room_id, a.availability]),
+    apiAvailabilities.map((a: RoomAvailabilityResponse) => [
+      a.room_id,
+      a.availability,
+    ]),
   );
   return apiRooms.map((apiRoom) => ({
     id: apiRoom.id,
@@ -30,9 +47,7 @@ export function normalizeRooms(
     location: apiRoom.location.name,
     seats: apiRoom.capacity,
     amenities:
-      apiRoom.amenities?.map(
-        (amenity: Record<string, unknown>) => amenity.name as string,
-      ) ?? [],
+      apiRoom.amenities?.map((amenity: AmenityResponse) => amenity.name) ?? [],
     available: availabilityMap[apiRoom.id] ?? true,
   }));
 }
@@ -65,7 +80,7 @@ export default function Home() {
 
   // Handle search form submission
   async function onSubmit(data: RoomSearchSchemaValue) {
-    const params: Record<string, unknown> = {};
+    const params: Params = {};
 
     // name search
     if (data.name) params.name = data.name;
@@ -103,11 +118,7 @@ export default function Home() {
 
   // Fetch Rooms (Scroll down to get next page)
   const fetchRooms = useCallback(
-    async (
-      url: string,
-      availabilityUrl: string,
-      params?: Record<string, unknown>,
-    ) => {
+    async (url: string, availabilityUrl: string, params?: Params) => {
       setLoading(true);
       try {
         // fetch room data and availability data parallelly
