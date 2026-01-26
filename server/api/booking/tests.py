@@ -448,6 +448,11 @@ class BookingViewTest(APITestCase):
         }
 
         response = self.client.post('/api/bookings/', payload, format='json')
+        print("STATUS:", response.status_code)
+        try:
+            print("DATA:", response.data)
+        except Exception:
+            print("RAW:", response.content.decode("utf-8", errors="ignore"))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_recurring_conflicts_with_one_time_booking(self):
