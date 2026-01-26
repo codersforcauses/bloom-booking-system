@@ -24,7 +24,7 @@
   Example: `?amenity=Projector,Whiteboard`
 
 **Pagination:**  
-Results are paginated (10 per page by default). Use `?page=2` for next page.
+Results are paginated (default page size may vary; check your API configuration) using limit/offset pagination. Use `?limit=10&offset=10` to get the next set of results. `room_id` returned in each page will be the same as /rooms.
 
 **Example Request:**
 
@@ -77,6 +77,47 @@ Returns details for a single room.
 
 **DELETE** `/api/rooms/{id}/`  
 **Not allowed** (returns 405 Method Not Allowed).
+
+---
+
+## Retrieve rooms availability
+
+**GET** `/api/rooms/availability`
+
+Returns availability of rooms in a boolean format. A room is available if the room has any free slot that overlaps with the requested time range (the time range must be at least partly later than now). In other words, a room is available if it has slot that can be booked.
+
+### Query Parameters (all optional):
+
+- `start_datetime`: Start datetime after or equal to (ISO 8601). Note: Date string is not accepted.
+- `end_datetime`: End datetime before or equal to (ISO 8601). Note: Date string is not accepted.
+
+**Pagination:**  
+Results are paginated (10 per page by default) using limit/offset pagination. Use `?limit=10&offset=10` to get the next set of results. `room_id` returned in each page will be the same as /rooms.
+
+**Example Request:**
+
+```
+http://localhost:8000/api/rooms/availability/?start_datetime=2026-01-19T12:00:00+0800&end_datetime=2026-01-19T14:00:00+0800
+```
+
+---
+
+## Retrieve room availability
+
+**GET** `/api/rooms/{id}/availability`
+
+Returns available slots for a single room. Slots returned will only include time later than now.
+
+### Query Parameters:
+
+- `start_date`: Start date after or equal to (YYYY-MM-DD). Optional.
+- `end_date`: End date before or equal to (YYYY-MM-DD). Required.
+
+**Example Request:**
+
+```
+GET /api/rooms/1/availability/?start_date=2026-01-05&end_date=2026-01-11
+```
 
 ---
 
