@@ -63,16 +63,12 @@ class BookingSerializer(DynamicFieldsModelSerializer):
             start_datetime = start_datetime or self.instance.start_datetime
             end_datetime = end_datetime or self.instance.end_datetime
             room = room or self.instance.room
-            recurrence_rule = recurrence_rule or self.instance.recurrence_rule
-
-        if recurrence_rule == "":
-            recurrence_rule = None
-            data['recurrence_rule'] = None
+            if 'recurrence_rule' not in data:
+                recurrence_rule = self.instance.recurrence_rule
 
         # validate recurrence_rule (Google Calendar RFC 5545 format)
         if recurrence_rule:
-            # MUST start with FREQ= and have valid values for it
-            # This is to keep consistent with other apis. Technically starting with COUNT followed by FREQ is valid.
+            # MUST start with FREQ= and have valid values for it (this is to keep consistant with other apis)
             if not re.match(r'^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;.*)?$', recurrence_rule):
                 raise serializers.ValidationError({
                     'recurrence_rule': 'RRULE must start with FREQ= and use DAILY/WEEKLY/MONTHLY/YEARLY.'
@@ -206,7 +202,6 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                     recurrence_rule__isnull=False,
                     start_datetime__lt=window_end,
                 ) |
-                # one-off bookings: standard window overlap check
                 Q(
                     recurrence_rule__isnull=True,
                     start_datetime__lt=window_end,
