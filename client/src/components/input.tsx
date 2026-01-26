@@ -82,7 +82,14 @@ type DateFieldProps = BaseFieldProps & {
   kind: "date";
   value: Date | undefined;
   onChange: (value: Date | undefined) => void;
-  disabledDates?: Date[];
+  disabledDates?: {
+    dates?: Date[];
+    from?: Date;
+    to?: Date;
+    before?: Date;
+    after?: Date;
+    dayOfWeek?: number[];
+  };
 };
 
 type TimeFieldProps = BaseFieldProps & {
