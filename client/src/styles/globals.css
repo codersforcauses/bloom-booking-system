@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: #f9f9f9ff;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -44,6 +44,9 @@
     --bloom-yellow-light: #f6e6a0ff;
     --bloom-orbit: #2332ffff;
     --bloom-orbit-light: #a5a8e1ff;
+
+    /* Used to offset the height of the navbar if centering a whole page */
+    --layout-header-height: 106px;
   }
 
   .dark {
@@ -116,6 +119,11 @@
 
   .caption-link {
     @apply text-xs font-normal leading-5 tracking-wider underline;
+  }
+
+  /* Used to offset the height of the navbar if centering a whole page */
+  .min-h-layout-header {
+    min-height: calc(100vh - var(--layout-header-height));
   }
 }
 
