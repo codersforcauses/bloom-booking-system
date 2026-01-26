@@ -6,6 +6,12 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.templatetags.static import static
 
+import smtplib
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 # Template paths under api/templates/emails
 BOOKING_CONFIRMED_TEMPLATE = "emails/booking_confirmed.html"
@@ -64,6 +70,16 @@ def get_bloom_logo_url() -> str:
     return static("images/bloom_logo.png")
 
 
+def requires_email_exists(func):
+    def wrapper(*args, **kwargs):
+        if not settings.EMAIL_HOST_USER:
+            logger.warning("EMAIL_HOST_USER is not set. Emails will not be sent.")
+            return 0
+        return func(*args, **kwargs)
+    return wrapper
+
+
+@requires_email_exists
 def send_simple_email(
     subject: str,
     message: str | None,
@@ -100,14 +116,18 @@ def send_simple_email(
     if message is None:
         message = ""
 
-    return send_mail(
-        subject=subject,
-        message=message,
-        from_email=from_email,
-        recipient_list=list(recipients),
-        fail_silently=fail_silently,
-        html_message=html_message,
-    )
+    try:
+        return send_mail(
+            subject=subject,
+            message=message,
+            from_email=from_email,
+            recipient_list=list(recipients),
+            fail_silently=fail_silently,
+            html_message=html_message,
+        )
+    except smtplib.SMTPAuthenticationError:
+        logger.error(f"Failed to send email: Authentication error with EMAIL_HOST_USER {from_email}.")
+        return 0
 
 
 def send_booking_confirmed_email(
