@@ -9,6 +9,7 @@
 
 import { format } from "date-fns";
 import React from "react";
+import { Matcher } from "react-day-picker";
 
 import Badge from "@/components/badge";
 import { Calendar } from "@/components/calendar";
@@ -78,14 +79,7 @@ type DateFieldProps = BaseFieldProps & {
   kind: "date";
   value: Date | undefined;
   onChange: (value: Date | undefined) => void;
-  disabledDates?: {
-    dates?: Date[];
-    from?: Date;
-    to?: Date;
-    before?: Date;
-    after?: Date;
-    dayOfWeek?: number[];
-  };
+  disabledDates?: Matcher | Matcher[];
 };
 
 type TimeFieldProps = BaseFieldProps & {

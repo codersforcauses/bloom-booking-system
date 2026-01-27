@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Matcher } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -29,15 +30,23 @@ interface RoomAvailability {
   end_datetime: Date;
 }
 
+interface DateTimeSlots {
+  date: Date;
+  slots: {
+    start: Date;
+    end: Date;
+  }[];
+}
+
 // Converts google calendar day strings to 3 lettter day strings
-const GCDayConversion = new Map();
-GCDayConversion.set("MO", "Mon");
-GCDayConversion.set("TU", "Tue");
-GCDayConversion.set("WE", "Wed");
-GCDayConversion.set("TH", "Thu");
-GCDayConversion.set("FR", "Fri");
-GCDayConversion.set("SA", "Sat");
-GCDayConversion.set("SU", "Sun");
+const GoogleCalendarDayConversion = new Map();
+GoogleCalendarDayConversion.set("MO", "Mon");
+GoogleCalendarDayConversion.set("TU", "Tue");
+GoogleCalendarDayConversion.set("WE", "Wed");
+GoogleCalendarDayConversion.set("TH", "Thu");
+GoogleCalendarDayConversion.set("FR", "Fri");
+GoogleCalendarDayConversion.set("SA", "Sat");
+GoogleCalendarDayConversion.set("SU", "Sun");
 
 // Convert between 3 letter day strings and their respective number
 const DayNumber = new Map();
@@ -110,13 +119,21 @@ function BookRoomForm() {
   const params = useParams();
   const room_id = Number(params.room_id);
 
-  const [roomAvailability, setRoomAvailability] = useState({
-    recurrence_rule: "RRULE:FREQ=WEEKLY;BYDAY:MO,TU,WE,TH,FR",
-    start_datetime: new Date(0).setHours(8),
-    end_datetime: new Date(0).setHours(17),
-  });
-  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
-  const [disabledDates, setDisabledDates] = useState({});
+  const default_room_availability: RoomAvailability = {
+    recurrence_rule: "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+    start_datetime: new Date(new Date(0).setHours(8)),
+    end_datetime: new Date(new Date(0).setHours(17)),
+  };
+  const default_available_timeslots: DateTimeSlots[] = [];
+  const default_disabled_dates: Matcher[] = [];
+
+  const [roomAvailability, setRoomAvailability] = useState(
+    default_room_availability,
+  );
+  const [availableTimeSlots, setAvailableTimeSlots] = useState(
+    default_available_timeslots,
+  );
+  const [disabledDates, setDisabledDates] = useState(default_disabled_dates);
 
   const [all_day, setAllDay] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -257,42 +274,115 @@ function BookRoomForm() {
   }
 
   /**
-   *
-   * @param rrule
+   * Returns an array of numbers reprenseting days of the week (Sunday = )
+   * not included * in the BYDAY argument of a Google Calendar recurrence_rule
+   * @param rrule A valid Google Calendar recurrence rule
    */
-  function disableDaysOfWeekFromRRule(rrule: string) {
+  function getUnavailableDaysOfWeek(rrule: string): number[] {
     // Assumes availability pattern is weekly
     const available_days_of_week = getDaysFromRRule(rrule).map((day) =>
-      DayNumber.get(GCDayConversion.get(day)),
+      DayNumber.get(GoogleCalendarDayConversion.get(day)),
     );
-    const unavailable_days_of_week = [0, 1, 2, 3, 4, 5, 6]
-      .filter((day) => !available_days_of_week.includes(day))
-      .map((day) => (day + 1) % 7); // DayPicker component usees 0=Sunday
-    setDisabledDates({
-      ...disabledDates,
-      dayOfWeek: unavailable_days_of_week,
-    });
+    const unavailable_days_of_week = [0, 1, 2, 3, 4, 5, 6].filter(
+      (day) => !available_days_of_week.includes(day),
+    );
+    return unavailable_days_of_week;
+  }
+
+  /**
+   * Get the dates that are not included in availability api response.
+   *
+   * @param available_timeslots An array of DateTimeSlots representing the
+   * available timeslots of a room (from `api/rooms/{id}/availablity` response)
+   * @param ignore_days_of_week An array of numbers representing days (Sun=0) to
+   * ignore when looking for unavailable days
+   * @returns An array of Dates between now and the last date of
+   * available_timeslots that are not included in available_timeslots and are
+   * on days not included in ignore_days_of_week
+   */
+  function getUnavailableDates(
+    available_timeslots: DateTimeSlots[],
+    ignore_days_of_week: number[] = [],
+  ): Date[] {
+    let unavailable_dates: Date[] = [];
+    const available_dates = available_timeslots.map((o: DateTimeSlots) =>
+      o.date.toISOString(),
+    ); // Array.includes does not work on Date objects thus use ISO strings
+    if (available_dates.length === 0) return unavailable_dates;
+    const last_date = new Date(available_dates[available_dates.length - 1]);
+    const d = new Date(new Date().toISOString().substring(0, 10));
+    while (d <= last_date) {
+      unavailable_dates.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+    unavailable_dates = unavailable_dates
+      .filter((date) => !ignore_days_of_week.includes(date.getDay()))
+      // Array.includes does not work on Date objects thus use ISO strings
+      .filter((date) => !available_dates.includes(date.toISOString()));
+    return unavailable_dates;
+  }
+
+  /**
+   * Set the disabledDates state variable with relevant information from calling
+   * getUnavailableDaysOfWeek and getUnavailableDates fucntions
+   */
+  function disableUnavailableDates(
+    room_availability: RoomAvailability = roomAvailability,
+    available_timeslots: DateTimeSlots[] = availableTimeSlots,
+  ) {
+    const days_of_week = getUnavailableDaysOfWeek(
+      room_availability.recurrence_rule,
+    ).map((day) => (day + 1) % 7); // DayPicker uses Sun=0
+    const dates = getUnavailableDates(available_timeslots, days_of_week);
+    setDisabledDates([
+      { before: new Date() },
+      { dayOfWeek: days_of_week },
+      ...dates,
+    ]);
   }
 
   // Probably best to replace this with a prop to the function to avoid calling the api twice
+  /**
+   * Calls the `api/room/{room_id}` api endpoint to get the room availablity
+   * information (start time, end time, recurrence_rule).
+   * @returns The room's availability rules (NOT its available timeslots).
+   */
   async function fetchRoomAvailability() {
     const apiUrl = `rooms/${room_id}/`;
+    let room_availability: RoomAvailability = {
+      recurrence_rule: "",
+      start_datetime: new Date(0),
+      end_datetime: new Date(0),
+    };
     await api({ url: apiUrl, method: "get" })
       .then((response) => {
         const data = response.data;
-        setRoomAvailability({
+        room_availability = {
           recurrence_rule: data.recurrence_rule,
-          start_datetime: data.start_datetime,
-          end_datetime: data.end_datetime,
-        });
-        disableDaysOfWeekFromRRule(data.recurrence_rule);
+          start_datetime: new Date(data.start_datetime),
+          end_datetime: new Date(data.end_datetime),
+        };
+        setRoomAvailability(room_availability);
       })
       .catch((error) => {
         // TODO : Handle error case
         console.error(error);
       });
+    return room_availability;
   }
 
+  /* 
+  This could (probably should) be altered to take in a start and end date as 
+  arguments for flipping through pages of the day picker.
+
+  https://daypicker.dev/docs/navigation for more information
+  */
+  /**
+   * Fetch the available timeslots from the `api/room/{room_id}/availability/`
+   * endpoint from the current date to the maximum date in the future accessible
+   * in one request, and set the availableTimeSlots state variable accordingly
+   * @returns The available timeslots returned by the api
+   */
   async function fetchAvailableTimeSlots() {
     const max_range = 42;
     const start_date = new Date().toISOString().substring(0, 10);
@@ -302,19 +392,43 @@ function BookRoomForm() {
       .toISOString()
       .substring(0, 10);
     const apiUrl = `rooms/${room_id}/availability/?start_date=${start_date}&end_date=${end_date}`;
-    api({ url: apiUrl, method: "get" })
+    let available_timeslots: DateTimeSlots[] = [];
+    await api({ url: apiUrl, method: "get" })
       .then((response) => {
-        console.log(response);
-        console.log(response.data.availability);
+        available_timeslots = response.data.availability.map(
+          (o: { date: string; slots: { start: string; end: string }[] }) => {
+            return {
+              date: new Date(o.date),
+              slots: o.slots.map((slot: { start: string; end: string }) => {
+                return {
+                  start: new Date(Date.parse(slot.start)),
+                  end: new Date(Date.parse(slot.end)),
+                };
+              }),
+            };
+          },
+        );
+        setAvailableTimeSlots(available_timeslots);
       })
       .catch((error) => {
+        // TODO: handle error case
         console.error(error);
       });
+    return available_timeslots;
+  }
+
+  /**
+   * Fetches the room's availablity rules and available timeslots and sets the
+   * disabledDates state variable accoringly.
+   */
+  async function fetchAvailability() {
+    const room_availability = fetchRoomAvailability();
+    const available_timeslots = fetchAvailableTimeSlots();
+    disableUnavailableDates(await room_availability, await available_timeslots);
   }
 
   useEffect(() => {
-    fetchRoomAvailability();
-    fetchAvailableTimeSlots();
+    fetchAvailability();
   }, []);
 
   return (
@@ -543,7 +657,7 @@ export default function BookRoomPage() {
       function getDaysAvailableString(rrule: string) {
         const rrule_days = getDaysFromRRule(rrule);
         const available_days = rrule_days.map((day: string) =>
-          GCDayConversion.get(day),
+          GoogleCalendarDayConversion.get(day),
         );
         const day_groups = groupConsecutiveDays(available_days);
         const string_parts: string[] = [];
