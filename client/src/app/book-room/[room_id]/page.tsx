@@ -31,7 +31,7 @@ interface RoomAvailability {
 }
 
 interface DateTimeSlots {
-  date: Date;
+  date: string;
   slots: {
     start: Date;
     end: Date;
@@ -119,23 +119,23 @@ function BookRoomForm() {
   const params = useParams();
   const room_id = Number(params.room_id);
 
+  // Used to strict date and time selection options
   const default_room_availability: RoomAvailability = {
     recurrence_rule: "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
     start_datetime: new Date(new Date(0).setHours(8)),
     end_datetime: new Date(new Date(0).setHours(17)),
   };
-  const default_available_timeslots: DateTimeSlots[] = [];
-  const default_disabled_dates: Matcher[] = [];
-
   const [roomAvailability, setRoomAvailability] = useState(
     default_room_availability,
   );
+  const default_available_timeslots: DateTimeSlots[] = [];
   const [availableTimeSlots, setAvailableTimeSlots] = useState(
     default_available_timeslots,
   );
+  const default_disabled_dates: Matcher[] = [];
   const [disabledDates, setDisabledDates] = useState(default_disabled_dates);
 
-  const [all_day, setAllDay] = useState(false);
+  const [allDay, setAllDay] = useState(false);
   const [verified, setVerified] = useState(false);
   const [alertDialogProps, setAlertDialogProps] = useState({
     title: "",
@@ -305,8 +305,8 @@ function BookRoomForm() {
     ignore_days_of_week: number[] = [],
   ): Date[] {
     let unavailable_dates: Date[] = [];
-    const available_dates = available_timeslots.map((o: DateTimeSlots) =>
-      o.date.toISOString(),
+    const available_dates = available_timeslots.map(
+      (o: DateTimeSlots) => o.date,
     ); // Array.includes does not work on Date objects thus use ISO strings
     if (available_dates.length === 0) return unavailable_dates;
     const last_date = new Date(available_dates[available_dates.length - 1]);
@@ -318,7 +318,10 @@ function BookRoomForm() {
     unavailable_dates = unavailable_dates
       .filter((date) => !ignore_days_of_week.includes(date.getDay()))
       // Array.includes does not work on Date objects thus use ISO strings
-      .filter((date) => !available_dates.includes(date.toISOString()));
+      .filter(
+        (date) =>
+          !available_dates.includes(date.toISOString().substring(0, 10)),
+      );
     return unavailable_dates;
   }
 
@@ -327,8 +330,8 @@ function BookRoomForm() {
    * getUnavailableDaysOfWeek and getUnavailableDates fucntions
    */
   function disableUnavailableDates(
-    room_availability: RoomAvailability = roomAvailability,
     available_timeslots: DateTimeSlots[] = availableTimeSlots,
+    room_availability: RoomAvailability = roomAvailability,
   ) {
     const days_of_week = getUnavailableDaysOfWeek(
       room_availability.recurrence_rule,
@@ -341,7 +344,7 @@ function BookRoomForm() {
     ]);
   }
 
-  // Probably best to replace this with a prop to the function to avoid calling the api twice
+  // Probably best to replace this with a prop to the function/component to avoid calling the api twice
   /**
    * Calls the `api/room/{room_id}` api endpoint to get the room availablity
    * information (start time, end time, recurrence_rule).
@@ -371,26 +374,26 @@ function BookRoomForm() {
     return room_availability;
   }
 
-  /* 
-  This could (probably should) be altered to take in a start and end date as 
-  arguments for flipping through pages of the day picker.
-
-  https://daypicker.dev/docs/navigation for more information
-  */
   /**
-   * Fetch the available timeslots from the `api/room/{room_id}/availability/`
-   * endpoint from the current date to the maximum date in the future accessible
-   * in one request, and set the availableTimeSlots state variable accordingly
-   * @returns The available timeslots returned by the api
+   * Fetches the available timeslots of the room in range
+   * {start_datetime, end_datetime} from the api.
+   * @param date_range An object {start_date, end_date} specifying the start and
+   * end dates to request the available time slots of, by default start_datetime
+   * is set to the current time and end_datetime is set to the first of the
+   * next month.
+   * @returns
    */
-  async function fetchAvailableTimeSlots() {
-    const max_range = 42;
-    const start_date = new Date().toISOString().substring(0, 10);
-    const end_date = new Date(
-      new Date().setDate(new Date().getDate() + max_range),
-    )
-      .toISOString()
-      .substring(0, 10);
+  async function fetchAvailableTimeSlots({
+    start_datetime = new Date(),
+    end_datetime = start_datetime.getMonth() !== 11
+      ? new Date(start_datetime.getFullYear(), start_datetime.getMonth() + 1, 1)
+      : new Date(start_datetime.getFullYear() + 1, 0, 1),
+  }: {
+    start_datetime?: Date;
+    end_datetime?: Date;
+  } = {}) {
+    const start_date = start_datetime.toISOString().substring(0, 10);
+    const end_date = end_datetime.toISOString().substring(0, 10);
     const apiUrl = `rooms/${room_id}/availability/?start_date=${start_date}&end_date=${end_date}`;
     let available_timeslots: DateTimeSlots[] = [];
     await api({ url: apiUrl, method: "get" })
@@ -398,7 +401,7 @@ function BookRoomForm() {
         available_timeslots = response.data.availability.map(
           (o: { date: string; slots: { start: string; end: string }[] }) => {
             return {
-              date: new Date(o.date),
+              date: o.date,
               slots: o.slots.map((slot: { start: string; end: string }) => {
                 return {
                   start: new Date(Date.parse(slot.start)),
@@ -424,7 +427,24 @@ function BookRoomForm() {
   async function fetchAvailability() {
     const room_availability = fetchRoomAvailability();
     const available_timeslots = fetchAvailableTimeSlots();
-    disableUnavailableDates(await room_availability, await available_timeslots);
+    disableUnavailableDates(await available_timeslots, await room_availability);
+  }
+
+  /**
+   * Fetches and updates the availabile timeslots for the current month of the
+   * date picker
+   *
+   * NOTE: Makes a new request every time the month is switched, would be more
+   * efficient to change availableTimeSlots to something like a map with the
+   * start date of each month as its keys and check for existing availability.
+   *
+   * @param month The datetime of the start of the month
+   */
+  async function handleMonthChange(month: Date) {
+    const available_timeslots = fetchAvailableTimeSlots({
+      start_datetime: month,
+    });
+    disableUnavailableDates(await available_timeslots);
   }
 
   useEffect(() => {
@@ -493,8 +513,12 @@ function BookRoomForm() {
                   name="date"
                   label="Date"
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    // TODO: Restrict time selection
+                  }}
                   disabledDates={disabledDates}
+                  onMonthChange={handleMonthChange}
                 />
               </FormControl>
               <FormMessage />
@@ -514,7 +538,6 @@ function BookRoomForm() {
                   label="Start time"
                   value={field.value}
                   onChange={field.onChange}
-                  disabled={true}
                 />
               </FormControl>
               <FormMessage />
@@ -534,7 +557,6 @@ function BookRoomForm() {
                   label="End time"
                   value={field.value}
                   onChange={field.onChange}
-                  disabled={true}
                 />
               </FormControl>
               <FormMessage />
@@ -544,7 +566,7 @@ function BookRoomForm() {
       </div>
       <Checkbox
         className="ml-6"
-        checked={all_day}
+        checked={allDay}
         onCheckedChange={(checked) => setAllDay(checked === true)}
         disabled={true}
       >

@@ -9,7 +9,7 @@
 
 import { format } from "date-fns";
 import React from "react";
-import { Matcher } from "react-day-picker";
+import { Matcher, MonthChangeEventHandler } from "react-day-picker";
 
 import Badge from "@/components/badge";
 import { Calendar } from "@/components/calendar";
@@ -80,6 +80,7 @@ type DateFieldProps = BaseFieldProps & {
   value: Date | undefined;
   onChange: (value: Date | undefined) => void;
   disabledDates?: Matcher | Matcher[];
+  onMonthChange?: MonthChangeEventHandler;
 };
 
 type TimeFieldProps = BaseFieldProps & {
@@ -281,6 +282,7 @@ function renderDateFieldControl(props: DateFieldProps) {
           selected={props.value}
           onSelect={props.onChange}
           disabled={props.disabledDates}
+          onMonthChange={props.onMonthChange}
           initialFocus
         />
       </PopoverContent>
