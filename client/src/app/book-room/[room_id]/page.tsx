@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { endOfMonth,endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
@@ -385,15 +386,15 @@ function BookRoomForm() {
    */
   async function fetchAvailableTimeSlots({
     start_datetime = new Date(),
-    end_datetime = start_datetime.getMonth() !== 11
-      ? new Date(start_datetime.getFullYear(), start_datetime.getMonth() + 1, 1)
-      : new Date(start_datetime.getFullYear() + 1, 0, 1),
+    end_datetime = endOfMonth(start_datetime),
   }: {
     start_datetime?: Date;
     end_datetime?: Date;
   } = {}) {
-    const start_date = start_datetime.toISOString().substring(0, 10);
-    const end_date = end_datetime.toISOString().substring(0, 10);
+    const start_date = startOfWeek(start_datetime)
+      .toISOString()
+      .substring(0, 10);
+    const end_date = endOfWeek(end_datetime).toISOString().substring(0, 10);
     const apiUrl = `rooms/${room_id}/availability/?start_date=${start_date}&end_date=${end_date}`;
     let available_timeslots: DateTimeSlots[] = [];
     await api({ url: apiUrl, method: "get" })
