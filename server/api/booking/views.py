@@ -120,17 +120,19 @@ class BookingViewSet(viewsets.ModelViewSet):
             response_serializer = self.get_serializer(booking)
 
             # Send booking confirmation email after successful creation
-            send_booking_confirmed_email(
-                recipients=[booking.visitor_email],
-                context={
-                    "room_name": booking.room,
-                    "start_datetime": booking.start_datetime,
-                    "end_datetime": booking.end_datetime,
-                    "visitor_name": booking.visitor_name,
-                    "location_name": booking.room.location,
-                    "manage_url": request.build_absolute_uri(f"/bookings/{booking.id}/")    # check this? not sure what pages the frontend uses.
-                }
-            )
+            try:
+                send_booking_confirmed_email(
+                    recipients=[booking.visitor_email],
+                    context={
+                        "room_name": booking.room,
+                        "start_datetime": booking.start_datetime,
+                        "end_datetime": booking.end_datetime,
+                        "visitor_name": booking.visitor_name,
+                        "location_name": booking.room.location
+                    }
+                )
+            except Exception as email_error:
+                logger.error(f"Booking {booking.id} created, but failed to send confirmation email: {email_error}")
 
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -205,14 +207,17 @@ class BookingViewSet(viewsets.ModelViewSet):
                         'id', 'status', 'cancel_reason', 'updated_at'))
 
                     # Send cancellation email
-                    send_booking_cancelled_email(
-                        recipients=[visitor_email],
-                        context={
-                            "room_name": booking.room,
-                            "start_datetime": booking.start_datetime,
-                            "end_datetime": booking.end_datetime,
-                            "book_room_url": request.build_absolute_uri("/rooms/")}     # check this? not sure what pages the frontend uses.
+                    try:    
+                        send_booking_cancelled_email(
+                            recipients=[visitor_email],
+                            context={
+                                "room_name": booking.room,
+                                "start_datetime": booking.start_datetime,
+                                "end_datetime": booking.end_datetime
+                            }
                         )
+                    except Exception as email_error:
+                        logger.error(f"Booking {booking.id} cancelled, but failed to send cancellation email: {email_error}")
 
                     return Response(response_serializer.data)
 
@@ -264,17 +269,19 @@ class BookingViewSet(viewsets.ModelViewSet):
                     updated_booking, fields=('id', 'status', 'updated_at'))
 
                 # Send updated booking confirmation email
-                send_booking_confirmed_email(
-                    recipients=[updated_booking.visitor_email],
-                    context={
-                        "room_name": updated_booking.room,
-                        "start_datetime": updated_booking.start_datetime,
-                        "end_datetime": updated_booking.end_datetime,
-                        "visitor_name": updated_booking.visitor_name,
-                        "location_name": updated_booking.room.location,
-                        "manage_url": request.build_absolute_uri(f"/bookings/{updated_booking.id}/")    # check this? not sure what the frontend uses.
-                    }
-                )
+                try:
+                    send_booking_confirmed_email(
+                        recipients=[updated_booking.visitor_email],
+                        context={
+                            "room_name": updated_booking.room,
+                            "start_datetime": updated_booking.start_datetime,
+                            "end_datetime": updated_booking.end_datetime,
+                            "visitor_name": updated_booking.visitor_name,
+                            "location_name": updated_booking.room.location
+                        }
+                    )
+                except Exception as email_error:
+                    logger.error(f"Booking {updated_booking.id} updated, but failed to send confirmation email: {email_error}")
 
                 return Response(response_serializer.data)
 
