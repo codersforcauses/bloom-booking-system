@@ -120,6 +120,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             response_serializer = self.get_serializer(booking)
 
             # Send booking confirmation email after successful creation
+            # A non-critical feature - booking creation should not fail if email sending fails
             try:
                 send_booking_confirmed_email(
                     recipients=[booking.visitor_email],
@@ -207,7 +208,8 @@ class BookingViewSet(viewsets.ModelViewSet):
                         'id', 'status', 'cancel_reason', 'updated_at'))
 
                     # Send cancellation email
-                    try:    
+                    # A non-critical feature - booking creation should not fail if email sending fails
+                    try:
                         send_booking_cancelled_email(
                             recipients=[visitor_email],
                             context={
@@ -269,6 +271,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                     updated_booking, fields=('id', 'status', 'updated_at'))
 
                 # Send updated booking confirmation email
+                # A non-critical feature - booking creation should not fail if email sending fails
                 try:
                     send_booking_confirmed_email(
                         recipients=[updated_booking.visitor_email],
