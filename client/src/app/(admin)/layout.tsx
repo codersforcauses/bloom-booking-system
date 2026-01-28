@@ -51,7 +51,7 @@ export default function AdminLayout({
       }
     };
     checkAuth();
-  }, [router]);
+  }, [router, redirectTo]);
 
   // While validating, render nothing (or add a skeleton screen later)
   if (isValidating) {
