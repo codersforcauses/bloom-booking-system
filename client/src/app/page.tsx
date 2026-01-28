@@ -9,7 +9,10 @@ import SearchRoomForm, {
   RoomSearchSchema,
   type RoomSearchSchemaValue,
 } from "@/app/search-room-form";
-import { BookingRoomCard , RoomForBookingRoomCard } from "@/components/room-card";
+import {
+  BookingRoomCard,
+  RoomForBookingRoomCard,
+} from "@/components/room-card";
 import api from "@/lib/api";
 import { normaliseRooms } from "@/lib/normalise-room";
 
