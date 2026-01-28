@@ -10,7 +10,7 @@ const TimePicker = () => {
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3 text-muted-foreground peer-disabled:opacity-50">
           <Clock8Icon className="size-4" />
-          <span className="sr-only">User</span>
+          <span className="sr-only">Select Time</span>
         </div>
         <Input
           type="time"
