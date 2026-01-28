@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { endOfMonth,endOfWeek, startOfMonth, startOfWeek } from "date-fns";
+import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import AlertDialog from "@/components/alert-dialog";
-import InputField from "@/components/input";
+import InputField, { SelectOption } from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
 import { RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
@@ -25,21 +25,34 @@ import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Room } from "@/types/card";
 
+/**
+ * Information about the Room's opening hours
+ */
 interface RoomAvailability {
   recurrence_rule: string;
   start_datetime: Date;
   end_datetime: Date;
 }
 
-interface DateTimeSlots {
-  date: string;
-  slots: {
-    start: Date;
-    end: Date;
-  }[];
+/**
+ * A slot of time from a start time to an end time
+ */
+interface TimeSlot {
+  start: Date;
+  end: Date;
 }
 
-// Converts google calendar day strings to 3 lettter day strings
+/**
+ * Information about a date and its available time slots
+ */
+interface DateTimeSlots {
+  date: string;
+  slots: TimeSlot[];
+}
+
+/**
+ * Converts google calendar day strings to 3 lettter day strings
+ */
 const GoogleCalendarDayConversion = new Map();
 GoogleCalendarDayConversion.set("MO", "Mon");
 GoogleCalendarDayConversion.set("TU", "Tue");
@@ -49,7 +62,9 @@ GoogleCalendarDayConversion.set("FR", "Fri");
 GoogleCalendarDayConversion.set("SA", "Sat");
 GoogleCalendarDayConversion.set("SU", "Sun");
 
-// Convert between 3 letter day strings and their respective number
+/**
+ * Convert between 3 letter day strings and their respective number
+ */
 const DayNumber = new Map();
 DayNumber.set("Mon", 0);
 DayNumber.set("Tue", 1);
@@ -116,11 +131,16 @@ function getAMPMTimeString(datetime: Date) {
   return `${hours_str}:${mins_str}${suffix}`;
 }
 
+/**
+ * Room booking form component
+ */
 function BookRoomForm() {
   const params = useParams();
   const room_id = Number(params.room_id);
 
-  // Used to strict date and time selection options
+  /**
+   * The opening hours of the room
+   */
   const default_room_availability: RoomAvailability = {
     recurrence_rule: "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
     start_datetime: new Date(new Date(0).setHours(8)),
@@ -129,15 +149,42 @@ function BookRoomForm() {
   const [roomAvailability, setRoomAvailability] = useState(
     default_room_availability,
   );
+  /**
+   * The time availability of a room over a range of dates
+   */
   const default_available_timeslots: DateTimeSlots[] = [];
   const [availableTimeSlots, setAvailableTimeSlots] = useState(
     default_available_timeslots,
   );
+  /**
+   * The dates to prevent users from selecting (e.g. past dates, closed days of
+   * week,booked dates)
+   */
   const default_disabled_dates: Matcher[] = [];
   const [disabledDates, setDisabledDates] = useState(default_disabled_dates);
-
+  /**
+   * The time slots of the current date chosen by the date field used to
+   * restrict the time selection fields
+   */
+  const empty_slots: TimeSlot[] = [];
+  const [selectTimeSlots, setSelectTimeSlots] = useState(empty_slots);
+  /**
+   * The options to render within the time selection fields
+   */
+  const empty_time_options: SelectOption[] = [];
+  const [startTimeOptions, setStartTimeOptions] = useState(empty_time_options);
+  const [endTimeOptions, setEndTimeOptions] = useState(empty_time_options);
+  /**
+   * The state of the All Day button
+   */
   const [allDay, setAllDay] = useState(false);
+  /**
+   * The state of the reCAPTCHA verification
+   */
   const [verified, setVerified] = useState(false);
+  /**
+   * The props to render within the alert dialog
+   */
   const [alertDialogProps, setAlertDialogProps] = useState({
     title: "",
     successText: "",
@@ -188,6 +235,13 @@ function BookRoomForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
+    defaultValues: {
+      name: undefined,
+      email: undefined,
+      date: undefined,
+      start_time: undefined,
+      end_time: undefined,
+    },
   });
 
   /**
@@ -391,6 +445,11 @@ function BookRoomForm() {
     start_datetime?: Date;
     end_datetime?: Date;
   } = {}) {
+    /* 
+    .toISOString() may cause an issue here as it formats datetimes to GMT time
+    which means start_date will be the date before the start date as
+    startOfWeek returns start of week 00:00 +8:00.
+    */
     const start_date = startOfWeek(start_datetime)
       .toISOString()
       .substring(0, 10);
@@ -446,6 +505,168 @@ function BookRoomForm() {
       start_datetime: month,
     });
     disableUnavailableDates(await available_timeslots);
+  }
+
+  /**
+   * Get the time slots available on the date provided from availableTimeSlots
+   * state variable
+   * @param date The date to get the time slots for
+   * @returns An array of the available timeslots for the provided date
+   */
+  function getDateTimeSlots(date: Date | undefined): TimeSlot[] {
+    if (date === undefined) return [];
+    // Prevents timezone offset messing with date string using .toISOString()
+    const date_string =
+      `${date.getFullYear()}-` +
+      `${(date.getMonth() + 1).toString().padStart(2, "0")}-` +
+      `${date.getDate().toString().padStart(2, "0")}`;
+    const date_availability = availableTimeSlots.find(
+      (o: DateTimeSlots) => o.date === date_string,
+    );
+    if (date_availability === undefined) return [];
+    return date_availability.slots;
+  }
+
+  /**
+   * Returns true if the time provided is within ont of the time slots provided
+   * @param time An HH:MM string representing a valid time
+   * @param slots An array of timeslots
+   * @returns True if time param is contained within one of the timeslots
+   */
+  function timeInTimeSlots(time: string, slots: TimeSlot[]): boolean {
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      const date = new Date(slot.start.toISOString().substring(0, 10));
+      const datetime = new Date(formatDateTime(date, time));
+      if (datetime >= slot.start && datetime <= slot.end) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get the time options for a select field between the room's opening and
+   * closing times within the available time slots provided
+   * @param slots The available timeslots to get times between
+   * @param filter_out_unavilable If true removes unavailable options from array
+   * returned, otherwise sets disabled to true for these options
+   * @param option_length The time between options e.g. 30 returns 08:00, 08:30
+   * @returns An array of of select options of times in HH:MM format between the
+   * room's opening and closing times, and within timeslots provided
+   */
+  function getTimeSelectOptionsInSlots(
+    slots: TimeSlot[],
+    filter_out_unavilable: boolean = true,
+    option_length: number = 30,
+  ): SelectOption[] {
+    const time_options: SelectOption[] = [];
+    const slot_length = new Date(
+      new Date(0).setMinutes(option_length),
+    ).getTime();
+
+    const room_start = roomAvailability.start_datetime.getTime();
+    const room_end = roomAvailability.end_datetime.getTime();
+
+    const d = new Date(room_start);
+    while (d.getTime() <= room_end) {
+      const time = d.toTimeString().substring(0, 5);
+      time_options.push({
+        value: time,
+        label: time,
+        disabled: !timeInTimeSlots(d.toTimeString().substring(0, 5), slots),
+      });
+      d.setTime(d.getTime() + slot_length);
+    }
+
+    if (filter_out_unavilable) return time_options.filter((o) => !o.disabled);
+    return time_options;
+  }
+
+  /**
+   * Get the available end_times given a start_time and available time slots,
+   * restricts the end_times to be within the same time slot as the start time
+   * and after the start time.
+   * @param start_time The value of the start_time field
+   * @param timeslots The timeslots of the current date
+   * @returns An array of SelectOptions with the end time options
+   */
+  function getEndTimeOptions(
+    start_time: string | undefined = form.getValues("start_time"),
+    timeslots: TimeSlot[] = selectTimeSlots,
+  ): SelectOption[] {
+    let end_options: SelectOption[] = [];
+    if (start_time === undefined) {
+      end_options = getTimeSelectOptionsInSlots(timeslots);
+    } else {
+      for (let i = 0; i < timeslots.length; i++) {
+        const slot = timeslots[i];
+        if (timeInTimeSlots(start_time, [slot])) {
+          end_options = getTimeSelectOptionsInSlots([slot]).filter(
+            (opt: SelectOption) => {
+              // Remove end times before start
+              const start = new Date(formatDateTime(new Date(), start_time));
+              const opt_time = new Date(formatDateTime(new Date(), opt.value));
+              return start < opt_time;
+            },
+          );
+          break;
+        }
+      }
+    }
+    return end_options;
+  }
+
+  /**
+   * Update the selectTimeSlots state variable to the time slots available on
+   * the new date, update the startTimeOptions state variable to the selectable
+   * times within the new time slots, reset the start_time field if old value
+   * is now invalid, call handleStartTimeChange() to update end_time field
+   * options.
+   *
+   * TODO : Should also enable/disable All Day checkbox depending on the
+   * available time slots
+   *
+   * @param date The date the day picker was changed to.
+   */
+  function handleDateChange(date: Date | undefined) {
+    const timeslots = getDateTimeSlots(date);
+    setSelectTimeSlots(timeslots);
+    const start_options = getTimeSelectOptionsInSlots(timeslots);
+    setStartTimeOptions(start_options);
+    // Reset field if previous value is now invalid
+    let start_time: string | undefined = form.getValues("start_time");
+    if (!start_options.map((opt) => opt.value).includes(start_time)) {
+      form.resetField("start_time"); // Not working as expected
+      start_time = undefined;
+    }
+    // Time is different as it is now a different date so trigger change
+    handleStartTimeChange(start_time, timeslots); // Updates end_time options
+  }
+
+  /**
+   * Update the endTimeOptions state variable to the available end times,
+   * reset the end_time field if the old value is now invalid.
+   * @param start_time The HH:MM string the start_time field was changed to
+   * @param timeslots The available timeslots of the current date
+   */
+  function handleStartTimeChange(
+    start_time: string | undefined,
+    timeslots: TimeSlot[] = selectTimeSlots,
+  ) {
+    const end_options = getEndTimeOptions(start_time, timeslots);
+    setEndTimeOptions(end_options);
+    // Reset field if previous value is now invalid
+    let end_time: string | undefined = form.getValues("end_time");
+    if (!end_options.map((opt) => opt.value).includes(end_time)) {
+      form.resetField("end_time"); // Not working as expected
+    }
+  }
+
+  /**
+   * TODO : Handle when all day field is changed
+   * @param checked
+   */
+  function handleAllDayChanged(checked: boolean) {
+    console.log(checked);
   }
 
   useEffect(() => {
@@ -516,7 +737,7 @@ function BookRoomForm() {
                   value={field.value}
                   onChange={(e) => {
                     field.onChange(e);
-                    // TODO: Restrict time selection
+                    handleDateChange(e);
                   }}
                   disabledDates={disabledDates}
                   onMonthChange={handleMonthChange}
@@ -533,12 +754,16 @@ function BookRoomForm() {
             <FormItem className="w-full">
               <FormControl>
                 <InputField
-                  kind="time-select"
+                  kind="select"
                   required={true}
                   name="start_time"
                   label="Start time"
+                  options={startTimeOptions}
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    handleStartTimeChange(e);
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -552,12 +777,15 @@ function BookRoomForm() {
             <FormItem className="w-full">
               <FormControl>
                 <InputField
-                  kind="time-select"
+                  kind="select"
                   required={true}
                   name="end_time"
                   label="End time"
+                  options={endTimeOptions}
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(e) => {
+                    field.onChange(e);
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -568,13 +796,16 @@ function BookRoomForm() {
       <Checkbox
         className="ml-6"
         checked={allDay}
-        onCheckedChange={(checked) => setAllDay(checked === true)}
-        disabled={true}
+        onCheckedChange={(checked) => {
+          setAllDay(checked === true);
+          handleAllDayChanged(checked === true);
+        }}
       >
         All Day (Currently not implemented)
       </Checkbox>
       <ReCAPTCHAV2 setVerified={setVerified} />
       <AlertDialog {...alertDialogProps}>
+        {/* Currently bugged when form is invalid */}
         <Button
           type="submit"
           className="w-1/6 min-w-[8rem] font-bold"
