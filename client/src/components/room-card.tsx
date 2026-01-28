@@ -97,7 +97,7 @@ function RoomCard({ room }: { room: Room; hideIcon?: boolean }) {
       label: "Amenities",
       value: <Amenities amenities={room.amenities} hideIcon />,
     },
-    { label: "Availability", value: room.availablility },
+    { label: "Availability", value: room.availability },
   ];
 
   return (

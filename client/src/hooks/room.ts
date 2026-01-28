@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
 import api from "@/lib/api";
+import { RoomResponse } from "@/lib/api-types";
 import { RoomAmenity, RoomLocation } from "@/types/room";
 
 // Future TO REPLACE when PAGINATION issue #58 is merged
@@ -163,6 +164,19 @@ function useDeleteRoomAmenity() {
   });
 }
 
+type ApiError = { message?: string; detail?: string };
+
+function useFetchRoom(id: number) {
+  return useQuery<RoomResponse, AxiosError<ApiError>>({
+    queryKey: ["room", id], // for caching
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const response = await api.get(`/rooms/${id}/`);
+      return response.data;
+    },
+  });
+}
+
 const RoomAPI = {
   useFetchRoomLocations,
   useFetchRoomLocation,
@@ -174,6 +188,7 @@ const RoomAPI = {
   useCreateRoomAmenity,
   useUpdateRoomAmenity,
   useDeleteRoomAmenity,
+  useFetchRoom,
 };
 
 export default RoomAPI;
