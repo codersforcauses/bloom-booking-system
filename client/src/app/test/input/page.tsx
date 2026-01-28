@@ -1,4 +1,4 @@
-// Text, Number, Select, Date, Time, Badge, are all variations of the Input field.
+// Text, Number, Select, Date, Time, Badge, Search, are all variations of the Input field.
 // To see how each one is used, refer to this page.
 // Currently only the Date and Time field are NOT implemented.
 "use client";
@@ -36,6 +36,8 @@ export default function TestInputPage() {
   const [timeSelect, setTimeSelect] = React.useState("");
 
   const [date, setDate] = React.useState<Date | undefined>(undefined);
+
+  const [searchValue, setSearchValue] = React.useState("");
 
   return (
     <div className="min-h-screen bg-[hsl(var(--secondary))] p-8">
@@ -112,6 +114,15 @@ export default function TestInputPage() {
           value={date}
           onChange={setDate}
           placeholder="Select date"
+        />
+
+        <InputField
+          kind="search"
+          name="search"
+          label="Search Bookings"
+          value={searchValue}
+          placeholder="Search here"
+          onSearch={(val) => setSearchValue(val)}
         />
       </div>
     </div>
