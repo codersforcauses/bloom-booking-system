@@ -1,5 +1,4 @@
 "use client";
-import { set } from "date-fns";
 import * as React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
@@ -43,10 +42,8 @@ export default function RoomFilterAccordion() {
       apiUrl.push(`amenities=${values.amenities.join(",")}`);
     }
 
-    console.log("API URL:", apiUrl.join("&"));
     try {
       const res = await api.get(`/rooms/?${apiUrl.join("&")}`);
-      console.log(res.data.results);
       setRooms(res.data.results);
     } catch (err) {
       console.error(err);
@@ -56,7 +53,7 @@ export default function RoomFilterAccordion() {
   return (
     <div className="flex items-center justify-center">
       <div className="w-[360px] rounded-xl border bg-white p-4 shadow-sm">
-        <h2 className="font-semib old mb-2 text-base">Filter</h2>
+        <h2 className="mb-2 text-base font-semibold">Filter</h2>
 
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -230,7 +227,7 @@ export default function RoomFilterAccordion() {
                 type="button"
                 variant="outline"
                 className="px-6"
-                onClick={() => {}}
+                onClick={() => form.reset()}
               >
                 Cancel
               </Button>

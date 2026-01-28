@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Breadcrumb from "@/components/breadcrumb";
 import InputField from "@/components/input";
@@ -20,6 +20,7 @@ export default function RoomsPage() {
 
   const [locations, setLocations] = useState([]);
   const [amenities, setAmenities] = useState([]);
+  const [error, setError] = useState<string | null>(null);
 
   async function fetchRooms() {
     try {
@@ -37,6 +38,7 @@ export default function RoomsPage() {
       console.error("Error fetching rooms:", error);
       setAllRooms([]);
       setRooms([]);
+      setError("Failed to load rooms. Please try again.");
     }
   }
 
@@ -91,6 +93,12 @@ export default function RoomsPage() {
               </a>
             </div>
           </div>
+
+          {error && (
+            <div className="mb-4 rounded bg-red-100 px-4 py-2 text-red-700">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {rooms.map((room) => (
