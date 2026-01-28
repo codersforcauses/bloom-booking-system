@@ -2,7 +2,7 @@ import { TZDate } from "@date-fns/tz";
 import { differenceInMinutes, endOfDay, format, startOfDay } from "date-fns";
 import { RRule, rrulestr } from "rrule";
 
-import { RoomResponse } from "@/lib/api-types";
+import { AmenityResponse, RoomResponse } from "@/lib/api-types";
 
 // helper function to bridge the gap between api room data and arguments of RoomCard
 export function normalizeRoom(apiRoom: RoomResponse | undefined) {
@@ -13,9 +13,7 @@ export function normalizeRoom(apiRoom: RoomResponse | undefined) {
     location: apiRoom?.location.name || "",
     seats: apiRoom?.capacity || 0,
     amenities:
-      apiRoom?.amenities?.map(
-        (amenity: Record<string, unknown>) => amenity.name as string,
-      ) ?? [],
+      apiRoom?.amenities?.map((amenity: AmenityResponse) => amenity.name) ?? [],
     available: true,
     availability: apiRoom
       ? getAvailabilityText(
