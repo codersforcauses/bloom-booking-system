@@ -6,6 +6,8 @@ from rest_framework.test import APITestCase
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from unittest.mock import patch
+from types import SimpleNamespace
+from api.booking.views import BookingViewSet
 
 User = get_user_model()
 future_date = timezone.now() + timedelta(days=7)
@@ -382,3 +384,25 @@ class BookingViewTest(APITestCase):
         data_large_limit = response_large_limit.json()
         # If max_limit is set in pagination, update 100 to your max_limit value
         self.assertLessEqual(len(data_large_limit["results"]), 100)
+
+    # ==================== Google Calendar Build Events Data Test ====================
+    def test_build_event_data_for_google_calendar(self):
+        """Test building event data for Google Calendar integration."""
+
+        mock_room = SimpleNamespace(id=self.room.id, name=self.room.name)
+
+        mock_booking = SimpleNamespace(
+            room=mock_room,
+            visitor_name="Alice Johnson",
+            visitor_email="alice@example.com",
+            start_datetime=future_date.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=1),
+            end_datetime=future_date.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=1),
+            recurrence_rule="FREQ=DAILY;COUNT=5"
+        )
+
+        booking_viewset = BookingViewSet()
+        event_data = booking_viewset._build_event_data(mock_booking)
+
+        self.assertEqual(event_data["summary"], f"Booking of {self.room.name} - Alice Johnson")
+        self.assertIn("description", event_data)
+        self.assertEqual(event_data["extendedProperties"]["private"].get("roomId"), str(self.room.id))

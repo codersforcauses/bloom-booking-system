@@ -108,7 +108,6 @@ export default function ViewCalendarPage() {
 
   // prepare booked slots for selection checking from google events (instead of calling backend API)
   const bookedSlots = useMemo(() => {
-    console.log("events", events);
     return events.map((event: GoogleCalendarEvent) => ({
       start: new TZDate(event.start, PERTH_TZ).getTime(),
       end: new TZDate(event.end, PERTH_TZ).getTime(),
