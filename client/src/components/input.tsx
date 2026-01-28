@@ -6,9 +6,11 @@
 // - Date
 // - Time (HH:MM input)
 // - Time-Select (08:00–17:00, 30-min intervals)
+// - Search
 
 import { format } from "date-fns";
-import React from "react";
+import { SearchIcon } from "lucide-react";
+import React, { useState } from "react";
 
 import Badge from "@/components/badge";
 import { Calendar } from "@/components/calendar";
@@ -24,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 type FieldKind =
   | "text"
@@ -32,7 +35,8 @@ type FieldKind =
   | "badge"
   | "date"
   | "time"
-  | "time-select";
+  | "time-select"
+  | "search";
 
 type BaseFieldProps = {
   name: string;
@@ -92,6 +96,12 @@ type TimeSelectFieldProps = BaseFieldProps & {
   onChange: (value: string) => void;
 };
 
+type SearchFieldProps = BaseFieldProps & {
+  kind: "search";
+  value: string;
+  onSearch: (value: string) => void;
+};
+
 // THIS IS A PLACEHOLDER
 // i will redo this once the booking model is merged into main.
 // 08:00 → 17:00 in 30-minute steps
@@ -115,7 +125,8 @@ export type InputFieldProps =
   | BadgeFieldProps
   | DateFieldProps
   | TimeFieldProps
-  | TimeSelectFieldProps;
+  | TimeSelectFieldProps
+  | SearchFieldProps;
 
 const InputField: React.FC<InputFieldProps> = (props) => {
   const { label, required, className, fieldClassName, error, name } = props;
@@ -159,12 +170,14 @@ const InputField: React.FC<InputFieldProps> = (props) => {
     control = renderTimeSelectFieldControl(timeSelectProps);
   } else if (kind === "badge" && badgeProps) {
     control = renderBadgeFieldControl(badgeProps);
+  } else if (kind === "search") {
+    control = renderSearchFieldControl(props as SearchFieldProps, name);
   } else {
     control = renderNotImplementedControl(kind);
   }
 
   return (
-    <div className={wrapperClasses}>
+    <div className={cn(wrapperClasses)}>
       <label htmlFor={name} className="body-sm-bold block">
         {label}
         {required && <span className="text-bloom-red"> *</span>}
@@ -366,6 +379,43 @@ function renderBadgeFieldControl(props: BadgeFieldProps) {
           </Badge>
         ))
       )}
+    </div>
+  );
+}
+
+function renderSearchFieldControl(props: SearchFieldProps, name: string) {
+  const [tempValue, setTempValue] = useState(props.value);
+
+  React.useEffect(() => {
+    setTempValue(props.value);
+  }, [props.value]);
+  const handleOnBlur = () => props.onSearch(tempValue);
+
+  const handleOnKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") props.onSearch(tempValue);
+  };
+
+  return (
+    <div
+      className={["flex flex-col", props.className].filter(Boolean).join(" ")}
+    >
+      <div
+        className={["relative", props.fieldClassName].filter(Boolean).join(" ")}
+      >
+        <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
+        <input
+          id={name}
+          name={name}
+          type="text"
+          className="body w-full bg-transparent px-3 py-1 pl-10 outline-none placeholder:text-[var(--bloom-gray)]"
+          placeholder={props.placeholder ?? "Search..."}
+          value={tempValue}
+          onChange={(e) => setTempValue(e.target.value)}
+          onBlur={handleOnBlur}
+          onKeyDown={handleOnKeyDown}
+        />
+      </div>
     </div>
   );
 }

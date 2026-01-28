@@ -10,8 +10,8 @@ import {
 } from "@/components/admin-settings-card";
 import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import RoomAPI from "@/hooks/room";
+import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
-import { RoomAmenity, RoomLocation } from "@/types/room";
 
 type View =
   | "summary"
@@ -20,11 +20,11 @@ type View =
   | "amenities-list"
   | "amenities-form";
 
+type Item = LocationResponse | AmenityResponse;
+
 export default function AdminSettingsPage() {
   const [view, setView] = useState<View>("summary");
-  const [editingItem, setEditingItem] = useState<
-    RoomLocation | RoomAmenity | null
-  >(null);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
 
   const [alert, setAlert] = useState<{
     open: boolean;
@@ -34,7 +34,7 @@ export default function AdminSettingsPage() {
   }>({ open: false, variant: "success" });
 
   const [confirmDelete, setConfirmDelete] = useState<{
-    item: RoomLocation | RoomAmenity;
+    item: Item;
     type: "locations" | "amenities";
   } | null>(null);
 
@@ -59,10 +59,7 @@ export default function AdminSettingsPage() {
     setView(type === "locations" ? "locations-form" : "amenities-form");
   };
 
-  const handleEdit = (
-    item: RoomLocation | RoomAmenity,
-    type: "locations" | "amenities",
-  ) => {
+  const handleEdit = (item: Item, type: "locations" | "amenities") => {
     setEditingItem(item);
     setView(type === "locations" ? "locations-form" : "amenities-form");
   };
@@ -105,10 +102,7 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleDelete = async (
-    item: RoomLocation | RoomAmenity,
-    type: "locations" | "amenities",
-  ) => {
+  const handleDelete = async (item: Item, type: "locations" | "amenities") => {
     try {
       if (type === "locations") {
         await deleteLocation.mutateAsync(item.id);

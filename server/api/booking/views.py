@@ -26,9 +26,14 @@ class ListBookingFilter(django_filters.FilterSet):
     visitor_email = django_filters.CharFilter(
         lookup_expr='iexact')
 
+    # New filter to support multiple room IDs
+    room_ids = django_filters.BaseInFilter(
+        field_name='room_id', lookup_expr='in'
+    )
+
     class Meta:
         model = Booking
-        fields = ["visitor_name", "visitor_email"]
+        fields = ["visitor_name", "visitor_email", "room_ids"]
 
 
 class BookingViewSet(viewsets.ModelViewSet):
