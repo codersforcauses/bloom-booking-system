@@ -43,6 +43,7 @@ const fetchEvents = async ({ queryKey, signal }: any) => {
 
   const { data } = await axios.get(`/api/calendar/`, {
     params: { roomId, timeMin: start, timeMax: end },
+    headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
     signal,
   });
 
