@@ -33,7 +33,12 @@ import { Calendar as MiniCalendar } from "@/components/calendar";
 import { RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import RoomAPI from "@/hooks/room";
-import { useRoomEvents } from "@/hooks/useRoomEvents";
+import {
+  CalendarEvent,
+  GoogleCalendarEvent,
+  NewCalendarEvent,
+  useRoomEvents,
+} from "@/hooks/useRoomEvents";
 import { getAvailableSlots, normalizeRoom } from "@/lib/room-utils";
 import { cn } from "@/lib/utils";
 
@@ -59,10 +64,9 @@ export default function ViewCalendarPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [date, setDate] = useState<Date>(new TZDate(new Date(), PERTH_TZ));
   const [view, setView] = useState<View>(isMobile ? Views.DAY : Views.WEEK);
-  const [selectedSlot, setSelectedSlot] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<NewCalendarEvent | null>(
+    null,
+  );
   // to set a 13-day window (mobile) / 3-week window (desktop) to pre-fetch data and prevent ui flickering
   const [dateRange, setDateRange] = useState(() => {
     if (isMobile) {
@@ -81,23 +85,37 @@ export default function ViewCalendarPage() {
       };
     }
   });
-  // display both real google events and user's selectedSlot
+
+  // fetch room data;
   const {
     data: room,
     isLoading,
     isError,
     error,
-  } = RoomAPI.useFetchRoom(Number(id)); // fetch room data;
+  } = RoomAPI.useFetchRoom(Number(id));
+  // fetch room events using custom hook
   const { events } = useRoomEvents(String(id), dateRange);
 
+  // display both real google events and user's selectedSlot
   const displayEvents = selectedSlot ? [...events, selectedSlot] : events;
 
+  // calculate available slots based on room data and dateRange
   const availableSlots = useMemo(() => {
     // if room is not active, just skip the calculation
     if (!room || !room.is_active) return new Set<number>();
     return getAvailableSlots(room, dateRange.start, dateRange.end);
   }, [room, dateRange]);
 
+  // prepare booked slots for selection checking from google events (instead of calling backend API)
+  const bookedSlots = useMemo(() => {
+    console.log("events", events);
+    return events.map((event: GoogleCalendarEvent) => ({
+      start: new TZDate(event.start, PERTH_TZ).getTime(),
+      end: new TZDate(event.end, PERTH_TZ).getTime(),
+    }));
+  }, [events]);
+
+  // handle slot selection
   const handleSelectSlot = (slotInfo: SlotInfo) => {
     // Disable when room is not active
     if (!room || !room.is_active) return;
@@ -109,18 +127,19 @@ export default function ViewCalendarPage() {
     const now = new TZDate(new Date(), PERTH_TZ);
     if (slotInfo.start < now) return;
 
-    // Selection cannot cover any booked slot
+    // Selection cannot cover any unavailable / booked slot
     let checkPointer = slotInfo.start.getTime();
     const endTime = slotInfo.end.getTime();
 
     while (checkPointer < endTime) {
-      if (!availableSlots || !availableSlots.has(checkPointer)) {
-        console.log(
-          "Blocking selection: detected disallowed slot at",
-          new Date(checkPointer),
-        );
-        return;
-      }
+      // Check general availability
+      if (!availableSlots || !availableSlots.has(checkPointer)) return;
+      // Check booked slots
+      const isBooked = bookedSlots.some(
+        (range: Record<string, number>) =>
+          checkPointer >= range.start && checkPointer < range.end,
+      );
+      if (isBooked) return;
       checkPointer += 30 * 60000;
     }
 
@@ -132,7 +151,7 @@ export default function ViewCalendarPage() {
     });
   };
 
-  const eventPropGetter = (event: Record<string, unknown>) => {
+  const eventPropGetter = (event: CalendarEvent) => {
     const isDraft = event.isDraft;
     return {
       className: cn(
