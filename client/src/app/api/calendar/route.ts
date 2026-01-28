@@ -14,11 +14,13 @@ export async function GET(request: Request) {
     const endParam = searchParams.get("timeMax");
 
     if (
-      !process.env.GOOGLE_APPLICATION_CREDENTIALS ||
-      !process.env.GOOGLE_CALENDAR_ID
+      !process.env.GOOGLE_PROJECT_ID ||
+      !process.env.GOOGLE_CALENDAR_ID ||
+      !process.env.GOOGLE_CLIENT_EMAIL ||
+      !process.env.GOOGLE_PRIVATE_KEY
     ) {
       console.error(
-        "GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_CALENDAR_ID is not set in environment variables.",
+        "Google Calendar environment variables are not set properly.",
       );
       return NextResponse.json(
         { error: "Internal server error" },
@@ -34,12 +36,12 @@ export async function GET(request: Request) {
     }
 
     // Resolve the path to the JSON file and authenticate
-    const keyPath = path.join(
-      process.cwd(),
-      process.env.GOOGLE_APPLICATION_CREDENTIALS,
-    );
     const auth = new google.auth.GoogleAuth({
-      keyFile: keyPath,
+      projectId: process.env.GOOGLE_PROJECT_ID,
+      credentials: {
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      },
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
     });
 
