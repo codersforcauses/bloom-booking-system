@@ -34,7 +34,11 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const [redirectTo] = useState(() => {
     const next = searchParams.get("next");
-    return next && next.startsWith("/") ? next : "/dashboard";
+    // Must start with exactly one slash
+    if (!next?.startsWith("/") || next.startsWith("//")) {
+      return "/dashboard";
+    }
+    return next;
   });
 
   useEffect(() => {
@@ -66,7 +70,7 @@ export default function LoginPage() {
       }
     };
     checkAuth();
-  }, []);
+  }, [router, redirectTo]);
 
   const {
     register,
