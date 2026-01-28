@@ -57,9 +57,6 @@ export function useRoomEvents(
     staleTime: 5 * 60 * 1000,
   });
 
-  if (queryInfo.error)
-    console.log("Error fetching room events: ", queryInfo.error);
-
   return {
     events: queryInfo.data || [],
     isLoading: queryInfo.isLoading,

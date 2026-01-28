@@ -1,14 +1,8 @@
-import { TZDate } from "@date-fns/tz";
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
 import api from "@/lib/api";
-import {
-  DayAvailability,
-  RoomAvailabilityResponse,
-  RoomResponse,
-  TimeSlot,
-} from "@/lib/api-types";
+import { RoomResponse } from "@/lib/api-types";
 import { RoomAmenity, RoomLocation } from "@/types/room";
 
 // Future TO REPLACE when PAGINATION issue #58 is merged

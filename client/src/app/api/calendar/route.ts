@@ -48,19 +48,21 @@ export async function GET(request: Request) {
     const queryParams: calendar_v3.Params$Resource$Events$List = {
       calendarId: process.env.GOOGLE_CALENDAR_ID,
       singleEvents: true,
-      orderBy: "startTime",
       privateExtendedProperty: [`roomId=${roomId}`], // use sharedExtendedProperty if using different service accounts
     };
 
     if (startParam) {
       const perthStart = startOfDay(new TZDate(startParam, PERTH_TZ));
       queryParams.timeMin = perthStart.toISOString();
+      queryParams.orderBy = "startTime";
     }
 
     if (endParam) {
       const perthEnd = endOfDay(new TZDate(endParam, PERTH_TZ));
       queryParams.timeMax = perthEnd.toISOString();
     }
+
+    console.log("Querying Google Calendar with params:", queryParams);
 
     const response = await calendar.events.list(queryParams);
     return NextResponse.json(response.data.items || []);

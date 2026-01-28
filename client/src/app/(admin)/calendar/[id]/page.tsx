@@ -63,7 +63,7 @@ export default function ViewCalendarPage() {
     string,
     unknown
   > | null>(null);
-  // to set a three-day window to pre-fetch data and prevent ui flickering
+  // to set a 13-day window (mobile) / 3-week window (desktop) to pre-fetch data and prevent ui flickering
   const [dateRange, setDateRange] = useState(() => {
     if (isMobile) {
       const start = startOfDay(subDays(now, 6));
@@ -148,8 +148,10 @@ export default function ViewCalendarPage() {
     (date: Date) => {
       if (view === Views.MONTH) return {};
       const time = date.getTime();
+      const now = new TZDate(new Date(), PERTH_TZ);
+      const currentTime = now.getTime();
 
-      if (time < now.getTime() || (room && !room.is_active)) {
+      if (time < currentTime || (room && !room.is_active)) {
         return {
           className: "!bg-[hsl(var(--muted))] !cursor-not-allowed",
         };
@@ -163,7 +165,7 @@ export default function ViewCalendarPage() {
 
       return {};
     },
-    [room, availableSlots, view],
+    [room, availableSlots, view, isLoading],
   );
 
   // if there is selectedSlot, bring the data as params
@@ -200,17 +202,21 @@ export default function ViewCalendarPage() {
     let start: Date;
     let end: Date;
     if (view === Views.DAY) {
-      // 12-day window: previous day, today, next day
+      // 13-day window: 6 days before, selected day, 6 days after
       start = startOfDay(subDays(perthDate, 6));
       end = endOfDay(addDays(perthDate, 6));
     } else if (view === Views.WEEK) {
       // 3-week window: previous week, current week, next week
       start = startOfWeek(subWeeks(perthDate, 1), { weekStartsOn: 1 });
       end = endOfWeek(addWeeks(perthDate, 1), { weekStartsOn: 1 });
-    } else {
+    } else if (view === Views.MONTH) {
       // whole month
       start = startOfMonth(perthDate);
       end = endOfMonth(perthDate);
+    } else {
+      // Agenda View: From the start of the selected day, looking 30 days ahead
+      start = startOfDay(perthDate);
+      end = endOfDay(addDays(perthDate, 30));
     }
     setDateRange({
       start: format(start, "yyyy-MM-dd"),
