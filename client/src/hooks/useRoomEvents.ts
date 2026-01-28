@@ -1,20 +1,40 @@
 import { TZDate } from "@date-fns/tz";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { is } from "date-fns/locale";
 
 const PERTH_TZ = "Australia/Perth";
 
-interface DateRange {
+export type DateRange = {
   start: string;
   end: string;
-}
+};
 
-interface CalendarEvent {
+export type GoogleCalendarEventResponse = {
   summary?: string;
   description?: string;
   start: { dateTime?: string; date?: string };
   end: { dateTime?: string; date?: string };
-}
+};
+
+export type GoogleCalendarEvent = {
+  title: string;
+  description: string;
+  start: TZDate | Date;
+  end: TZDate | Date;
+  data: GoogleCalendarEvent;
+  resourceId: string | undefined;
+  isDraft: boolean;
+};
+
+export type NewCalendarEvent = {
+  title: string;
+  start: TZDate | Date;
+  end: TZDate | Date;
+  isDraft: boolean;
+};
+
+export type CalendarEvent = GoogleCalendarEvent | NewCalendarEvent;
 
 const fetchEvents = async ({ queryKey, signal }: any) => {
   const [_, roomId, { start, end }] = queryKey;
@@ -28,10 +48,14 @@ const fetchEvents = async ({ queryKey, signal }: any) => {
 
   return data
     .filter(
-      (event: CalendarEvent) => event.start?.dateTime || event.start?.date,
+      (event: GoogleCalendarEventResponse) =>
+        event.start?.dateTime || event.start?.date,
     )
-    .filter((event: CalendarEvent) => event.end?.dateTime || event.end?.date)
-    .map((event: CalendarEvent) => ({
+    .filter(
+      (event: GoogleCalendarEventResponse) =>
+        event.end?.dateTime || event.end?.date,
+    )
+    .map((event: GoogleCalendarEventResponse) => ({
       title: event.summary || "Untitled",
       description: event.description || "",
       start: new TZDate(
@@ -41,6 +65,7 @@ const fetchEvents = async ({ queryKey, signal }: any) => {
       end: new TZDate(event.end?.dateTime || event.end?.date || "", PERTH_TZ),
       data: event,
       resourceId: roomId,
+      isDraft: false,
     }));
 };
 
