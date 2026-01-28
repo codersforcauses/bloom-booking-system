@@ -219,7 +219,7 @@ export type AdminRoomCard = {
   image: string;
   location: string;
   available: boolean;
-  availablility: string;
+  availability: string;
   seats: number;
   amenities: string[];
   bookings: number;
