@@ -10,7 +10,6 @@ import { RiArtboardLine } from "react-icons/ri";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Room } from "@/types/card";
 
 import { Button } from "./ui/button";
 
@@ -67,6 +66,18 @@ const Amenities = ({
   );
 };
 
+// ----------------- Room Card Variant: RoomCard -----------------
+
+export type RoomForRoomCard = {
+  id: number;
+  title: string;
+  image?: string;
+  location: string;
+  seats: number;
+  amenities: string[];
+  availability: string;
+};
+
 /**
  * Displays a room with details in a label-value grid format.
  *
@@ -78,17 +89,18 @@ const Amenities = ({
  *
  * @example
  * const room = {
+ *   id: 1,
  *   title: "Meeting Room A",
- *   image: "/rooms/a.jpg",
+ *   image: "/rooms/a.jpg" (optional),
  *   location: "Level 2 Block B",
  *   seats: 10,
  *   amenities: ["Audio", "HDMI"],
- *   available: true,
+ *   availability: "8:00pm - 6:00pm, everyday",
  * };
  *
  * <RoomCard room={room} />
  */
-function RoomCard({ room }: { room: Room; hideIcon?: boolean }) {
+function RoomCard({ room }: { room: RoomForRoomCard; hideIcon?: boolean }) {
   const roomDetailsGroups = [
     { label: "Room Name", value: room.title },
     { label: "Location", value: room.location },
@@ -97,7 +109,7 @@ function RoomCard({ room }: { room: Room; hideIcon?: boolean }) {
       label: "Amenities",
       value: <Amenities amenities={room.amenities} hideIcon />,
     },
-    { label: "Availability", value: room.availablility },
+    { label: "Availability", value: room.availability },
   ];
 
   return (
@@ -128,8 +140,20 @@ function RoomCard({ room }: { room: Room; hideIcon?: boolean }) {
   );
 }
 
+// ----------------- Room Card Variant: BookingRoomCard -----------------
+
+export type RoomForBookingRoomCard = {
+  id: number;
+  title: string;
+  image?: string;
+  location: string;
+  seats: number;
+  amenities: string[];
+  available: boolean;
+};
+
 type BookingRoomProps = {
-  room: Room;
+  room: RoomForBookingRoomCard;
   hideIcon?: boolean;
   onBook?: () => void;
 };
@@ -147,8 +171,9 @@ type BookingRoomProps = {
  *
  * @example
  * const room = {
+ *   id: 2,
  *   title: "Training Room B",
- *   image: "/rooms/b.jpg",
+ *   image: "/rooms/b.jpg" (optional),
  *   location: "Level 3 Block D",
  *   seats: 12,
  *   amenities: ["Audio", "HDMI", "White Board"],
@@ -186,8 +211,26 @@ function BookingRoomCard({ room, onBook }: BookingRoomProps) {
   );
 }
 
+// ----------------- Room Card Variant: AdminRoomCard -----------------
+
+export type AdminRoomCard = {
+  id: number;
+  title: string;
+  image: string;
+  location: string;
+  available: boolean;
+  availablility: string;
+  seats: number;
+  amenities: string[];
+  bookings: number;
+  removed?: boolean;
+  start_datetime?: string;
+  end_datetime?: string;
+  recurrence_rule?: string;
+};
+
 type AdminRoomCardProps = {
-  room: Room;
+  room: AdminRoomCard;
   hideIcon?: boolean;
   onView?: () => void;
   onEdit?: () => void;

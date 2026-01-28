@@ -9,10 +9,9 @@ import SearchRoomForm, {
   RoomSearchSchema,
   type RoomSearchSchemaValue,
 } from "@/app/search-room-form";
-import { BookingRoomCard } from "@/components/room-card";
+import { BookingRoomCard , RoomForBookingRoomCard } from "@/components/room-card";
 import api from "@/lib/api";
 import { normaliseRooms } from "@/lib/normalise-room";
-import { Room } from "@/types/card";
 
 type Params = {
   name?: string;
@@ -27,7 +26,7 @@ type Params = {
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<RoomForBookingRoomCard[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [nextAvailabilityUrl, setNextAvailabilityUrl] = useState<string | null>(
     null,

@@ -1,14 +1,14 @@
+import { RoomForBookingRoomCard } from "@/components/room-card";
 import {
   AmenityResponse,
   RoomAvailabilityResponse,
   RoomResponse,
 } from "@/lib/api-types";
-import { Room } from "@/types/card";
 // helper function to bridge the gap between api room data and props of BookingRoomCard
 export function normaliseRooms(
   apiRooms: RoomResponse[],
   apiAvailabilities: RoomAvailabilityResponse[],
-): Room[] {
+): RoomForBookingRoomCard[] {
   // turn list to map
   const availabilityMap = Object.fromEntries(
     apiAvailabilities.map((a: RoomAvailabilityResponse) => [
