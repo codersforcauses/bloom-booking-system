@@ -64,7 +64,7 @@ type NumberFieldProps = BaseFieldProps & {
   step?: number;
 };
 
-type SelectOption = { label: string; value: string };
+export type SelectOption = { label: string; value: string; disabled?: boolean };
 type SelectFieldProps = BaseFieldProps & {
   kind: "select";
   options: SelectOption[];
@@ -263,7 +263,12 @@ function renderSelectFieldControl(props: SelectFieldProps) {
       </SelectTrigger>
       <SelectContent>
         {props.options.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
+          <SelectItem
+            className={opt.disabled ? "line-through" : ""}
+            key={opt.value}
+            value={opt.value}
+            disabled={opt.disabled}
+          >
             {opt.label}
           </SelectItem>
         ))}
