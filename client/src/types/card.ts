@@ -60,7 +60,7 @@ export const roomsMock: Room[] = [
     seats: 4,
     location: "St Catherine's college, 2 Park Road",
     available: true,
-    availability: "12;00pm - 7:00pm, Wed - Fri",
+    availability: "12:00pm - 7:00pm, Wed - Fri",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
     bookings: 8,
     removed: true,
