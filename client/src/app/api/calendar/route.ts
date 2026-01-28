@@ -2,12 +2,29 @@ import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
 import { calendar_v3, google } from "googleapis";
 import { NextResponse } from "next/server";
-import path from "path";
+
+import { verifyToken } from "@/app/api/check-auth/route";
 
 const PERTH_TZ = "Australia/Perth";
 
 export async function GET(request: Request) {
   try {
+    // Check authorization header
+    const authHeader = request.headers.get("authorization");
+    const accessToken = authHeader?.split(" ")[1] || null;
+
+    const verificationResult = await verifyToken(accessToken);
+    if (!verificationResult.valid) {
+      console.log(
+        "Unauthorized access to /api/calendar:",
+        verificationResult.error,
+      );
+      return NextResponse.json(
+        { error: verificationResult.error },
+        { status: verificationResult.status },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const roomId = searchParams.get("roomId");
     const startParam = searchParams.get("timeMin");
