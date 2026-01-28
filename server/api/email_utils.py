@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.templatetags.static import static
 
-import smtplib
+from smtplib import SMTPAuthenticationError, SMTPResponseException
 
 import logging
 
@@ -116,6 +116,7 @@ def send_simple_email(
     if message is None:
         message = ""
 
+    # Attempts to send email. If authentication fails with bad credentials, log an error but keep the app running.
     try:
         return send_mail(
             subject=subject,
@@ -125,9 +126,14 @@ def send_simple_email(
             fail_silently=fail_silently,
             html_message=html_message,
         )
-    except smtplib.SMTPAuthenticationError:
+    except SMTPAuthenticationError:
         logger.error(f"Failed to send email: Authentication error with EMAIL_HOST_USER {from_email}.")
         return 0
+    except SMTPResponseException as e:
+        if e.smtp_code == 530:
+            logger.error("Failed to send email: SMTP authentication required.")
+            return 0
+        raise
 
 
 def send_booking_confirmed_email(
