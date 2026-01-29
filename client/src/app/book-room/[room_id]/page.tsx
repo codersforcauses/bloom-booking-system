@@ -1,7 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
+import {
+  endOfMonth,
+  endOfWeek,
+  set,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
@@ -132,12 +138,16 @@ function getAMPMTimeString(datetime: Date) {
 }
 
 /**
- * Room booking form component
+ * React hook form component using zod validation for booking a room.
+ * Includes name, email, date, start time and end time fields, reCAPTCHA
+ * verification, an all day checkbox, and an alert dialog on submission.
+ *
+ * Date picker disables unavailable dates based on room availability and
+ * existing bookings.
  */
 function BookRoomForm() {
   const params = useParams();
   const room_id = Number(params.room_id);
-
   /**
    * The opening hours of the room
    */
@@ -149,6 +159,14 @@ function BookRoomForm() {
   const [roomAvailability, setRoomAvailability] = useState(
     default_room_availability,
   );
+  /**
+   * The previous query parameters used to request available timeslots,
+   * used to prevent duplicate requests and filling up availableTimeSlots with
+   * duplicates
+   */
+  const empty_previous_requests: string[] = [];
+  const [previousAvailabilityRequests, setPreviousAvailabilityRequests] =
+    useState(empty_previous_requests);
   /**
    * The time availability of a room over a range of dates
    */
@@ -427,7 +445,7 @@ function BookRoomForm() {
         setRoomAvailability(room_availability);
       })
       .catch((error) => {
-        // TODO : Handle error case
+        // TODO : Handle error
         console.error(error);
       });
     return room_availability;
@@ -458,29 +476,45 @@ function BookRoomForm() {
       .toISOString()
       .substring(0, 10);
     const end_date = endOfWeek(end_datetime).toISOString().substring(0, 10);
-    const apiUrl = `rooms/${room_id}/availability/?start_date=${start_date}&end_date=${end_date}`;
-    let available_timeslots: DateTimeSlots[] = [];
-    await api({ url: apiUrl, method: "get" })
-      .then((response) => {
-        available_timeslots = response.data.availability.map(
-          (o: { date: string; slots: { start: string; end: string }[] }) => {
-            return {
-              date: o.date,
-              slots: o.slots.map((slot: { start: string; end: string }) => {
-                return {
-                  start: new Date(Date.parse(slot.start)),
-                  end: new Date(Date.parse(slot.end)),
-                };
-              }),
-            };
-          },
-        );
-        setAvailableTimeSlots(available_timeslots);
-      })
-      .catch((error) => {
-        // TODO: handle error case
-        console.error(error);
-      });
+    const query_params = `start_date=${start_date}&end_date=${end_date}`;
+    const apiUrl = `rooms/${room_id}/availability/?${query_params}`;
+    let available_timeslots: DateTimeSlots[] = [...availableTimeSlots];
+
+    if (!previousAvailabilityRequests.includes(query_params)) {
+      await api({ url: apiUrl, method: "get" })
+        .then((response) => {
+          const new_available_timeslots = response.data.availability.map(
+            (o: { date: string; slots: { start: string; end: string }[] }) => {
+              return {
+                date: o.date,
+                slots: o.slots.map((slot: { start: string; end: string }) => {
+                  return {
+                    start: new Date(Date.parse(slot.start)),
+                    end: new Date(Date.parse(slot.end)),
+                  };
+                }),
+              };
+            },
+          );
+          available_timeslots = [
+            ...available_timeslots,
+            ...new_available_timeslots,
+          ];
+          setAvailableTimeSlots(available_timeslots);
+          setPreviousAvailabilityRequests([
+            ...previousAvailabilityRequests,
+            query_params,
+          ]);
+        })
+        .catch((error) => {
+          /*
+          If error occurs, available_timeslots is equal to the current
+          availableTimeslots state variable so nothing needs to be handled
+          */
+          console.error(error);
+        });
+    }
+    // Return available_timeslots for use before state variable updates
     return available_timeslots;
   }
 
@@ -620,8 +654,9 @@ function BookRoomForm() {
   }
 
   /**
-   *
-   * @param timeslots
+   * Enable/disable the all day checkbox depending on if room is available all
+   * day.
+   * @param timeslots The timeslots for the currently selected date
    */
   function enableAllDayIfApplicable(timeslots: TimeSlot[]) {
     if (timeslots.length === 1) {
@@ -653,10 +688,7 @@ function BookRoomForm() {
    * the new date, update the startTimeOptions state variable to the selectable
    * times within the new time slots, reset the start_time field if old value
    * is now invalid, call handleStartTimeChange() to update end_time field
-   * options.
-   *
-   * TODO : Should also enable/disable All Day checkbox depending on the
-   * available time slots
+   * options, enable/disabled the all day button depending on timeslots available.
    *
    * @param date The date the day picker was changed to.
    */
@@ -671,9 +703,9 @@ function BookRoomForm() {
       form.resetField("start_time"); // Not working as expected
       start_time = undefined;
     }
+    enableAllDayIfApplicable(timeslots);
     // Time is different as it is now a different date so trigger change
     handleStartTimeChange(start_time, timeslots); // Updates end_time options
-    enableAllDayIfApplicable(timeslots);
   }
 
   /**
@@ -705,7 +737,8 @@ function BookRoomForm() {
   }
 
   /**
-   * Uncheck all day if end time changed from room closing time
+   * Uncheck all day if end time changed from room closing time.
+   *
    * @param end_time
    */
   function handleEndTimeChange(end_time: string | undefined) {
@@ -718,11 +751,16 @@ function BookRoomForm() {
   }
 
   /**
+   * Set the start_time and end_time fields to the room's opening and closing
    *
-   * @param checked
+   * @param checked The state of the all day checkbox
    */
   function handleAllDayChanged(checked: boolean) {
-    if (form.getValues("date") === undefined) setAllDay(false);
+    if (form.getValues("date") === undefined) {
+      setAllDay(false);
+      form.setError("date", { message: "Please select a date." });
+      return;
+    }
     if (checked) {
       const room_start_time = roomAvailability.start_datetime
         .toTimeString()
@@ -736,6 +774,10 @@ function BookRoomForm() {
     }
   }
 
+  /**
+   * Fetch the room availability and available timeslots between the current
+   * time and end of the current month on component mount.
+   */
   useEffect(() => {
     fetchAvailability();
   }, []);
@@ -806,6 +848,9 @@ function BookRoomForm() {
                     field.onChange(e);
                     handleDateChange(e);
                   }}
+                  defaultMonth={
+                    field.value === undefined ? new Date() : field.value
+                  }
                   disabledDates={disabledDates}
                   onMonthChange={handleMonthChange}
                 />
@@ -870,15 +915,23 @@ function BookRoomForm() {
         }}
         disabled={!allDayEnabled}
       >
-        {allDayEnabled ? "All Day" : "All Day (Unavailable for selected date)"}
+        {allDayEnabled ? "All day" : "All day (Unavailable for selected date)"}
       </Checkbox>
       <ReCAPTCHAV2 setVerified={setVerified} />
       <AlertDialog {...alertDialogProps}>
-        {/* Currently bugged when form is invalid */}
         <Button
           type="submit"
           className="w-1/6 min-w-[8rem] font-bold"
           disabled={!verified}
+          onClick={() => {
+            if (!form.formState.isValid)
+              setAlertDialogProps({
+                title: "Invalid details",
+                successText: "Please correct the errors in the form.",
+                showIcon: false,
+                isPending: false,
+              });
+          }}
         >
           Submit
         </Button>
@@ -887,6 +940,10 @@ function BookRoomForm() {
   );
 }
 
+/**
+ * TODO : Write docs
+ * @returns
+ */
 export default function BookRoomPage() {
   const params = useParams();
   const room_id = Number(params.room_id);
@@ -1057,6 +1114,9 @@ export default function BookRoomPage() {
       });
   }
 
+  /**
+   * Fetch the room information on component mount.
+   */
   useEffect(() => {
     fetchRoom(room_id);
   }, []);

@@ -79,6 +79,7 @@ type DateFieldProps = BaseFieldProps & {
   kind: "date";
   value: Date | undefined;
   onChange: (value: Date | undefined) => void;
+  defaultMonth?: Date;
   disabledDates?: Matcher | Matcher[];
   onMonthChange?: MonthChangeEventHandler;
 };
@@ -250,12 +251,7 @@ function renderSelectFieldControl(props: SelectFieldProps) {
       </SelectTrigger>
       <SelectContent>
         {props.options.map((opt) => (
-          <SelectItem
-            className={opt.disabled ? "line-through" : ""}
-            key={opt.value}
-            value={opt.value}
-            disabled={opt.disabled}
-          >
+          <SelectItem key={opt.value} value={opt.value} disabled={opt.disabled}>
             {opt.label}
           </SelectItem>
         ))}
@@ -286,6 +282,7 @@ function renderDateFieldControl(props: DateFieldProps) {
           mode="single"
           selected={props.value}
           onSelect={props.onChange}
+          defaultMonth={props.defaultMonth}
           disabled={props.disabledDates}
           onMonthChange={props.onMonthChange}
           initialFocus
