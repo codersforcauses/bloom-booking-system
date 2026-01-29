@@ -26,6 +26,8 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+// Dynamic rendering is required to ensure fresh authentication state and prevent caching of sensitive routes.
+
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loginSuccess, setLoginSuccess] = useState(false);
