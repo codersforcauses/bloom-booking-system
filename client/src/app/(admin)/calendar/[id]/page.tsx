@@ -38,7 +38,7 @@ import {
   GoogleCalendarEvent,
   NewCalendarEvent,
   useRoomEvents,
-} from "@/hooks/useRoomEvents";
+} from "@/hooks/room-events";
 import { getAvailableSlots, normalizeRoom } from "@/lib/room-utils";
 import { cn } from "@/lib/utils";
 
@@ -156,8 +156,8 @@ export default function ViewCalendarPage() {
       className: cn(
         "rounded-md !text-black !border-none",
         isDraft
-          ? "!bg-[var(--bloom-blue-light)] opacity-60 !border-2 !border-dotted !border-[var(--bloom-blue)]"
-          : "!bg-[var(--bloom-blue)]",
+          ? "!bg-bloom-blue-light opacity-60 !border-2 !border-dotted !border-bloom-blue"
+          : "!bg-bloom-blue",
       ),
     };
   };
