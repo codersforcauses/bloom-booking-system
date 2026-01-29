@@ -175,6 +175,10 @@ function BookRoomForm() {
   const [startTimeOptions, setStartTimeOptions] = useState(empty_time_options);
   const [endTimeOptions, setEndTimeOptions] = useState(empty_time_options);
   /**
+   * The state of the All Day button disabled property
+   */
+  const [allDayEnabled, setAllDayEnabled] = useState(true);
+  /**
    * The state of the All Day button
    */
   const [allDay, setAllDay] = useState(false);
@@ -594,7 +598,7 @@ function BookRoomForm() {
     timeslots: TimeSlot[] = selectTimeSlots,
   ): SelectOption[] {
     let end_options: SelectOption[] = [];
-    if (start_time === undefined) {
+    if (start_time === undefined || start_time === "") {
       end_options = getTimeSelectOptionsInSlots(timeslots);
     } else {
       for (let i = 0; i < timeslots.length; i++) {
@@ -613,6 +617,35 @@ function BookRoomForm() {
       }
     }
     return end_options;
+  }
+
+  /**
+   *
+   * @param timeslots
+   */
+  function enableAllDayIfApplicable(timeslots: TimeSlot[]) {
+    if (timeslots.length === 1) {
+      const room_start_time = roomAvailability.start_datetime
+        .toTimeString()
+        .substring(0, 5);
+      const room_end_time = roomAvailability.end_datetime
+        .toTimeString()
+        .substring(0, 5);
+
+      const slot = timeslots[0];
+      const slot_start_time = slot.start.toTimeString().substring(0, 5);
+      const slot_end_time = slot.end.toTimeString().substring(0, 5);
+
+      if (
+        slot_start_time === room_start_time &&
+        slot_end_time === room_end_time
+      ) {
+        setAllDayEnabled(true);
+        return;
+      }
+    }
+    setAllDay(false);
+    setAllDayEnabled(false);
   }
 
   /**
@@ -640,11 +673,13 @@ function BookRoomForm() {
     }
     // Time is different as it is now a different date so trigger change
     handleStartTimeChange(start_time, timeslots); // Updates end_time options
+    enableAllDayIfApplicable(timeslots);
   }
 
   /**
    * Update the endTimeOptions state variable to the available end times,
-   * reset the end_time field if the old value is now invalid.
+   * reset the end_time field if the old value is now invalid, uncheck all day
+   * if the start time was changed from the room opening time.
    * @param start_time The HH:MM string the start_time field was changed to
    * @param timeslots The available timeslots of the current date
    */
@@ -659,14 +694,46 @@ function BookRoomForm() {
     if (!end_options.map((opt) => opt.value).includes(end_time)) {
       form.resetField("end_time"); // Not working as expected
     }
+    // Uncheck all day if start time changed from room opening time
+    if (
+      allDay &&
+      start_time !==
+        roomAvailability.start_datetime.toTimeString().substring(0, 5)
+    ) {
+      setAllDay(false);
+    }
   }
 
   /**
-   * TODO : Handle when all day field is changed
+   * Uncheck all day if end time changed from room closing time
+   * @param end_time
+   */
+  function handleEndTimeChange(end_time: string | undefined) {
+    if (
+      allDay &&
+      end_time !== roomAvailability.end_datetime.toTimeString().substring(0, 5)
+    ) {
+      setAllDay(false);
+    }
+  }
+
+  /**
+   *
    * @param checked
    */
   function handleAllDayChanged(checked: boolean) {
-    console.log(checked);
+    if (form.getValues("date") === undefined) setAllDay(false);
+    if (checked) {
+      const room_start_time = roomAvailability.start_datetime
+        .toTimeString()
+        .substring(0, 5);
+      const room_end_time = roomAvailability.end_datetime
+        .toTimeString()
+        .substring(0, 5);
+      form.setValue("start_time", room_start_time);
+      form.setValue("end_time", room_end_time);
+      handleStartTimeChange(room_start_time);
+    }
   }
 
   useEffect(() => {
@@ -785,6 +852,7 @@ function BookRoomForm() {
                   value={field.value}
                   onChange={(e) => {
                     field.onChange(e);
+                    handleEndTimeChange(e);
                   }}
                 />
               </FormControl>
@@ -800,8 +868,9 @@ function BookRoomForm() {
           setAllDay(checked === true);
           handleAllDayChanged(checked === true);
         }}
+        disabled={!allDayEnabled}
       >
-        All Day (Currently not implemented)
+        {allDayEnabled ? "All Day" : "All Day (Unavailable for selected date)"}
       </Checkbox>
       <ReCAPTCHAV2 setVerified={setVerified} />
       <AlertDialog {...alertDialogProps}>
