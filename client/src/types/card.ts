@@ -9,6 +9,9 @@ export type Room = {
   amenities: string[];
   bookings?: number;
   removed?: boolean;
+  start_datetime?: string;
+  end_datetime?: string;
+  recurrence_rule?: string;
 };
 
 const defaultImage =
