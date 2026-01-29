@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { logout } from "@/lib/api";
-import { RoomAmenity, RoomLocation } from "@/types/room";
+import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 
 type SummaryCardProps = {
   locations: string[];
@@ -146,11 +146,11 @@ function AdminSettingsSummaryCard({
 
 type TableCardProps = {
   title: string;
-  items: RoomAmenity[] | RoomLocation[];
+  items: AmenityResponse[] | LocationResponse[];
   onAdd: () => void;
   onBack: () => void;
-  onEditItem?: (item: RoomLocation | RoomAmenity) => void;
-  onDeleteItem?: (item: RoomLocation | RoomAmenity) => void;
+  onEditItem?: (item: LocationResponse | AmenityResponse) => void;
+  onDeleteItem?: (item: LocationResponse | AmenityResponse) => void;
 };
 
 function AdminSettingsTableCard({
