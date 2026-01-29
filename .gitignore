@@ -298,7 +298,6 @@ opt/
 
 # google api 
 server/api/booking/google_calendar/google_calendar_service.json
-server/google_calendar_service.json
-client/google_calendar_service.json
+**/google_calendar_service.json
 
 server/media/

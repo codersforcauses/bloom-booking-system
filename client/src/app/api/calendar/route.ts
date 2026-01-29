@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const verificationResult = await verifyToken(accessToken);
     if (!verificationResult.valid) {
       console.log(
-        "Unauthorized access to /api/calendar:",
+        "Unauthorized access to /api/calendar",
         verificationResult.error,
       );
       return NextResponse.json(
