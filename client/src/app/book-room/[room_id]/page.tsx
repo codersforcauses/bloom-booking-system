@@ -1,20 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  endOfMonth,
-  endOfWeek,
-  set,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
+import { endOfMonth, endOfWeek, startOfWeek } from "date-fns";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import AlertDialog from "@/components/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogProps,
+  AlertDialogVariant,
+} from "@/components/alert-dialog";
 import InputField, { SelectOption } from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
 import { RoomCard } from "@/components/room-card";
@@ -205,14 +203,32 @@ function BookRoomForm() {
    */
   const [verified, setVerified] = useState(false);
   /**
+   * The state of the form submission
+   */
+  const [submitPending, setSubmitPending] = useState(false);
+  /**
+   * Closes the alert dialog (used becuause props are controlled by state variable).
+   */
+  function close_dialog() {
+    setAlertDialogProps({
+      ...alertDialogProps,
+      open: false,
+    });
+  }
+  /**
    * The props to render within the alert dialog
    */
-  const [alertDialogProps, setAlertDialogProps] = useState({
+  const default_alert_dialog_props: AlertDialogProps = {
     title: "",
-    successText: "",
-    showIcon: false,
-    isPending: false,
-  });
+    description: "",
+    variant: "info" as AlertDialogVariant,
+    open: false,
+    onConfirm: close_dialog,
+    onClose: close_dialog,
+  };
+  const [alertDialogProps, setAlertDialogProps] = useState(
+    default_alert_dialog_props,
+  );
 
   const formSchema = z
     .object({
@@ -268,16 +284,11 @@ function BookRoomForm() {
 
   /**
    * Uses data from the from to send an POST request to /api/bookings/ endpoint
-   * and sets alertDialogProps and isPending according to server response.
+   * and sets alertDialogProps according to server response.
    * @param data The data from the form.
    */
   function onSubmit(data: z.infer<typeof formSchema>) {
-    setAlertDialogProps({
-      title: "Submitting booking...",
-      successText: "",
-      showIcon: false,
-      isPending: true,
-    });
+    setSubmitPending(true);
     const payload = {
       room_id: room_id,
       visitor_name: data.name,
@@ -288,9 +299,9 @@ function BookRoomForm() {
     };
     const alert_dialog_props = {
       title: "",
-      successText: "",
-      showIcon: false,
-      isPending: false,
+      description: "",
+      variant: "info" as AlertDialogVariant,
+      open: true,
     };
     api({ url: "bookings/", method: "post", data: payload })
       .then((response) => {
@@ -317,7 +328,7 @@ function BookRoomForm() {
           Nov,
           Dec,
         }
-        const success_text = cn(
+        const description = cn(
           `Your ${res.room.name} Booking for`,
           `${date.getDate()} ${MonthString[date.getMonth()]} ${date.getFullYear()}`,
           `from ${start_time} to ${end_time}`,
@@ -325,28 +336,32 @@ function BookRoomForm() {
           `You will receive an email confirmation shortly.`,
         );
         alert_dialog_props.title = "Awesome!";
-        alert_dialog_props.successText = success_text;
-        alert_dialog_props.showIcon = true;
+        alert_dialog_props.description = description;
+        alert_dialog_props.variant = "success" as AlertDialogVariant;
       })
       .catch((error) => {
         alert_dialog_props.title = "Sorry!";
-        alert_dialog_props.showIcon = false;
+        alert_dialog_props.variant = "error" as AlertDialogVariant;
         const res = error.response.data;
         if (res.start_datetime !== undefined) {
-          alert_dialog_props.successText = cn(res.start_datetime);
+          alert_dialog_props.description = cn(res.start_datetime);
         } else if (res.end_datetime !== undefined) {
-          alert_dialog_props.successText = cn(res.end_datetime);
+          alert_dialog_props.description = cn(res.end_datetime);
         } else if (res.non_field_errors !== undefined) {
-          alert_dialog_props.successText = cn(res.non_field_errors);
+          alert_dialog_props.description = cn(res.non_field_errors);
         } else if (res.detail !== undefined) {
-          alert_dialog_props.successText = cn(res.detail);
+          alert_dialog_props.description = cn(res.detail);
         } else {
-          alert_dialog_props.successText = "Unknown error.";
+          alert_dialog_props.description = "Unknown error.";
           console.error(error);
         }
       })
       .finally(() => {
-        setAlertDialogProps(alert_dialog_props);
+        setAlertDialogProps({
+          ...alertDialogProps,
+          ...alert_dialog_props,
+        });
+        setSubmitPending(false);
       });
   }
 
@@ -918,24 +933,27 @@ function BookRoomForm() {
         {allDayEnabled ? "All day" : "All day (Unavailable for selected date)"}
       </Checkbox>
       <ReCAPTCHAV2 setVerified={setVerified} />
-      <AlertDialog {...alertDialogProps}>
-        <Button
-          type="submit"
-          className="w-1/6 min-w-[8rem] font-bold"
-          disabled={!verified}
-          onClick={() => {
-            if (!form.formState.isValid)
-              setAlertDialogProps({
-                title: "Invalid details",
-                successText: "Please correct the errors in the form.",
-                showIcon: false,
-                isPending: false,
-              });
-          }}
-        >
-          Submit
-        </Button>
-      </AlertDialog>
+      <Button
+        type="submit"
+        className="w-1/6 min-w-[8rem] font-bold"
+        disabled={!verified || submitPending}
+        onClick={() => {
+          /* 
+          BUG : on first submit attempt shows even if form is valid
+          */
+          if (!form.formState.isValid)
+            setAlertDialogProps({
+              ...alertDialogProps,
+              title: "Invalid details",
+              description: "Please correct the errors in the form.",
+              variant: "error" as AlertDialogVariant,
+              open: true,
+            });
+        }}
+      >
+        Submit
+      </Button>
+      <AlertDialog {...alertDialogProps} />
     </Form>
   );
 }
