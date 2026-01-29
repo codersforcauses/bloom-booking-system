@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api, { setAccessToken } from "@/lib/api";
+import { delay } from "@/lib/utils";
 
 /**
  * - POST /users/login/ with username/password
@@ -27,7 +28,19 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(true);
+  const [loginSuccess, setLoginSuccess] = useState(false);
+
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [redirectTo] = useState(() => {
+    const next = searchParams.get("next");
+    // Must start with exactly one slash
+    if (!next?.startsWith("/") || next.startsWith("//")) {
+      return "/dashboard";
+    }
+    return next;
+  });
+
   useEffect(() => {
     const checkAuth = async () => {
       const accessToken = localStorage.getItem("accessToken");
@@ -47,7 +60,7 @@ export default function LoginPage() {
           body: JSON.stringify({ accessToken }),
         });
         if (res.ok) {
-          router.push("/dashboard");
+          router.push(redirectTo);
         } else {
           setIsLoading(false);
         }
@@ -57,13 +70,14 @@ export default function LoginPage() {
       }
     };
     checkAuth();
-  }, []);
+  }, [router, redirectTo]);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setError,
+    clearErrors,
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { username: "", password: "" },
@@ -92,6 +106,8 @@ export default function LoginPage() {
         return;
       }
 
+      clearErrors();
+      setLoginSuccess(true);
       setAccessToken(access);
 
       // refresh token is used by api.ts refresh flow, so we must store it too
@@ -99,9 +115,9 @@ export default function LoginPage() {
         localStorage.setItem("refreshToken", refresh);
       }
 
-      // Redirect to dashboard
-      router.push("/dashboard");
-      router.refresh();
+      await delay(800);
+      router.push(redirectTo);
+      // router.refresh();
     } catch (err: any) {
       const message =
         err?.response?.data?.detail ||
@@ -183,6 +199,12 @@ export default function LoginPage() {
           {errors.root?.message && (
             <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-bloom-red">
               {errors.root.message}
+            </p>
+          )}
+
+          {loginSuccess && (
+            <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+              Login successful. Redirecting…
             </p>
           )}
 
