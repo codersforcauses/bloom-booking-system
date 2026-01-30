@@ -148,6 +148,8 @@ function getAMPMTimeString(datetime: Date) {
  * existing bookings.
  */
 function BookRoomForm() {
+  const router = useRouter();
+
   const params = useParams();
   const room_id = Number(params.room_id);
   /**
@@ -301,7 +303,7 @@ function BookRoomForm() {
       end_datetime: formatDateTime(data.date, data.end_time),
       recurrence_rule: "",
     };
-    const alert_dialog_props = {
+    const alert_dialog_props: AlertDialogProps = {
       title: "",
       description: "",
       variant: "info" as AlertDialogVariant,
@@ -342,6 +344,8 @@ function BookRoomForm() {
         alert_dialog_props.title = "Awesome!";
         alert_dialog_props.description = description;
         alert_dialog_props.variant = "success" as AlertDialogVariant;
+        alert_dialog_props.onConfirm = () => router.push("/");
+        alert_dialog_props.onClose = () => router.push("/");
       })
       .catch((error) => {
         alert_dialog_props.title = "Sorry!";
@@ -516,13 +520,13 @@ function BookRoomForm() {
             },
           );
           available_timeslots = [
-            ...available_timeslots,
             ...new_available_timeslots,
+            ...available_timeslots,
           ];
           setAvailableTimeSlots(available_timeslots);
           setPreviousAvailabilityRequests([
-            ...previousAvailabilityRequests,
             query_params,
+            ...previousAvailabilityRequests,
           ]);
         })
         .catch((error) => {
