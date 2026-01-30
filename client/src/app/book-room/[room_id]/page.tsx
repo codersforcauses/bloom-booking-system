@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { endOfMonth, endOfWeek, startOfWeek } from "date-fns";
-import { useParams } from "next/navigation";
+import { useParams,useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
 import { useForm } from "react-hook-form";
@@ -25,6 +25,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { Spinner } from "@/components/ui/spinner";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Room } from "@/types/card";
@@ -950,6 +951,8 @@ function BookRoomForm() {
  * @returns
  */
 export default function BookRoomPage() {
+  const router = useRouter();
+
   const params = useParams();
   const room_id = Number(params.room_id);
 
@@ -1097,22 +1100,8 @@ export default function BookRoomPage() {
         setRoom(room);
       })
       .catch((error) => {
-        // TODO: handle error (properly)
         console.error("Error fetching room:", error);
         setError(error.message);
-
-        const err_room: Room = {
-          id: -1,
-          title: "Error... unable to load room",
-          image: defaultImage,
-          location: "",
-          available: false,
-          availablility: "",
-          seats: 0,
-          amenities: [],
-          removed: false,
-        };
-        setRoom(err_room);
       })
       .finally(() => {
         setIsLoading(false);
@@ -1132,10 +1121,29 @@ export default function BookRoomPage() {
         <h1 className="text-xl font-semibold">Book room</h1>
       </div>
       <div className="flex h-full w-full items-start justify-center gap-[3rem] p-[1rem]">
-        <div className="w-fit max-w-[24rem]">
-          <RoomCard room={room} />
-        </div>
-        <BookRoomForm />
+        {isLoading && <Spinner className="w-6" />}
+        {!isLoading && error && (
+          <AlertDialog
+            title="An error has occurred"
+            description="Unable to load room information. Please try again later."
+            variant="error"
+            open={true}
+            onConfirm={() => {
+              router.push("/");
+            }}
+            onClose={() => {
+              router.push("/");
+            }}
+          />
+        )}
+        {!isLoading && !error && (
+          <>
+            <div className="w-fit max-w-[24rem]">
+              <RoomCard room={room} />
+            </div>
+            <BookRoomForm />
+          </>
+        )}
       </div>
     </div>
   );
