@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { endOfMonth, endOfWeek, startOfWeek } from "date-fns";
-import { useParams,useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
 import { useForm } from "react-hook-form";
@@ -87,18 +87,21 @@ DayNumber.set(5, "Sat");
 DayNumber.set(6, "Sun");
 
 /**
- * Combine a date object and a HH:MM time string to a ISO string
+ * Combine a date object and a HH:MM time string to a ISO string, if time string
+ * is empty will return the same time as date param
  * @param date a Date object
  * @param time a valid time in format HH:MM
  * @returns a Date object with the same date as date param and time contained in time string
  */
 function formatDateTime(date: Date, time: string) {
   const full_date = new Date(date);
-  const time_split = time.split(":");
-  const hours = Number(time_split[0]);
-  const mins = Number(time_split[1]);
-  full_date.setHours(hours);
-  full_date.setMinutes(mins);
+  if (time !== "") {
+    const time_split = time.split(":");
+    const hours = Number(time_split[0]);
+    const mins = Number(time_split[1]);
+    full_date.setHours(hours);
+    full_date.setMinutes(mins);
+  }
   const iso_string = full_date.toISOString();
   return iso_string;
 }
@@ -275,11 +278,11 @@ function BookRoomForm() {
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      name: undefined,
-      email: undefined,
+      name: "",
+      email: "",
       date: undefined,
-      start_time: undefined,
-      end_time: undefined,
+      start_time: "",
+      end_time: "",
     },
   });
 
@@ -462,7 +465,7 @@ function BookRoomForm() {
       })
       .catch((error) => {
         // TODO : Handle error
-        console.error(error);
+        console.error("Unable to fetch room availability", error);
       });
     return room_availability;
   }
@@ -644,11 +647,11 @@ function BookRoomForm() {
    * @returns An array of SelectOptions with the end time options
    */
   function getEndTimeOptions(
-    start_time: string | undefined = form.getValues("start_time"),
+    start_time: string = form.getValues("start_time"),
     timeslots: TimeSlot[] = selectTimeSlots,
   ): SelectOption[] {
     let end_options: SelectOption[] = [];
-    if (start_time === undefined || start_time === "") {
+    if (start_time === "") {
       end_options = getTimeSelectOptionsInSlots(timeslots);
     } else {
       for (let i = 0; i < timeslots.length; i++) {
@@ -717,7 +720,7 @@ function BookRoomForm() {
     let start_time: string | undefined = form.getValues("start_time");
     if (!start_options.map((opt) => opt.value).includes(start_time)) {
       form.resetField("start_time"); // Not working as expected
-      start_time = undefined;
+      start_time = "";
     }
     enableAllDayIfApplicable(timeslots);
     // Time is different as it is now a different date so trigger change
@@ -732,13 +735,13 @@ function BookRoomForm() {
    * @param timeslots The available timeslots of the current date
    */
   function handleStartTimeChange(
-    start_time: string | undefined,
+    start_time: string,
     timeslots: TimeSlot[] = selectTimeSlots,
   ) {
     const end_options = getEndTimeOptions(start_time, timeslots);
     setEndTimeOptions(end_options);
     // Reset field if previous value is now invalid
-    let end_time: string | undefined = form.getValues("end_time");
+    let end_time: string = form.getValues("end_time");
     if (!end_options.map((opt) => opt.value).includes(end_time)) {
       form.resetField("end_time"); // Not working as expected
     }
@@ -757,7 +760,7 @@ function BookRoomForm() {
    *
    * @param end_time
    */
-  function handleEndTimeChange(end_time: string | undefined) {
+  function handleEndTimeChange(end_time: string) {
     if (
       allDay &&
       end_time !== roomAvailability.end_datetime.toTimeString().substring(0, 5)
@@ -819,7 +822,7 @@ function BookRoomForm() {
                   required={true}
                   name="name"
                   label="Name"
-                  value={field.value}
+                  value={field.value || ""}
                   onChange={field.onChange}
                 />
               </FormControl>
@@ -838,7 +841,7 @@ function BookRoomForm() {
                   required={true}
                   name="email"
                   label="Email"
-                  value={field.value}
+                  value={field.value || ""}
                   onChange={field.onChange}
                 />
               </FormControl>
@@ -887,7 +890,8 @@ function BookRoomForm() {
                   name="start_time"
                   label="Start time"
                   options={startTimeOptions}
-                  value={field.value}
+                  value={field.value || ""}
+                  placeholder="Select a time"
                   onChange={(e) => {
                     field.onChange(e);
                     handleStartTimeChange(e);
@@ -910,7 +914,8 @@ function BookRoomForm() {
                   name="end_time"
                   label="End time"
                   options={endTimeOptions}
-                  value={field.value}
+                  value={field.value || ""}
+                  placeholder="Select a time"
                   onChange={(e) => {
                     field.onChange(e);
                     handleEndTimeChange(e);
@@ -939,24 +944,19 @@ function BookRoomForm() {
         className="w-1/6 min-w-[8rem] font-bold"
         disabled={!verified || submitPending}
       >
-        Submit
+        {!submitPending ? "Submit" : <Spinner className="w-6" />}
       </Button>
       <AlertDialog {...alertDialogProps} />
     </Form>
   );
 }
 
-/**
- * TODO : Write docs
- * @returns
- */
 export default function BookRoomPage() {
   const router = useRouter();
 
   const params = useParams();
   const room_id = Number(params.room_id);
 
-  // Temporary fix to ensure room is always a room type
   const loading_room: Room = {
     id: -1,
     title: "Loading...",
@@ -969,7 +969,9 @@ export default function BookRoomPage() {
     amenities: [],
     removed: false,
   };
-
+  /**
+   * The room information
+   */
   const [room, setRoom] = useState(loading_room);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
