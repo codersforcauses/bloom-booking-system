@@ -308,6 +308,8 @@ function BookRoomForm() {
       description: "",
       variant: "info" as AlertDialogVariant,
       open: true,
+      onConfirm: close_dialog,
+      onClose: close_dialog,
     };
     api({ url: "bookings/", method: "post", data: payload })
       .then((response) => {
@@ -365,10 +367,7 @@ function BookRoomForm() {
         }
       })
       .finally(() => {
-        setAlertDialogProps({
-          ...alertDialogProps,
-          ...alert_dialog_props,
-        });
+        setAlertDialogProps(alert_dialog_props);
         setSubmitPending(false);
       });
   }
