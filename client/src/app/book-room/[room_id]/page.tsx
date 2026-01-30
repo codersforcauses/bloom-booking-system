@@ -937,19 +937,6 @@ function BookRoomForm() {
         type="submit"
         className="w-1/6 min-w-[8rem] font-bold"
         disabled={!verified || submitPending}
-        onClick={() => {
-          /* 
-          BUG : on first submit attempt shows even if form is valid
-          */
-          if (!form.formState.isValid)
-            setAlertDialogProps({
-              ...alertDialogProps,
-              title: "Invalid details",
-              description: "Please correct the errors in the form.",
-              variant: "error" as AlertDialogVariant,
-              open: true,
-            });
-        }}
       >
         Submit
       </Button>
