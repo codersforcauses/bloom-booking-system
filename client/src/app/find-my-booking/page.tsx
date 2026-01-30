@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 import InputField from "@/components/input";
 import { PaginationSearchParams } from "@/components/pagination-bar";
@@ -47,7 +47,7 @@ export default function FindMyBookingPage() {
 
   useEffect(() => {
     if (!isError || !error) return;
-     
+
     console.error("Error searching bookings:", error);
   }, [isError, error]);
 
