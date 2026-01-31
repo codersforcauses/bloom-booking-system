@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
 import { AdminRoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import RoomAPI, { useFetchRooms } from "@/hooks/room";
-import {
-  AmenityResponse,
-  LocationResponse,
-  RoomResponse,
-} from "@/lib/api-types";
+import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 import { Room } from "@/types/card";
 
 import FilterPopOver from "./filter-button";
@@ -40,7 +37,6 @@ export default function RoomsPage() {
     isLoading,
     isError,
     error,
-    refetch,
   } = useFetchRooms({
     page: 1,
     nrows: 100,
@@ -107,9 +103,9 @@ export default function RoomsPage() {
 
           <FilterPopOver />
 
-          <a href="/meeting-room/add">
+          <Link href="/meeting-room/add" passHref>
             <Button variant="confirm">Add Room</Button>
-          </a>
+          </Link>
         </div>
 
         {isError && (

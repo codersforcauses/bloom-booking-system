@@ -16,11 +16,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  AmenityResponse,
-  LocationResponse,
-  RoomResponse,
-} from "@/lib/api-types";
+import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 import { Room } from "@/types/card";
 
 import RoomContext from "./room-context";
@@ -30,12 +26,13 @@ export default function FilterDropdown() {
   if (!ctx) throw new Error("RoomContext not found");
 
   const { locations, amenities, onFilterChange, filterValues } = ctx;
+
   const form = useForm<Room>({
     defaultValues: {
       location: filterValues?.location ?? "",
-      seats: filterValues?.seats ?? 0,
+      //   seats: filterValues?.seats ?? 0,
       amenities: filterValues?.amenities ?? [],
-      available: filterValues?.available ?? false,
+      //   available: filterValues?.available ?? false,
     },
     mode: "onSubmit",
   });
@@ -44,9 +41,9 @@ export default function FilterDropdown() {
   React.useEffect(() => {
     form.reset({
       location: filterValues?.location ?? "",
-      seats: filterValues?.seats ?? 0,
+      //   seats: filterValues?.seats ?? 0,
       amenities: filterValues?.amenities ?? [],
-      available: filterValues?.available ?? false,
+      //   available: filterValues?.available ?? false,
     });
   }, [filterValues]);
 
@@ -70,7 +67,7 @@ export default function FilterDropdown() {
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <Accordion
             type="multiple"
-            defaultValue={["location", "seats"]}
+            defaultValue={["location"]}
             className="w-full divide-y"
           >
             {/* Location */}
@@ -251,7 +248,7 @@ export default function FilterDropdown() {
             <Button
               type="submit"
               className="px-6"
-              disabled={!form.formState.isDirty && !form.formState.isSubmitting}
+              disabled={!form.formState.isDirty || form.formState.isSubmitting}
             >
               Apply
             </Button>
