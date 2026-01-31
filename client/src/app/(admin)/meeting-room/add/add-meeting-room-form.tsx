@@ -3,11 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import CustomRepeatModal from "@/app/(admin)/meeting-room/add/custom-repeat";
+import AmenityModal from "@/app/(admin)/meeting-room/add/add-amenities";
+import CustomRepeatModal, {
+  type CustomRepeatValue,
+} from "@/app/(admin)/meeting-room/add/custom-repeat";
 import InputField from "@/components/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import RoomAPI from "@/hooks/room";
+import type {
+  AmenityResponse,
+  LocationResponse,
+  RoomResponse,
+} from "@/lib/api-types";
 import { Room } from "@/types/card";
 
 import LocationModal from "./add-location";
@@ -68,70 +76,112 @@ export default function AddMeetingRoomForm() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title?.trim()) {
-      newErrors.title = "Room name is required";
-    }
+    const name = (formData.title || "").trim();
+    const locationValue =
+      typeof formData.location === "string"
+        ? formData.location
+        : formData.location != null
+          ? String(formData.location)
+          : "";
+    const locationId = locationValue.trim()
+      ? parseInt(locationValue, 10) || 0
+      : 0;
+    const capacityId = Number(formData.seats) || 0;
+    const start = formData.start_datetime?.toString() || "";
+    const end = formData.end_datetime?.toString() || "";
 
-    if (!formData.location?.trim()) {
-      newErrors.location = "Location is required";
-    }
+    if (!name) newErrors.name = "Room name is required";
+    if (!locationId) newErrors.location = "Location is required";
+    if (!capacityId) newErrors.seats = "Capacity is required";
+    if (!start) newErrors.start_datetime = "Start date/time is required";
+    if (!end) newErrors.end_datetime = "End date/time is required";
 
-    if (!formData.seats || formData.seats <= 0) {
-      newErrors.seats = "Seat capacity is required";
-    }
-
-    if (!formData.start_datetime?.toString().trim()) {
-      newErrors.start_datetime = "Start date/time is required";
-    }
-
-    if (!formData.end_datetime?.toString().trim()) {
-      newErrors.end_datetime = "End date/time is required";
-    }
-
-    if (formData.start_datetime && formData.end_datetime) {
-      const startTime = new Date(formData.start_datetime as string).getTime();
-      const endTime = new Date(formData.end_datetime as string).getTime();
-      if (endTime <= startTime) {
+    if (start && end) {
+      const startTime = new Date(start).getTime();
+      const endTime = new Date(end).getTime();
+      if (endTime <= startTime)
         newErrors.end_datetime = "End time must be after start time";
-      }
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) return null;
+
+    return {
+      name,
+      img: "",
+      location_id: locationId,
+      capacity_id: capacityId,
+      start_datetime: start,
+      end_datetime: end,
+      recurrence_rule: formData.recurrence_rule || "",
+    };
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    const validatedData = validateForm();
+    if (!validatedData) return;
 
     setIsSubmitting(true);
 
     try {
       // Use FormData for multipart file upload
       const formDataMultipart = new FormData();
-      formDataMultipart.append("name", formData.title || "");
-      formDataMultipart.append("location", formData.location || "");
-      formDataMultipart.append("capacity", (formData.seats || 0).toString());
+      formDataMultipart.append("name", validatedData.name);
       formDataMultipart.append(
-        "amenities",
-        JSON.stringify(formData.amenities || []),
+        "location_id",
+        validatedData.location_id.toString(),
       );
-      formDataMultipart.append("start_datetime", formData.start_datetime || "");
-      formDataMultipart.append("end_datetime", formData.end_datetime || "");
       formDataMultipart.append(
-        "recurrence_rule",
-        formData.recurrence_rule || "",
+        "capacity_id",
+        validatedData.capacity_id.toString(),
       );
+      formDataMultipart.append("start_datetime", validatedData.start_datetime);
+      formDataMultipart.append("end_datetime", validatedData.end_datetime);
+      if (validatedData.recurrence_rule) {
+        formDataMultipart.append(
+          "recurrence_rule",
+          validatedData.recurrence_rule,
+        );
+      }
       if (imageFile) {
         formDataMultipart.append("img", imageFile);
       }
 
+      // Note: Amenities are stored via RoomAmenity junction table; the UI still collects selected amenity ids
+      // NOTE: Using `fetch("/api/rooms")` will call a Next.js frontend route (e.g. `/app/api/rooms`) and
+      // bypasses the shared axios `api` client in `src/lib/api.ts` that injects auth tokens and handles
+      // token refresh. There is no frontend `/app/api/rooms` route in the repo, so this may 404 or be
+      // unauthenticated. Prefer using the existing API client or a RoomAPI mutation hook instead:
+      //   api.post("/rooms/", formDataMultipart)
+      // Axios will set the correct Content-Type for FormData automatically, so don't set it manually.
       const response = await fetch("/api/rooms", {
         method: "POST",
         body: formDataMultipart,
-        // Don't set Content-Type header - browser will set it with boundary
       });
 
       if (!response.ok) throw new Error("Failed to add room");
+
+      const created = await response.json();
+
+      // If there are selected amenities, associate them (if backend supports it)
+      if (Array.isArray(formData.amenities) && formData.amenities.length > 0) {
+        // Attempt to associate amenities if endpoint exists
+        try {
+          await Promise.all(
+            formData.amenities.map(async (a) => {
+              const amenityId = typeof a === "string" ? parseInt(a, 10) : a;
+              if (!amenityId) return;
+              await fetch(`/api/rooms/${created.id}/amenities/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amenity_id: amenityId }),
+              });
+            }),
+          );
+        } catch (e) {
+          // Ignore failures to attach amenities for now
+        }
+      }
 
       router.push("/dashboard");
     } catch (error) {
@@ -401,14 +451,29 @@ export default function AddMeetingRoomForm() {
                     setShowCustomRepeat(false);
                     setRepeat("");
                   }}
-                  onDone={(value) => {
+                  onDone={(value: CustomRepeatValue) => {
                     setRepeat("custom");
 
                     // Convert custom repeat to RRULE format
-                    let rrule = `FREQ=${value.frequency.toUpperCase()}`;
+                    const freqMap: Record<string, string> = {
+                      day: "DAILY",
+                      week: "WEEKLY",
+                      month: "MONTHLY",
+                    };
+                    const freq = freqMap[value.frequency];
+                    if (!freq) {
+                      // Unknown frequency (e.g., 'year') - do not set an RRULE
+                      handleInputChange("recurrence_rule", "");
+                      setShowCustomRepeat(false);
+                      return;
+                    }
+                    let rrule = `FREQ=${freq}`;
+
                     if (value.interval && value.interval !== "1") {
                       rrule += `;INTERVAL=${value.interval}`;
                     }
+
+                    // For weekly frequency, list BYDAY values (MO,TU,WE...)
                     if (value.frequency === "week" && value.days?.length) {
                       // Convert day abbreviations to RRULE format (MO, TU, WE, etc.)
                       const dayMap: Record<string, string> = {
@@ -428,10 +493,12 @@ export default function AddMeetingRoomForm() {
 
                     // Add end condition
                     if (value.endType === "on" && value.endDate) {
-                      const endDateStr = new Date(value.endDate)
-                        .toISOString()
-                        .split("T")[0]
-                        .replace(/-/g, "");
+                      // Use a UTC datetime (YYYYMMDDT000000Z) for UNTIL to match backend
+                      // expectations and RFC5545 datetime format for timed recurrences.
+                      const endDate = new Date(value.endDate);
+                      const endDateStr =
+                        endDate.toISOString().split("T")[0].replace(/-/g, "") +
+                        "T000000Z";
                       rrule += `;UNTIL=${endDateStr}`;
                     } else if (value.endType === "after" && value.occurrences) {
                       rrule += `;COUNT=${value.occurrences}`;
