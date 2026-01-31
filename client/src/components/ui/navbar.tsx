@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HiOutlineUser } from "react-icons/hi";
 
 import { cn } from "@/lib/utils";
@@ -11,6 +11,31 @@ import { Button } from "./button";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    const checkAuth = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        setIsLoggedIn(false);
+        return;
+      }
+      try {
+        const res = await fetch("/api/check-auth", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ accessToken }),
+        });
+        if (res.ok) {
+          setIsLoggedIn(true);
+        }
+      } catch (err) {
+        setIsLoggedIn(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-white">
