@@ -170,7 +170,10 @@ const handleEarlyLogout = (errMsg: string, err?: AxiosError) => {
 
 const logout = () => {
   clearTokens();
-  if (typeof window !== "undefined") {
+  if (
+    typeof window !== "undefined" &&
+    !window.location.pathname.startsWith("/login")
+  ) {
     window.location.href = "/login";
   }
 };

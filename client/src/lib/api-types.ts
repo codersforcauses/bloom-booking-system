@@ -35,12 +35,22 @@ export type RoomResponse = {
   is_active: boolean;
 };
 
-type RoomShortResponse = {
+export type RoomShortResponse = {
   id: number;
   name: string;
 };
 
 type RoomStatus = "CONFIRMED" | "CANCELLED" | "COMPLETED";
+
+export type UpdateBookingRequest = Partial<{
+  room_id: number;
+  visitor_name: string;
+  visitor_email: string;
+  start_datetime: string;
+  end_datetime: string;
+  recurrence_rule: string;
+  cancel_reason: string;
+}>;
 
 export type BookingResponse = {
   id: number;
@@ -55,7 +65,7 @@ export type BookingResponse = {
   created_at: string;
 };
 
-export type PaginatedResponse<T> = {
+type PaginatedResponse<T> = {
   count: number;
   next: string | null;
   previous: string | null;
@@ -63,6 +73,17 @@ export type PaginatedResponse<T> = {
 };
 
 export type PaginatedRoomResponse = PaginatedResponse<RoomResponse>;
+export type PaginatedLocationResponse = PaginatedResponse<LocationResponse>;
+export type PaginatedAmenityResponse = PaginatedResponse<AmenityResponse>;
 export type PaginatedBookingResponse = PaginatedResponse<BookingResponse>;
 
 export type PingResponse = string;
+
+export type RoomAvailabilityResponse = {
+  room_id: number;
+  availability: boolean;
+};
+
+// for /rooms/availability/ endpoint
+export type PaginatedRoomAvailabilityResponse =
+  PaginatedResponse<RoomAvailabilityResponse>;

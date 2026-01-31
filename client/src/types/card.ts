@@ -4,10 +4,10 @@ export type Room = {
   image: string;
   location: string;
   available: boolean;
-  availablility: string;
+  availablility?: string;
   seats: number;
   amenities: string[];
-  bookings: number;
+  bookings?: number;
   removed?: boolean;
 };
 
