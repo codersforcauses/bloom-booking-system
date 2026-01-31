@@ -17,7 +17,27 @@ import { RoomShortResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
 import { FilterPopover } from "./filter";
-import DemoTable from "./table";
+import FindMyBookingForm from "./find-my-booking-form";
+import { BookingsStats } from "./statistic";
+import BookingTable from "./table";
+
+export default function BookingPageWrapper() {
+  // TODO: get role dynamically
+  let role = "admin";
+  let isAdmin = role === "admin";
+
+  const [verifiedEmail, setVerifiedEmail] = useState<string>("");
+
+  if (isAdmin) return <BookingPage isAdmin />;
+
+  if (!verifiedEmail) {
+    return (
+      <FindMyBookingForm onVerified={(email) => setVerifiedEmail(email)} />
+    );
+  }
+
+  return <BookingPage email={verifiedEmail} />;
+}
 
 /**
  * CustomFetchBookingParams
@@ -35,7 +55,13 @@ export type CustomFetchBookingParams = PaginationSearchParams & {
   _selectedRooms?: RoomShortResponse[];
 };
 
-export default function PaginationDemo() {
+function BookingPage({
+  email = "",
+  isAdmin = false,
+}: {
+  email?: string;
+  isAdmin?: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const oldSearchParams = useSearchParams();
@@ -55,11 +81,7 @@ export default function PaginationDemo() {
    * - Prevent leaking filter data into query strings
    * - Still allow backend to receive full params
    */
-  const urlVisibleParams: CustomFetchBookingParams = {
-    search,
-    page,
-    nrows,
-  };
+  const urlVisibleParams: CustomFetchBookingParams = { search };
 
   /**
    * Local state for all search params
@@ -67,27 +89,27 @@ export default function PaginationDemo() {
    * - Includes both URL-visible params AND internal-only filters
    * - This state is what we send to the backend
    */
-  const [searchParams, setSearchParams] = useState<CustomFetchBookingParams>({
-    room_ids: "",
-    visitor_email: "",
-    visitor_name: "",
-    _selectedRooms: [],
-    ...urlVisibleParams,
-  });
+  const [searchParams, setSearchParams] = useState<CustomFetchBookingParams>(
+    () => ({
+      page,
+      nrows,
+      room_ids: "",
+      visitor_email: email,
+      visitor_name: "",
+      _selectedRooms: [],
+      ...urlVisibleParams,
+    }),
+  );
+
+  useEffect(() => {
+    // Non-admins must only use the verified email
+    if (!isAdmin && email !== searchParams.visitor_email) {
+      // email changed (someone modified readonly field or URL)
+      router.push("/booking"); // send back to email form
+    }
+  }, [email, searchParams.visitor_email, isAdmin, router]);
 
   const { data, isLoading, totalPages } = useFetchBookings(searchParams);
-
-  // Sync URL params to state
-  useEffect(() => {
-    if (!isLoading) {
-      setSearchParams((prev) => ({
-        ...prev,
-        search: search || prev.search,
-        nrows: nrows || prev.nrows,
-        page: page || prev.page,
-      }));
-    }
-  }, [search, nrows, page, isLoading]);
 
   /**
    * pushParams
@@ -97,7 +119,11 @@ export default function PaginationDemo() {
    * 2. URL query string (only allowed keys)
    */
   const pushParams = (params: Partial<CustomFetchBookingParams>) => {
-    const updatedParams = { ...searchParams, ...params };
+    let updatedParams = { ...searchParams, ...params };
+    if (!isAdmin) {
+      updatedParams = { ...updatedParams, visitor_email: email };
+    }
+
     setSearchParams(updatedParams);
 
     const urlParams = pickKeys(
@@ -134,10 +160,18 @@ export default function PaginationDemo() {
 
   const onClose = () => setAlert((prev) => ({ ...prev, open: false }));
 
+  if (!isLoading) {
+    if (searchParams.page && totalPages < searchParams.page) {
+      pushParams({ page: totalPages });
+    }
+  }
+
   return (
     <div className="w-full rounded-xl bg-gray-100 p-6">
+      {isAdmin && <BookingsStats />}
+
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Pagination Display</h2>
+        <h2 className="text-xl font-semibold">List of Bookings</h2>
         <div className="flex gap-2">
           <InputField
             kind="search"
@@ -149,16 +183,18 @@ export default function PaginationDemo() {
             className="w-full space-y-0"
           />
 
-          <DownloadCsvButton
-            path="/bookings/"
-            fileName="bookings-export.csv"
-            onSuccess={() =>
-              showAlert("success", "Success", "CSV exported successfully!")
-            }
-            onError={(err) =>
-              showAlert("error", "Error", resolveErrorMessage(err))
-            }
-          />
+          {isAdmin && (
+            <DownloadCsvButton
+              path="/bookings/"
+              fileName="bookings-export.csv"
+              onSuccess={() =>
+                showAlert("success", "Success", "CSV exported successfully!")
+              }
+              onError={(err) =>
+                showAlert("error", "Error", resolveErrorMessage(err))
+              }
+            />
+          )}
 
           <FilterPopover
             initialFilters={searchParams}
@@ -172,20 +208,21 @@ export default function PaginationDemo() {
                 _selectedRooms: rooms,
               });
             }}
+            isEmailDisabled={!isAdmin}
             className="border-bloom-blue text-bloom-blue"
           />
         </div>
       </div>
 
-      <DemoTable data={data} isLoading={isLoading} showAlert={showAlert} />
+      <BookingTable data={data} isLoading={isLoading} showAlert={showAlert} />
 
       <PaginationBar
-        page={page}
+        page={searchParams.page ?? page}
         totalPages={totalPages}
         onPageChange={(newPage) =>
           pushParams({ page: Math.min(newPage, totalPages) })
         }
-        row={nrows}
+        row={searchParams.nrows}
         onRowChange={(newNrows) =>
           pushParams({ nrows: Number(newNrows), page: 1 })
         }
