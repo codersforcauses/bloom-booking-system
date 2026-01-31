@@ -173,20 +173,23 @@ export default function LoginPage() {
             >
               Password
             </Label>
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter Password"
-              autoComplete="current-password"
-              {...register("password")}
-            />
 
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <Eye /> : <EyeClosed />}
-            </button>
+            <div className="body w-full rounded-md border bg-background px-3 py-2 shadow-bloom-input outline-none placeholder:text-bloom-gray">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter Password"
+                autoComplete="current-password"
+                {...register("password")}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <Eye /> : <EyeClosed />}
+              </button>
+            </div>
 
             {errors.password && (
               <p className="text-xs text-bloom-red">
