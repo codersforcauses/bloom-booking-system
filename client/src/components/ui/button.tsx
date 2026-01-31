@@ -10,7 +10,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         confirm: "bg-bloom-blue hover:bg-bloom-blue-light rounded-lg",
-        outline: "border border-black hover:bg-bloom-blue-light rounded-lg",
+        outline:
+          "border border-black bg-white hover:bg-bloom-blue-light rounded-lg",
         warning: "bg-bloom-red text-white hover:bg-bloom-red-light rounded-lg",
         login: "items-center hover:bg-bloom-yellow rounded-none bg-bloom-gray",
         text: "border-b border-transparent hover:border-b hover:border-black rounded-none px-0",

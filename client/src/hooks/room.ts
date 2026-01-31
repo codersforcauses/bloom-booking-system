@@ -13,19 +13,20 @@ import {
 } from "@/lib/api-types";
 
 function useFetchRooms(params: PaginationSearchParams) {
-  const { page = 1, nrows = 10, search } = params;
+  const { page = 1, nrows = 10, search, ...customParams } = params;
 
   const offset = (page - 1) * nrows;
 
   const { data, isLoading, isError, error, refetch } =
     useQuery<PaginatedRoomResponse>({
-      queryKey: ["rooms", page, nrows, search, offset],
+      queryKey: ["rooms", page, nrows, search, offset, customParams],
       queryFn: async () => {
         const response = await api.get("/rooms/", {
           params: {
             limit: nrows,
             offset,
             ...(search ? { search } : {}),
+            ...(customParams ? { ...customParams } : {}),
           },
         });
         return response.data;
