@@ -1,77 +1,201 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 import InputField from "@/components/input";
-import ReCAPTCHA_v2 from "@/components/recaptcha";
+import {
+  PaginationBar,
+  PaginationSearchParams,
+  pickKeys,
+  toQueryString,
+} from "@/components/pagination-bar";
 import { Button } from "@/components/ui/button";
+import { useFetchBookings } from "@/hooks/booking";
+import { RoomShortResponse } from "@/lib/api-types";
+import { cn } from "@/lib/utils";
 
-const itemSchema = z.object({
-  email: z.email("Invalid email."),
-});
-
-type ItemFormValues = z.infer<typeof itemSchema>;
+import { FilterPopover } from "./filter";
+import FindMyBookingForm from "./find-my-booking-form";
+import BookingTable from "./table";
 
 export default function FindMyBookingPage() {
-  const router = useRouter();
-  const [verified, setVerified] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState<string>("");
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<ItemFormValues>({
-    resolver: zodResolver(itemSchema),
-    defaultValues: {
-      email: "",
-    },
-  });
+  // Handler to reset email
+  const handleBack = () => setVerifiedEmail("");
+
+  if (!verifiedEmail) {
+    return (
+      <FindMyBookingForm onVerified={(email) => setVerifiedEmail(email)} />
+    );
+  }
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BookingPage email={verifiedEmail} handleBack={handleBack} />
+    </Suspense>
+  );
+}
+
+/**
+ * CustomFetchBookingParams
+ *
+ * This type extends PaginationSearchParams using a GENERIC idea:
+ * - PaginationSearchParams defines common pagination fields (page, nrows, search)
+ * - We extend it with booking specific filters
+ *
+ * This allows reuse across FE and BE while keeping strong typing.
+ */
+export type CustomFetchBookingParams = PaginationSearchParams & {
+  room_ids?: string;
+  visitor_email?: string;
+  visitor_name?: string;
+  _selectedRooms?: RoomShortResponse[];
+};
+
+function BookingPage({
+  email = "",
+  handleBack,
+}: {
+  email: string;
+  handleBack: () => void;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const oldSearchParams = useSearchParams();
+
+  const search = oldSearchParams.get("search") ?? "";
+  const page = Number(oldSearchParams.get("page") ?? 1);
+  const nrows = Number(oldSearchParams.get("nrows") ?? 5);
 
   /**
-   * Fetches booking information for the email specified in the form.
-   * @param formData - content of the form inputs
+   * urlVisibleParams
+   *
+   * This object defines which params are allowed to be shown in the URL.
+   * It acts as a WHITELIST.
+   *
+   * Purpose:
+   * - Keep URLs clean
+   * - Prevent leaking filter data into query strings
+   * - Still allow backend to receive full params
    */
-  const onSubmit = async (data: ItemFormValues) => {
-    try {
-      // Optional: call API here or just navigate
-      router.push(`/booking?email=${encodeURIComponent(data.email)}`);
-    } catch (error) {
-      console.error("Error searching bookings:", error);
+  const urlVisibleParams: CustomFetchBookingParams = { search };
+
+  /**
+   * Local state for all search params
+   *
+   * - Includes both URL-visible params AND internal-only filters
+   * - This state is what we send to the backend
+   */
+  const [searchParams, setSearchParams] = useState<CustomFetchBookingParams>(
+    () => ({
+      page,
+      nrows,
+      room_ids: "",
+      visitor_email: email,
+      visitor_name: "",
+      _selectedRooms: [],
+      ...urlVisibleParams,
+    }),
+  );
+
+  useEffect(() => {
+    // email changed send back to email form
+    if (email !== searchParams.visitor_email) {
+      router.push("/booking");
     }
+  }, [email, searchParams.visitor_email, router]);
+
+  const { data, isLoading, totalPages } = useFetchBookings(searchParams);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (searchParams.page && totalPages > 0 && totalPages < searchParams.page) {
+      pushParams({ page: totalPages });
+    }
+  }, [isLoading, totalPages, searchParams.page]);
+
+  /**
+   * pushParams
+   *
+   * This function updates:
+   * 1. Local state (used for backend fetching)
+   * 2. URL query string (only allowed keys)
+   */
+  const pushParams = (params: Partial<CustomFetchBookingParams>) => {
+    const updatedParams = { ...searchParams, ...params, visitor_email: email };
+    setSearchParams(updatedParams);
+
+    const urlParams = pickKeys(
+      updatedParams,
+      ...(Object.keys(urlVisibleParams) as (keyof typeof urlVisibleParams)[]),
+    );
+
+    router.push(`${pathname}?${toQueryString(urlParams)}`);
   };
 
   return (
-    <div className="min-h-layout-header mx-auto flex flex-col items-center justify-center space-y-6 bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))]">
-      <form
-        className="flex flex-col items-center justify-center gap-8"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <h2 className="title mb-2">Enter your email</h2>
-        <Controller
-          control={control}
-          name="email"
-          render={({ field }) => (
-            <InputField
-              className="w-[90vw] md:w-[50vw]"
-              kind="text"
-              label=""
-              name="email"
-              placeholder="Enter your email"
-              value={field.value}
-              onChange={field.onChange}
-              error={errors.email?.message}
-            />
-          )}
-        />
-        <ReCAPTCHA_v2 setVerified={setVerified}></ReCAPTCHA_v2>
-        <Button disabled={!verified || !!errors.email || isSubmitting}>
-          Search
-        </Button>
-      </form>
+    <div className="w-full rounded-xl bg-gray-100 p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-xl font-semibold">List of Bookings</h2>
+        <div className="flex gap-2">
+          <InputField
+            kind="search"
+            name="search"
+            label=""
+            value={searchParams.search || ""}
+            placeholder="Search Name"
+            onSearch={(val) => pushParams({ search: val })}
+            className="w-full space-y-0"
+          />
+
+          <Button
+            onClick={handleBack}
+            variant="outline"
+            title="Back"
+            aria-label="Back"
+            disabled={isLoading}
+            className={cn(
+              "gap-2 border-2 bg-white p-2 hover:bg-muted",
+              !isLoading
+                ? "border-bloom-blue text-bloom-blue"
+                : "border-gray-300 text-gray-300",
+            )}
+          >
+            Back
+          </Button>
+          <FilterPopover
+            initialFilters={searchParams}
+            selectedRooms={searchParams._selectedRooms || []}
+            onApply={(
+              filters: CustomFetchBookingParams,
+              rooms: RoomShortResponse[],
+            ) => {
+              pushParams({
+                ...filters,
+                _selectedRooms: rooms,
+              });
+            }}
+            className="border-bloom-blue text-bloom-blue"
+          />
+        </div>
+      </div>
+
+      <BookingTable data={data} isLoading={isLoading} />
+
+      <PaginationBar
+        page={searchParams.page ?? page}
+        totalPages={totalPages}
+        onPageChange={(newPage) =>
+          pushParams({ page: Math.min(newPage, totalPages) })
+        }
+        row={searchParams.nrows}
+        onRowChange={(newNrows) =>
+          pushParams({ nrows: Number(newNrows), page: 1 })
+        }
+      />
     </div>
   );
 }

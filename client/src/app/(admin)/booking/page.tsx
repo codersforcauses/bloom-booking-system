@@ -3,12 +3,14 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { FilterPopover } from "@/app/(public)/find-my-booking/filter";
+import { CustomFetchBookingParams } from "@/app/(public)/find-my-booking/page";
+import BookingTable from "@/app/(public)/find-my-booking/table";
 import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import { DownloadCsvButton } from "@/components/download-csv-button";
 import InputField from "@/components/input";
 import {
   PaginationBar,
-  PaginationSearchParams,
   pickKeys,
   toQueryString,
 } from "@/components/pagination-bar";
@@ -16,61 +18,17 @@ import { useFetchBookings } from "@/hooks/booking";
 import { RoomShortResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
-import { FilterPopover } from "./filter";
-import FindMyBookingForm from "./find-my-booking-form";
 import { BookingsStats } from "./statistic";
-import BookingTable from "./table";
 
 export default function BookingPageWrapper() {
-  // TODO: get role dynamically
-  let role = "admin";
-  let isAdmin = role === "admin";
-
-  const [verifiedEmail, setVerifiedEmail] = useState<string>("");
-
-  if (isAdmin)
-    return (
-      <Suspense fallback={<div>Loading...</div>}>
-        <BookingPage isAdmin />
-      </Suspense>
-    );
-
-  if (!verifiedEmail) {
-    return (
-      <FindMyBookingForm onVerified={(email) => setVerifiedEmail(email)} />
-    );
-  }
-
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <BookingPage email={verifiedEmail} />
+      <BookingPage />
     </Suspense>
   );
 }
 
-/**
- * CustomFetchBookingParams
- *
- * This type extends PaginationSearchParams using a GENERIC idea:
- * - PaginationSearchParams defines common pagination fields (page, nrows, search)
- * - We extend it with booking specific filters
- *
- * This allows reuse across FE and BE while keeping strong typing.
- */
-export type CustomFetchBookingParams = PaginationSearchParams & {
-  room_ids?: string;
-  visitor_email?: string;
-  visitor_name?: string;
-  _selectedRooms?: RoomShortResponse[];
-};
-
-function BookingPage({
-  email = "",
-  isAdmin = false,
-}: {
-  email?: string;
-  isAdmin?: boolean;
-}) {
+function BookingPage() {
   const router = useRouter();
   const pathname = usePathname();
   const oldSearchParams = useSearchParams();
@@ -79,44 +37,19 @@ function BookingPage({
   const page = Number(oldSearchParams.get("page") ?? 1);
   const nrows = Number(oldSearchParams.get("nrows") ?? 5);
 
-  /**
-   * urlVisibleParams
-   *
-   * This object defines which params are allowed to be shown in the URL.
-   * It acts as a WHITELIST.
-   *
-   * Purpose:
-   * - Keep URLs clean
-   * - Prevent leaking filter data into query strings
-   * - Still allow backend to receive full params
-   */
   const urlVisibleParams: CustomFetchBookingParams = { search };
 
-  /**
-   * Local state for all search params
-   *
-   * - Includes both URL-visible params AND internal-only filters
-   * - This state is what we send to the backend
-   */
   const [searchParams, setSearchParams] = useState<CustomFetchBookingParams>(
     () => ({
       page,
       nrows,
       room_ids: "",
-      visitor_email: email,
+      visitor_email: "",
       visitor_name: "",
       _selectedRooms: [],
       ...urlVisibleParams,
     }),
   );
-
-  useEffect(() => {
-    // Non-admins must only use the verified email
-    if (!isAdmin && email !== searchParams.visitor_email) {
-      // email changed (someone modified readonly field or URL)
-      router.push("/booking"); // send back to email form
-    }
-  }, [email, searchParams.visitor_email, isAdmin, router]);
 
   const { data, isLoading, totalPages } = useFetchBookings(searchParams);
 
@@ -128,19 +61,8 @@ function BookingPage({
     }
   }, [isLoading, totalPages, searchParams.page]);
 
-  /**
-   * pushParams
-   *
-   * This function updates:
-   * 1. Local state (used for backend fetching)
-   * 2. URL query string (only allowed keys)
-   */
   const pushParams = (params: Partial<CustomFetchBookingParams>) => {
     let updatedParams = { ...searchParams, ...params };
-    if (!isAdmin) {
-      updatedParams = { ...updatedParams, visitor_email: email };
-    }
-
     setSearchParams(updatedParams);
 
     const urlParams = pickKeys(
@@ -179,7 +101,7 @@ function BookingPage({
 
   return (
     <div className="w-full rounded-xl bg-gray-100 p-6">
-      {isAdmin && <BookingsStats />}
+      <BookingsStats />
 
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold">List of Bookings</h2>
@@ -194,18 +116,16 @@ function BookingPage({
             className="w-full space-y-0"
           />
 
-          {isAdmin && (
-            <DownloadCsvButton
-              path="/bookings/"
-              fileName="bookings-export.csv"
-              onSuccess={() =>
-                showAlert("success", "Success", "CSV exported successfully!")
-              }
-              onError={(err) =>
-                showAlert("error", "Error", resolveErrorMessage(err))
-              }
-            />
-          )}
+          <DownloadCsvButton
+            path="/bookings/"
+            fileName="bookings-export.csv"
+            onSuccess={() =>
+              showAlert("success", "Success", "CSV exported successfully!")
+            }
+            onError={(err) =>
+              showAlert("error", "Error", resolveErrorMessage(err))
+            }
+          />
 
           <FilterPopover
             initialFilters={searchParams}
@@ -219,7 +139,7 @@ function BookingPage({
                 _selectedRooms: rooms,
               });
             }}
-            isEmailDisabled={!isAdmin}
+            EnableEmail
             className="border-bloom-blue text-bloom-blue"
           />
         </div>
