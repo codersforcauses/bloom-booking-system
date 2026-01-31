@@ -4,14 +4,19 @@ import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
 import { PaginatedBookingResponse } from "@/lib/api-types";
 
-export function useFetchBookings(params: PaginationSearchParams) {
+export function useFetchBookings(
+  params: PaginationSearchParams,
+  options?: { enabled?: boolean },
+) {
   const { page = 1, nrows = 5, search, ...customParams } = params;
 
   const offset = (page - 1) * nrows;
 
-  // Exclude keys that start with "_"
+  // filter out private keys and undefined values
   const filteredParams = Object.fromEntries(
-    Object.entries(customParams).filter(([key]) => !key.startsWith("_")),
+    Object.entries(customParams).filter(
+      ([key, value]) => !key.startsWith("_") && value !== undefined,
+    ),
   );
 
   const { data, isLoading, isError, error, refetch } =
@@ -28,6 +33,7 @@ export function useFetchBookings(params: PaginationSearchParams) {
         });
         return response.data;
       },
+      enabled: options?.enabled ?? true,
     });
 
   const totalPages = data ? Math.ceil(data.count / nrows) : 1;

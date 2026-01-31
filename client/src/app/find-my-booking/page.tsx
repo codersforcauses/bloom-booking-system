@@ -28,11 +28,16 @@ export default function FindMyBookingPage() {
     isLoading,
     isError,
     error,
-  } = useFetchBookings({
-    visitor_email: searchEmail || undefined,
-    page: 1,
-    nrows: 100, // get all bookings for the email
-  } as BookingSearchParams);
+  } = useFetchBookings(
+    {
+      visitor_email: searchEmail || undefined,
+      page: 1,
+      nrows: 100,
+    } as BookingSearchParams,
+    {
+      enabled: !!searchEmail, // only run when searchEmail is set
+    },
+  );
 
   // redirect to results page if there are results
   useEffect(() => {
