@@ -132,7 +132,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="min-h-layout-header flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-3xl border border-slate-100 bg-white px-10 py-12 shadow-md">
         <h1 className="mb-2 text-center text-2xl font-semibold text-slate-900">
           Login
