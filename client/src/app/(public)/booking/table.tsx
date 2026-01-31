@@ -8,7 +8,7 @@ import { BookingResponse } from "@/lib/api-types";
 import { parseRecurrenceRule } from "@/lib/recurrence";
 import { cn } from "@/lib/utils";
 
-export default function DemoTable({
+export default function BookingTable({
   data,
   isLoading,
   showAlert,
@@ -29,20 +29,27 @@ export default function DemoTable({
    * - `render` receives a Booking row
    */
   const columns: Column<BookingResponse>[] = [
-    { key: "id", header: "ID", className: "h-12" },
     // Nested keys are allowed. This reads booking.room.name
-    { key: "room.name", header: "Room Name" },
+    { key: "room.name", header: "Room Name", className: "h-12" },
     { key: "visitor_name", header: "Visitor Name" },
     { key: "visitor_email", header: "Visitor Email" },
     {
       key: "start_datetime",
       header: "Start Date & Time",
-      render: (row) => new Date(row.start_datetime).toLocaleString(),
+      render: (row) => (
+        <span className="whitespace-nowrap">
+          {new Date(row.start_datetime).toLocaleString()}
+        </span>
+      ),
     },
     {
       key: "end_datetime",
       header: "End Date & Time",
-      render: (row) => new Date(row.end_datetime).toLocaleString(),
+      render: (row) => (
+        <span className="whitespace-nowrap">
+          {new Date(row.end_datetime).toLocaleString()}
+        </span>
+      ),
     },
     {
       key: "status",
