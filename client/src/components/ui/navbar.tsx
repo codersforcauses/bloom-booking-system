@@ -2,25 +2,35 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 import { HiOutlineUser } from "react-icons/hi";
 
 import { cn } from "@/lib/utils";
 
 import { Button } from "./button";
 
-const NavbarLinks = ({ loggedIn = false }: { loggedIn: boolean }) => {
+const NavbarLinks = ({
+  loggedIn = false,
+  setOpen,
+}: {
+  loggedIn: boolean;
+  setOpen: (bool: boolean) => void;
+}) => {
   if (loggedIn) {
     return (
       <>
         <Link href="/dashboard">
-          <Button variant="outline">Dashboard</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Dashboard
+          </Button>
         </Link>
         <Link href="/meeting-rooms">
-          <Button variant="text">Meeting Rooms</Button>
+          <Button variant="text" onClick={() => setOpen(false)}>
+            Meeting Rooms
+          </Button>
         </Link>
         <Link href="/settings">
-          <Button variant="login">
+          <Button variant="login" onClick={() => setOpen(false)}>
             <HiOutlineUser className="h-5 w-5" />
             Settings
           </Button>
@@ -32,13 +42,17 @@ const NavbarLinks = ({ loggedIn = false }: { loggedIn: boolean }) => {
   return (
     <>
       <Link href="/">
-        <Button variant="outline">Book room</Button>
+        <Button variant="outline" onClick={() => setOpen(false)}>
+          Book room
+        </Button>
       </Link>
       <Link href="/find-my-booking">
-        <Button variant="text">Find my booking</Button>
+        <Button variant="text" onClick={() => setOpen(false)}>
+          Find my booking
+        </Button>
       </Link>
       <Link href="/login">
-        <Button variant="login">
+        <Button variant="login" onClick={() => setOpen(false)}>
           <HiOutlineUser className="h-5 w-5" />
           Admin login
         </Button>
@@ -110,7 +124,7 @@ export default function Navbar() {
 
         {/* desktop */}
         <div className="hidden items-center gap-6 md:flex">
-          <NavbarLinks loggedIn={isLoggedIn} />
+          <NavbarLinks loggedIn={isLoggedIn} setOpen={setOpen} />
         </div>
       </div>
 
@@ -118,7 +132,7 @@ export default function Navbar() {
       {open && (
         <div className="absolute left-0 top-full min-h-screen w-full overflow-y-auto bg-white md:hidden">
           <div className="flex min-h-screen flex-col items-center gap-6 px-8 py-6">
-            <NavbarLinks loggedIn={isLoggedIn} />
+            <NavbarLinks loggedIn={isLoggedIn} setOpen={setOpen} />
           </div>
         </div>
       )}
