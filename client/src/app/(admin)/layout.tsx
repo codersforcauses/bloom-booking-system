@@ -1,12 +1,20 @@
 "use client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthGuard>{children}</AuthGuard>
+    </Suspense>
+  );
+}
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isValidating, setIsValidating] = useState(true);
   const router = useRouter();
   const pathname = usePathname();

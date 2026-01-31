@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import { DownloadCsvButton } from "@/components/download-csv-button";
@@ -28,7 +28,12 @@ export default function BookingPageWrapper() {
 
   const [verifiedEmail, setVerifiedEmail] = useState<string>("");
 
-  if (isAdmin) return <BookingPage isAdmin />;
+  if (isAdmin)
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <BookingPage isAdmin />
+      </Suspense>
+    );
 
   if (!verifiedEmail) {
     return (
@@ -36,7 +41,11 @@ export default function BookingPageWrapper() {
     );
   }
 
-  return <BookingPage email={verifiedEmail} />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BookingPage email={verifiedEmail} />
+    </Suspense>
+  );
 }
 
 /**
