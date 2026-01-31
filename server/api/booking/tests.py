@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 User = get_user_model()
 future_date = timezone.now() + timedelta(days=7)
+one_year_later = timezone.now() + timedelta(days=365)
 
 
 class BookingViewTest(APITestCase):
@@ -28,7 +29,7 @@ class BookingViewTest(APITestCase):
             capacity=10,
             start_datetime=future_date.replace(
                 hour=9, minute=0, second=0, microsecond=0),
-            end_datetime=future_date.replace(
+            end_datetime=one_year_later.replace(
                 hour=18, minute=0, second=0, microsecond=0),
             recurrence_rule="FREQ=DAILY;BYDAY=MO,TU,WE",
             is_active=True
