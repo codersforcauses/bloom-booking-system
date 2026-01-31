@@ -2,7 +2,14 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { endOfMonth, endOfWeek, format, startOfWeek } from "date-fns";
+import {
+  endOfMonth,
+  endOfWeek,
+  format,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
+import { responseCookiesToRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
@@ -405,23 +412,32 @@ function BookRoomForm() {
    */
   function getUnavailableDates(
     available_timeslots: DateTimeSlots[],
-    ignore_days_of_week: number[] = [],
+    options: {
+      ignore_days_of_week?: number[];
+      start_date?: Date;
+      end_date?: Date;
+    } = {},
   ): Date[] {
+    const ignore_days_of_week = options.ignore_days_of_week || [];
+
     let unavailable_dates: Date[] = [];
     const available_dates = available_timeslots.map(
       (o: DateTimeSlots) => o.date,
     ); // Array.includes does not work on Date objects thus use ISO strings
     if (available_dates.length === 0) return unavailable_dates;
 
-    const last_date = new Date(
-      available_dates.reduce((latest, current) => {
-        const latestDate = new Date(latest);
-        const currentDate = new Date(current);
-        return currentDate > latestDate ? current : latest;
-      }, available_dates[0]),
-    );
+    const start_date = options.start_date || new Date();
+    const last_date =
+      options.end_date ||
+      new Date(
+        available_dates.reduce((latest, current) => {
+          const latestDate = new Date(latest);
+          const currentDate = new Date(current);
+          return currentDate > latestDate ? current : latest;
+        }, available_dates[0]),
+      );
 
-    const d = new Date(new Date().toISOString().substring(0, 10));
+    const d = new Date(format(start_date, "yyyy-MM-dd"));
     while (d <= last_date) {
       unavailable_dates.push(new Date(d));
       d.setDate(d.getDate() + 1);
@@ -443,11 +459,16 @@ function BookRoomForm() {
   function disableUnavailableDates(
     available_timeslots: DateTimeSlots[] = availableTimeSlots,
     room_availability: RoomAvailability = roomAvailability,
+    options: { start_date?: Date; end_date?: Date } = {},
   ) {
     const days_of_week = getUnavailableDaysOfWeek(
       room_availability.recurrence_rule,
     ).map((day) => (day + 1) % 7); // DayPicker uses Sun=0
-    const dates = getUnavailableDates(available_timeslots, days_of_week); // THIS IS BROKEN
+    const dates = getUnavailableDates(available_timeslots, {
+      ignore_days_of_week: days_of_week,
+      start_date: options.start_date,
+      end_date: options.end_date,
+    });
     setDisabledDates([
       { before: new Date() },
       { dayOfWeek: days_of_week },
@@ -496,13 +517,13 @@ function BookRoomForm() {
    */
   async function fetchAvailableTimeSlots({
     start_datetime = new Date(),
-    end_datetime = endOfMonth(start_datetime),
+    end_datetime = endOfWeek(endOfMonth(start_datetime)),
   }: {
     start_datetime?: Date;
     end_datetime?: Date;
   } = {}) {
-    const start_date = format(startOfWeek(start_datetime), "yyyy-MM-dd");
-    const end_date = format(endOfWeek(end_datetime), "yyyy-MM-dd");
+    const start_date = format(start_datetime, "yyyy-MM-dd");
+    const end_date = format(end_datetime, "yyyy-MM-dd");
     const query_params = `start_date=${start_date}&end_date=${end_date}`;
     const apiUrl = `rooms/${room_id}/availability/?${query_params}`;
     let available_timeslots: DateTimeSlots[] = [...availableTimeSlots];
@@ -555,9 +576,19 @@ function BookRoomForm() {
    * disabledDates state variable accoringly.
    */
   async function fetchAvailability() {
+    const start_datetime = new Date();
+    const end_datetime = endOfWeek(endOfMonth(start_datetime));
+
     const room_availability = fetchRoomAvailability();
-    const available_timeslots = fetchAvailableTimeSlots();
-    disableUnavailableDates(await available_timeslots, await room_availability);
+    const available_timeslots = fetchAvailableTimeSlots({
+      start_datetime: start_datetime,
+      end_datetime: end_datetime,
+    });
+    disableUnavailableDates(
+      await available_timeslots,
+      await room_availability,
+      { start_date: start_datetime, end_date: end_datetime },
+    );
   }
 
   /**
@@ -571,10 +602,16 @@ function BookRoomForm() {
    * @param month The datetime of the start of the month
    */
   async function handleMonthChange(month: Date) {
+    const start_datetime = startOfWeek(startOfMonth(month));
+    const end_datetime = endOfWeek(endOfMonth(month));
     const available_timeslots = fetchAvailableTimeSlots({
-      start_datetime: month,
+      start_datetime: start_datetime,
+      end_datetime: end_datetime,
     });
-    disableUnavailableDates(await available_timeslots);
+    disableUnavailableDates(await available_timeslots, roomAvailability, {
+      start_date: start_datetime,
+      end_date: end_datetime,
+    });
   }
 
   /**
