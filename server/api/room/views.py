@@ -76,7 +76,7 @@ class RoomViewSet(viewsets.ModelViewSet):
     ordering = ['name']  # Default ordering by room name
 
     # Search: Allow users to search across these fields
-    search_fields = ['name', 'location__name', 'location__address']
+    search_fields = ['name', 'location__name']
 
     http_method_names = ["get", "post", "patch"]
 

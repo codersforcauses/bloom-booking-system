@@ -29,7 +29,7 @@ type FilterPopoverProps = {
     filters: CustomFetchBookingParams,
     rooms: RoomShortResponse[],
   ) => void;
-  isEmailDisabled?: boolean;
+  EnableEmail?: boolean;
   className?: string;
 };
 
@@ -37,7 +37,7 @@ export function FilterPopover({
   initialFilters,
   selectedRooms = [],
   onApply,
-  isEmailDisabled = false,
+  EnableEmail = false,
   className,
 }: FilterPopoverProps) {
   const [open, setOpen] = useState(false);
@@ -141,7 +141,7 @@ export function FilterPopover({
                 Visitor Email
               </AccordionTrigger>
               <AccordionContent>
-                {isEmailDisabled ? (
+                {!EnableEmail ? (
                   <Input
                     type="text"
                     name="visitor_email"

@@ -15,7 +15,11 @@ export default function BookingTable({
 }: {
   data: BookingResponse[];
   isLoading?: boolean;
-  showAlert: (variant: AlertDialogVariant, title: string, desc: string) => void;
+  showAlert?: (
+    variant: AlertDialogVariant,
+    title: string,
+    desc: string,
+  ) => void;
 }) {
   /**
    * Table column configuration for Booking data.
@@ -87,7 +91,7 @@ export default function BookingTable({
             type="button"
             className="text-sm text-bloom-blue underline hover:text-bloom-blue-light"
             onClick={() =>
-              showAlert(
+              showAlert?.(
                 recurrence.label && recurrence.detail ? "info" : "error",
                 recurrence.text
                   ? `${recurrence.label} (${recurrence.text})`
@@ -144,7 +148,7 @@ export default function BookingTable({
               : "cursor-not-allowed border-gray-300 text-gray-300",
           )}
           onClick={() =>
-            showAlert(
+            showAlert?.(
               "confirm",
               "Cancel booking?",
               "This action cannot be undone.",
