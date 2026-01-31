@@ -111,6 +111,14 @@ function BookingPage({
 
   const { data, isLoading, totalPages } = useFetchBookings(searchParams);
 
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (searchParams.page && totalPages > 0 && totalPages < searchParams.page) {
+      pushParams({ page: totalPages });
+    }
+  }, [isLoading, totalPages, searchParams.page]);
+
   /**
    * pushParams
    *
@@ -159,12 +167,6 @@ function BookingPage({
   ) => setAlert({ open: true, variant, title, description: desc });
 
   const onClose = () => setAlert((prev) => ({ ...prev, open: false }));
-
-  if (!isLoading) {
-    if (searchParams.page && totalPages < searchParams.page) {
-      pushParams({ page: totalPages });
-    }
-  }
 
   return (
     <div className="w-full rounded-xl bg-gray-100 p-6">

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
@@ -10,8 +11,12 @@ export function useFetchBookings(params: PaginationSearchParams) {
   const offset = (page - 1) * nrows;
 
   // Exclude keys that start with "_"
-  const filteredParams = Object.fromEntries(
-    Object.entries(customParams).filter(([key]) => !key.startsWith("_")),
+  const filteredParams = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(customParams).filter(([key]) => !key.startsWith("_")),
+      ),
+    [customParams],
   );
 
   const { data, isLoading, isError, error, refetch } =
@@ -26,7 +31,7 @@ export function useFetchBookings(params: PaginationSearchParams) {
             ...(filteredParams ? { ...filteredParams } : {}),
           },
         });
-        return response.data;
+        return response.data ?? [];
       },
     });
 
