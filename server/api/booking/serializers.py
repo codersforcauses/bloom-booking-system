@@ -66,6 +66,24 @@ class BookingSerializer(DynamicFieldsModelSerializer):
             if 'recurrence_rule' not in data:
                 recurrence_rule = self.instance.recurrence_rule
 
+        if room:
+            # reject inactive rooms
+            if getattr(room, "is_active", True) is False:
+                raise serializers.ValidationError({
+                    "room_id": "This room is not active."
+                })
+
+            # reject bookings past the room's end_datetime (if set)
+            room_end = room.end_datetime
+            if room_end and end_datetime:
+                room_end = timezone.localtime(room_end)
+                booking_end = timezone.localtime(end_datetime)
+
+                if booking_end > room_end:
+                    raise serializers.ValidationError({
+                        "end_datetime": f"Booking ends after the room's end time ({room_end})."
+                    })
+
         # validate recurrence_rule (Google Calendar RFC 5545 format)
         if recurrence_rule:
             # MUST start with FREQ= and have valid values for it (this is to keep consistant with other apis)
