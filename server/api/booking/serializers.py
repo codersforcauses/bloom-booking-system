@@ -210,6 +210,16 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                 window_start = localtime(start_datetime)
                 window_end = localtime(end_datetime)
 
+            room_end = getattr(room, "end_datetime", None)
+            if room_end:
+                room_end = timezone.localtime(room_end)
+                if window_end > room_end:
+                    raise serializers.ValidationError({
+                        "non_field_errors": [
+                            f"Bookings exceed the end date of the room. Room isn't active after {room_end.strftime('%Y-%m-%d %H:%M')}."
+                        ]
+                    })
+
             # pull candidate existing bookings
             overlapping_bookings = Booking.objects.filter(
                 room=room,
