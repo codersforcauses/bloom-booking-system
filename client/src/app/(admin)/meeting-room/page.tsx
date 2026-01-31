@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect,useMemo, useRef, useState } from "react";
 
 import { AdminRoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ export default function RoomsPage() {
   const [pendingSearch, setPendingSearch] = useState<string>("");
   const [filters, setFilters] = useState<Partial<Room>>({});
 
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
   // Build customParams object for API
   function buildCustomParams() {
     const customParams: Record<string, string> = {};
@@ -34,12 +36,13 @@ export default function RoomsPage() {
   // Custom fetch hook with dynamic params
   const {
     data: rooms,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading,
     isError,
     error,
   } = useFetchRooms({
-    page: 1,
-    nrows: 100,
     search: searchTerm,
     ...buildCustomParams(),
   });
@@ -77,6 +80,19 @@ export default function RoomsPage() {
     () => normalizedRooms.map((r) => r.title),
     [normalizedRooms],
   );
+
+  useEffect(() => {
+    if (!loadMoreRef.current || isFetchingNextPage) return;
+    const observer = new IntersectionObserver((observedItems) => {
+      const marker = observedItems[0];
+      if (marker.isIntersecting && hasNextPage) {
+        console.log("Fetching next page of rooms");
+        fetchNextPage();
+      }
+    });
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <RoomContext.Provider
@@ -131,6 +147,8 @@ export default function RoomsPage() {
               onRemove={() => alert("Remove")}
             />
           ))}
+          {/* an invisible marker that trigger fetch when scrolling into view */}
+          <div ref={loadMoreRef} style={{ height: 1 }} />
         </div>
       </div>
     </RoomContext.Provider>

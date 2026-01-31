@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
@@ -12,33 +12,50 @@ import {
   RoomShortResponse,
 } from "@/lib/api-types";
 
+// switch to use useInfiniteQuery to handle infinite scrolling
 function useFetchRooms(params: PaginationSearchParams) {
-  const { page = 1, nrows = 10, search, ...customParams } = params;
+  const { nrows = 10, search, ...customParams } = params;
 
-  const offset = (page - 1) * nrows;
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useInfiniteQuery<PaginatedRoomResponse>({
+    queryKey: ["rooms", nrows, search, customParams],
+    queryFn: async ({ pageParam = 1 }) => {
+      const offset = ((pageParam as number) - 1) * nrows;
+      const response = await api.get("/rooms/", {
+        params: {
+          limit: nrows,
+          offset,
+          ...(search ? { search } : {}),
+          ...(customParams ? { ...customParams } : {}),
+        },
+      });
+      return response.data;
+    },
 
-  const { data, isLoading, isError, error, refetch } =
-    useQuery<PaginatedRoomResponse>({
-      queryKey: ["rooms", page, nrows, search, offset, customParams],
-      queryFn: async () => {
-        const response = await api.get("/rooms/", {
-          params: {
-            limit: nrows,
-            offset,
-            ...(search ? { search } : {}),
-            ...(customParams ? { ...customParams } : {}),
-          },
-        });
-        return response.data;
-      },
-    });
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const totalFetched = allPages.length * nrows;
+      return totalFetched < lastPage.count ? allPages.length + 1 : undefined;
+    },
+  });
 
-  const totalPages = data ? Math.ceil(data.count / nrows) : 1;
+  const allRooms = data?.pages.flatMap((page) => page.results) ?? [];
+  const totalCount = data?.pages[0]?.count ?? 0;
 
   return {
-    data: data?.results ?? [],
-    count: data?.count ?? 0,
-    totalPages,
+    data: allRooms,
+    count: totalCount,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading,
     isError,
     error,
