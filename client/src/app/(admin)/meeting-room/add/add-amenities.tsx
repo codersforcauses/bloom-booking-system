@@ -10,25 +10,25 @@ import {
 } from "@/components/admin-settings-card";
 import { AlertDialog } from "@/components/alert-dialog";
 import RoomAPI from "@/hooks/room";
-import type { LocationResponse } from "@/lib/api-types";
+import type { AmenityResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
 type View = "list" | "form";
 
-type LocationModalProps = {
+type AmenityModalProps = {
   open: boolean;
   onClose: () => void;
-  onSelect: (location: string | number) => void;
+  onSelect: (amenity: string | number) => void;
 };
 
-export default function LocationModal({
+export default function AmenityModal({
   open,
   onClose,
   onSelect,
-}: LocationModalProps) {
+}: AmenityModalProps) {
   const [view, setView] = useState<View>("list");
-  const [editingItem, setEditingItem] = useState<LocationResponse | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<LocationResponse | null>(
+  const [editingItem, setEditingItem] = useState<AmenityResponse | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<AmenityResponse | null>(
     null,
   );
 
@@ -41,29 +41,29 @@ export default function LocationModal({
 
   const queryClient = useQueryClient();
 
-  const { data: locations = [], isLoading } = RoomAPI.useFetchRoomLocations({
+  const { data: amenities = [], isLoading } = RoomAPI.useFetchRoomAmenities({
     page: 1,
     nrows: 100,
   });
 
-  const createLocation = RoomAPI.useCreateRoomLocation();
-  const updateLocation = RoomAPI.useUpdateRoomLocation(editingItem?.id ?? 0);
-  const deleteLocation = RoomAPI.useDeleteRoomLocation();
+  const createAmenity = RoomAPI.useCreateRoomAmenity();
+  const updateAmenity = RoomAPI.useUpdateRoomAmenity(editingItem?.id ?? 0);
+  const deleteAmenity = RoomAPI.useDeleteRoomAmenity();
 
   const handleSubmit = async (value: string) => {
     try {
-      let createdLocation;
+      let createdAmenity;
       if (editingItem) {
-        await updateLocation.mutateAsync({ name: value });
+        await updateAmenity.mutateAsync({ name: value });
       } else {
-        createdLocation = await createLocation.mutateAsync({ name: value });
+        createdAmenity = await createAmenity.mutateAsync({ name: value });
       }
 
-      queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+      queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
 
-      // If creating a new location, pass the location ID back to parent
-      if (createdLocation && !editingItem) {
-        onSelect(createdLocation.id);
+      // If creating a new amenity, pass the amenity ID back to parent
+      if (createdAmenity && !editingItem) {
+        onSelect(createdAmenity.id);
       }
 
       setView("list");
@@ -78,10 +78,10 @@ export default function LocationModal({
     }
   };
 
-  const handleDelete = async (item: LocationResponse) => {
+  const handleDelete = async (item: AmenityResponse) => {
     try {
-      await deleteLocation.mutateAsync(item.id);
-      queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+      await deleteAmenity.mutateAsync(item.id);
+      queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
       setConfirmDelete(null);
     } catch (err) {
       setAlert({
@@ -107,8 +107,8 @@ export default function LocationModal({
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2">
           {view === "list" && (
             <AdminSettingsTableCard
-              title="Locations"
-              items={isLoading ? [] : locations}
+              title="Amenities"
+              items={isLoading ? [] : amenities}
               onAdd={() => setView("form")}
               onBack={closeModal}
               onEditItem={(item) => {
@@ -121,7 +121,7 @@ export default function LocationModal({
 
           {view === "form" && (
             <AdminSettingsFormCard
-              title="Location"
+              title="Amenity"
               defaultValue={editingItem?.name || ""}
               onCancel={() => setView("list")}
               onSubmit={handleSubmit}

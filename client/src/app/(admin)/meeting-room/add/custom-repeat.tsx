@@ -9,10 +9,20 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
+export type CustomRepeatValue = {
+  interval: string;
+  frequency: "day" | "week" | "month";
+  days: string[];
+  endType: "on" | "after" | "never";
+  endDate?: Date;
+  occurrences: string;
+  startDate?: Date;
+};
+
 type CustomRepeatModalProps = {
   open: boolean;
   onClose: () => void;
-  onDone: (value: any) => void;
+  onDone: (value: CustomRepeatValue) => void;
 };
 
 export default function CustomRepeatModal({
@@ -20,17 +30,17 @@ export default function CustomRepeatModal({
   onClose,
   onDone,
 }: CustomRepeatModalProps) {
-  const [interval, setInterval] = useState("1");
-  const [frequency, setFrequency] = useState("week");
+  const [interval, setInterval] = useState<string>("1");
+  const [frequency, setFrequency] =
+    useState<CustomRepeatValue["frequency"]>("week");
   const [days, setDays] = useState<string[]>(["tue"]);
-  const [endType, setEndType] = useState<"on" | "after" | "never">("on");
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    new Date(2022, 4, 30),
-  );
-  const [occurrences, setOccurrences] = useState("1");
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    new Date(2021, 11, 3),
-  );
+  const [endType, setEndType] = useState<CustomRepeatValue["endType"]>("on");
+  // NOTE: Avoid hardcoded historical defaults — using fixed dates (2021/2022) will make the UI
+  // default to stale values and could immediately end recurrences. Prefer `new Date()` or
+  // `undefined` and only require these when the corresponding end option is chosen.
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [occurrences, setOccurrences] = useState<string>("1");
+  const [startDate] = useState<Date | undefined>(new Date());
 
   if (!open) return null;
 
@@ -85,9 +95,10 @@ export default function CustomRepeatModal({
                     { label: "Day", value: "day" },
                     { label: "Week", value: "week" },
                     { label: "Month", value: "month" },
-                    { label: "Year", value: "year" },
                   ]}
-                  onChange={setFrequency}
+                  onChange={(v) =>
+                    setFrequency(v as CustomRepeatValue["frequency"])
+                  }
                   className="mb-0"
                 />
               </div>
@@ -105,14 +116,13 @@ export default function CustomRepeatModal({
               className="grid-cols-2 gap-2"
             >
               {dayOptions.map((day) => (
-                <label
+                <CheckboxItem
                   key={day.value}
-                  htmlFor={day.value}
+                  value={day.value}
                   className="flex cursor-pointer items-center gap-2"
                 >
-                  <CheckboxItem value={day.value} />
                   <span className="body text-black">{day.label}</span>
-                </label>
+                </CheckboxItem>
               ))}
             </CheckboxGroup>
           </div>
