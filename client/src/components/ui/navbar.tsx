@@ -9,6 +9,44 @@ import { cn } from "@/lib/utils";
 
 import { Button } from "./button";
 
+const NavbarLinks = ({ loggedIn = false }: { loggedIn: boolean }) => {
+  if (loggedIn) {
+    return (
+      <>
+        <Link href="/dashboard">
+          <Button variant="outline">Dashboard</Button>
+        </Link>
+        <Link href="/meeting-rooms">
+          <Button variant="text">Meeting Rooms</Button>
+        </Link>
+        <Link href="/settings">
+          <Button variant="login">
+            <HiOutlineUser className="h-5 w-5" />
+            Settings
+          </Button>
+        </Link>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Link href="/">
+        <Button variant="outline">Book room</Button>
+      </Link>
+      <Link href="/find-my-booking">
+        <Button variant="text">Find my booking</Button>
+      </Link>
+      <Link href="/login">
+        <Button variant="login">
+          <HiOutlineUser className="h-5 w-5" />
+          Admin login
+        </Button>
+      </Link>
+    </>
+  );
+};
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -72,18 +110,7 @@ export default function Navbar() {
 
         {/* desktop */}
         <div className="hidden items-center gap-6 md:flex">
-          <Link href="/">
-            <Button variant="outline">Book room</Button>
-          </Link>
-          <Link href="/find-my-booking">
-            <Button variant="text">Find my booking</Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="login">
-              <HiOutlineUser className="h-5 w-5" />
-              Admin login
-            </Button>
-          </Link>
+          <NavbarLinks loggedIn={isLoggedIn} />
         </div>
       </div>
 
@@ -91,23 +118,7 @@ export default function Navbar() {
       {open && (
         <div className="absolute left-0 top-full min-h-screen w-full overflow-y-auto bg-white md:hidden">
           <div className="flex min-h-screen flex-col items-center gap-6 px-8 py-6">
-            <Link href="/">
-              <Button variant="outline">Book room</Button>
-            </Link>
-            <Link
-              href="/find-my-booking"
-              className="-mx-4 mt-4 hover:text-primary"
-            >
-              <Button variant="text">Find my booking</Button>
-            </Link>
-            <div className="-mx-2 mt-20">
-              <Link href="/login">
-                <Button variant="login">
-                  <HiOutlineUser className="h-5 w-5" />
-                  Admin login
-                </Button>
-              </Link>
-            </div>
+            <NavbarLinks loggedIn={isLoggedIn} />
           </div>
         </div>
       )}
