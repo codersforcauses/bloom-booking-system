@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { endOfMonth, endOfWeek, startOfWeek } from "date-fns";
+import axios from "axios";
+import { endOfMonth, endOfWeek, format, startOfWeek } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
@@ -27,7 +28,7 @@ import {
 } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 import api from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, resolveErrorMessage } from "@/lib/utils";
 import { Room } from "@/types/card";
 
 /**
@@ -133,10 +134,10 @@ function getDaysFromRRule(rrule: string) {
  */
 function getAMPMTimeString(datetime: Date) {
   const hours = datetime.getHours();
-  const hours_str = hours > 12 ? `${hours - 12}` : `${hours}`;
-  const mins_str = datetime.getMinutes().toString().padStart(2, "0");
-  const suffix = hours > 12 ? "pm" : "am";
-  return `${hours_str}:${mins_str}${suffix}`;
+  const display_hours = hours % 12 || 12;
+  const display_mins = datetime.getMinutes().toString().padStart(2, "0");
+  const suffix = hours >= 12 ? "pm" : "am";
+  return `${display_hours}:${display_mins}${suffix}`;
 }
 
 /**
@@ -160,7 +161,7 @@ function BookRoomForm() {
     start_datetime: new Date(new Date(0).setHours(8)),
     end_datetime: new Date(new Date(0).setHours(17)),
   };
-  const [roomAvailability, setRoomAvailability] = useState(
+  const [roomAvailability, setRoomAvailability] = useState<RoomAvailability>(
     default_room_availability,
   );
   /**
@@ -168,50 +169,45 @@ function BookRoomForm() {
    * used to prevent duplicate requests and filling up availableTimeSlots with
    * duplicates
    */
-  const empty_previous_requests: string[] = [];
   const [previousAvailabilityRequests, setPreviousAvailabilityRequests] =
-    useState(empty_previous_requests);
+    useState<string[]>([]);
   /**
    * The time availability of a room over a range of dates
    */
-  const default_available_timeslots: DateTimeSlots[] = [];
-  const [availableTimeSlots, setAvailableTimeSlots] = useState(
-    default_available_timeslots,
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<DateTimeSlots[]>(
+    [],
   );
   /**
    * The dates to prevent users from selecting (e.g. past dates, closed days of
    * week,booked dates)
    */
-  const default_disabled_dates: Matcher[] = [];
-  const [disabledDates, setDisabledDates] = useState(default_disabled_dates);
+  const [disabledDates, setDisabledDates] = useState<Matcher[]>([]);
   /**
    * The time slots of the current date chosen by the date field used to
    * restrict the time selection fields
    */
-  const empty_slots: TimeSlot[] = [];
-  const [selectTimeSlots, setSelectTimeSlots] = useState(empty_slots);
+  const [selectTimeSlots, setSelectTimeSlots] = useState<TimeSlot[]>([]);
   /**
    * The options to render within the time selection fields
    */
-  const empty_time_options: SelectOption[] = [];
-  const [startTimeOptions, setStartTimeOptions] = useState(empty_time_options);
-  const [endTimeOptions, setEndTimeOptions] = useState(empty_time_options);
+  const [startTimeOptions, setStartTimeOptions] = useState<SelectOption[]>([]);
+  const [endTimeOptions, setEndTimeOptions] = useState<SelectOption[]>([]);
   /**
    * The state of the All Day button disabled property
    */
-  const [allDayEnabled, setAllDayEnabled] = useState(true);
+  const [allDayEnabled, setAllDayEnabled] = useState<boolean>(true);
   /**
    * The state of the All Day button
    */
-  const [allDay, setAllDay] = useState(false);
+  const [allDay, setAllDay] = useState<boolean>(false);
   /**
    * The state of the reCAPTCHA verification
    */
-  const [verified, setVerified] = useState(false);
+  const [verified, setVerified] = useState<boolean>(false);
   /**
    * The state of the form submission
    */
-  const [submitPending, setSubmitPending] = useState(false);
+  const [submitPending, setSubmitPending] = useState<boolean>(false);
   /**
    * Closes the alert dialog (used becuause props are controlled by state variable).
    */
@@ -232,18 +228,16 @@ function BookRoomForm() {
     onConfirm: close_dialog,
     onClose: close_dialog,
   };
-  const [alertDialogProps, setAlertDialogProps] = useState(
+  const [alertDialogProps, setAlertDialogProps] = useState<AlertDialogProps>(
     default_alert_dialog_props,
   );
 
+  const yesterday_date = new Date(new Date().setDate(new Date().getDate() - 1));
   const formSchema = z
     .object({
       name: z.string().min(1, "This is a required field."),
       email: z.email("Must be a valid email address."),
-      date: z.date("Must be a valid date.").min(
-        new Date().setDate(new Date().getDate() - 1), // Yesterday's date
-        "Cannot be a date in the past.",
-      ),
+      date: z.date().min(yesterday_date, "Cannot be a date in the past."),
       start_time: z.iso.time("Must be a valid time."),
       end_time: z.iso.time("Must be a valid time."),
     })
@@ -336,13 +330,12 @@ function BookRoomForm() {
           Nov,
           Dec,
         }
-        const description = cn(
-          `Your ${res.room.name} Booking for`,
-          `${date.getDate()} ${MonthString[date.getMonth()]} ${date.getFullYear()}`,
-          `from ${start_time} to ${end_time}`,
-          `has been submitted.\n`,
-          `You will receive an email confirmation shortly.`,
-        );
+        const description =
+          `Your ${res.room.name} Booking for ` +
+          `${date.getDate()} ${MonthString[date.getMonth()]} ${date.getFullYear()} ` +
+          `from ${start_time} to ${end_time} ` +
+          `has been submitted.\n` +
+          `You will receive an email confirmation shortly.`;
         alert_dialog_props.title = "Awesome!";
         alert_dialog_props.description = description;
         alert_dialog_props.variant = "success" as AlertDialogVariant;
@@ -352,6 +345,18 @@ function BookRoomForm() {
       .catch((error) => {
         alert_dialog_props.title = "Sorry!";
         alert_dialog_props.variant = "error" as AlertDialogVariant;
+        alert_dialog_props.description = "Unknown error.";
+
+        if (!axios.isAxiosError(error) || error.response === undefined) {
+          console.error(error);
+          return;
+        }
+
+        if (error.response.data === undefined) {
+          console.error(error);
+          return;
+        }
+
         const res = error.response.data;
         if (res.start_datetime !== undefined) {
           alert_dialog_props.description = cn(res.start_datetime);
@@ -362,7 +367,6 @@ function BookRoomForm() {
         } else if (res.detail !== undefined) {
           alert_dialog_props.description = cn(res.detail);
         } else {
-          alert_dialog_props.description = "Unknown error.";
           console.error(error);
         }
       })
@@ -408,7 +412,15 @@ function BookRoomForm() {
       (o: DateTimeSlots) => o.date,
     ); // Array.includes does not work on Date objects thus use ISO strings
     if (available_dates.length === 0) return unavailable_dates;
-    const last_date = new Date(available_dates[available_dates.length - 1]);
+
+    const last_date = new Date(
+      available_dates.reduce((latest, current) => {
+        const latestDate = new Date(latest);
+        const currentDate = new Date(current);
+        return currentDate > latestDate ? current : latest;
+      }, available_dates[0]),
+    );
+
     const d = new Date(new Date().toISOString().substring(0, 10));
     while (d <= last_date) {
       unavailable_dates.push(new Date(d));
@@ -435,7 +447,7 @@ function BookRoomForm() {
     const days_of_week = getUnavailableDaysOfWeek(
       room_availability.recurrence_rule,
     ).map((day) => (day + 1) % 7); // DayPicker uses Sun=0
-    const dates = getUnavailableDates(available_timeslots, days_of_week);
+    const dates = getUnavailableDates(available_timeslots, days_of_week); // THIS IS BROKEN
     setDisabledDates([
       { before: new Date() },
       { dayOfWeek: days_of_week },
@@ -489,15 +501,8 @@ function BookRoomForm() {
     start_datetime?: Date;
     end_datetime?: Date;
   } = {}) {
-    /* 
-    .toISOString() may cause an issue here as it formats datetimes to GMT time
-    which means start_date will be the date before the start date as
-    startOfWeek returns start of week 00:00 +8:00.
-    */
-    const start_date = startOfWeek(start_datetime)
-      .toISOString()
-      .substring(0, 10);
-    const end_date = endOfWeek(end_datetime).toISOString().substring(0, 10);
+    const start_date = format(startOfWeek(start_datetime), "yyyy-MM-dd");
+    const end_date = format(endOfWeek(end_datetime), "yyyy-MM-dd");
     const query_params = `start_date=${start_date}&end_date=${end_date}`;
     const apiUrl = `rooms/${room_id}/availability/?${query_params}`;
     let available_timeslots: DateTimeSlots[] = [...availableTimeSlots];
@@ -518,15 +523,20 @@ function BookRoomForm() {
               };
             },
           );
-          available_timeslots = [
-            ...new_available_timeslots,
-            ...available_timeslots,
-          ];
-          setAvailableTimeSlots(available_timeslots);
-          setPreviousAvailabilityRequests([
-            query_params,
-            ...previousAvailabilityRequests,
-          ]);
+          setAvailableTimeSlots((prevAvailableTimeSlots) => {
+            const merged = [
+              ...new_available_timeslots,
+              ...prevAvailableTimeSlots,
+            ];
+            available_timeslots = merged;
+            return merged;
+          });
+          setPreviousAvailabilityRequests(
+            (prevPreviousAvailabilityRequests) => [
+              query_params,
+              ...prevPreviousAvailabilityRequests,
+            ],
+          );
         })
         .catch((error) => {
           /*
@@ -975,9 +985,9 @@ export default function BookRoomPage() {
   /**
    * The room information
    */
-  const [room, setRoom] = useState(loading_room);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [room, setRoom] = useState<Room>(loading_room);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   /**
    * Fetches the room information for the room with the specified id.
