@@ -231,6 +231,7 @@ export function SelectRow({
 }
 
 export type PaginationSearchParams = {
+  customParams?: Record<string, string>;
   search?: string;
   nrows?: number;
   page?: number;
