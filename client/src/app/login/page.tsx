@@ -174,9 +174,10 @@ export default function LoginPage() {
               Password
             </Label>
 
-            <div className="body w-full rounded-md border bg-background px-3 py-2 shadow-bloom-input outline-none placeholder:text-bloom-gray">
+            <div className="body flex w-full items-center justify-between rounded-md border bg-background shadow-bloom-input outline-none placeholder:text-bloom-gray">
               <input
                 id="password"
+                className="h-full w-full px-3 py-2 outline-none"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter Password"
                 autoComplete="current-password"
@@ -185,6 +186,7 @@ export default function LoginPage() {
 
               <button
                 type="button"
+                className="pr-2"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <Eye /> : <EyeClosed />}
