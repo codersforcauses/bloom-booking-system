@@ -856,11 +856,11 @@ function BookRoomForm() {
       form={form}
       onSubmit={form.handleSubmit(onSubmit)}
       className={cn(
-        "h-fit w-full min-w-[32rem] max-w-[56rem] rounded-md",
-        "flex flex-col gap-6 bg-white px-16 py-12",
+        "h-fit w-full rounded-md md:min-w-[32rem] md:max-w-[56rem]",
+        "flex flex-col gap-6 bg-white px-8 py-8 md:px-16 md:py-12",
       )}
     >
-      <div className="flex flex-row gap-3">
+      <div className="flex flex-col gap-6 md:flex-row md:gap-3">
         <FormField
           name="name"
           control={form.control}
@@ -900,7 +900,7 @@ function BookRoomForm() {
           )}
         />
       </div>
-      <div className="flex flex-row gap-3">
+      <div className="flex flex-col gap-6 md:flex-row md:gap-3">
         <FormField
           name="date"
           control={form.control}
@@ -1169,10 +1169,15 @@ export default function BookRoomPage() {
 
   return (
     <div className="h-fit min-h-screen w-screen bg-gray-100">
-      <div className="flex w-full items-center px-[3rem] py-[2rem]">
+      <div className="flex w-full items-center px-[1rem] pt-[1rem] md:px-[3rem]">
         <h1 className="text-xl font-semibold">Book room</h1>
       </div>
-      <div className="flex h-full w-full items-start justify-center gap-[3rem] p-[1rem]">
+      <div
+        className={cn(
+          "flex h-full w-full flex-col lg:flex-row",
+          "items-center justify-center gap-[1rem] p-[1rem] lg:items-start xl:gap-[3rem]",
+        )}
+      >
         {isLoading && <Spinner className="w-6" />}
         {!isLoading && error && (
           <AlertDialog
