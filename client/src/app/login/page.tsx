@@ -174,10 +174,10 @@ export default function LoginPage() {
               Password
             </Label>
 
-            <div className="body flex w-full items-center justify-between rounded-md border bg-background shadow-bloom-input outline-none placeholder:text-bloom-gray">
+            <div className="body flex w-full items-center justify-between rounded-md border bg-background shadow-bloom-input outline-none">
               <input
                 id="password"
-                className="h-full w-full px-3 py-2 outline-none"
+                className="h-full w-full px-3 py-2 outline-none placeholder:text-bloom-gray"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter Password"
                 autoComplete="current-password"
