@@ -1,7 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery , useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
+import type { BookingResponse } from "@/lib/api-types";
 import { PaginatedBookingResponse } from "@/lib/api-types";
 
 export function useFetchBookings(params: PaginationSearchParams) {
@@ -41,4 +43,37 @@ export function useFetchBookings(params: PaginationSearchParams) {
     error,
     refetch,
   };
+}
+
+export function useFetchBooking(bookingId: number, visitorEmail?: string) {
+  return useQuery<BookingResponse, AxiosError>({
+    queryKey: ["bookings", bookingId, visitorEmail],
+    queryFn: async ({ signal }) => {
+      const response = await api.get(`/bookings/${bookingId}/`, {
+        params: { email: visitorEmail },
+        signal,
+      });
+      return response.data;
+    },
+    enabled: !!bookingId,
+  });
+}
+
+export function useCancelBooking(bookingId: number) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    BookingResponse,
+    AxiosError,
+    { visitor_email: string; cancel_reason: string }
+  >({
+    mutationFn: async (payload) => {
+      const response = await api.patch(`/bookings/${bookingId}/`, payload);
+      return response.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["bookings", bookingId],
+      });
+    },
+  });
 }
