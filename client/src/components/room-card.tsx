@@ -215,7 +215,6 @@ type AdminRoomCardProps = {
  *   location: "Level 1 Block E",
  *   seats: 20,
  *   amenities: ["White Board", "Audio"],
- *   bookings: 10,
  *   removed: false,
  * };
  *
@@ -241,7 +240,6 @@ function AdminRoomCard({
       label: "Amenities",
       value: <Amenities amenities={room.amenities} hideIcon={hideIcon} />,
     },
-    { label: "Bookings", value: room.bookings },
   ];
 
   return (

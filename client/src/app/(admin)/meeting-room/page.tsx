@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect,useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AdminRoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
@@ -11,25 +11,30 @@ import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 import { Room } from "@/types/card";
 
 import FilterPopOver from "./filter-button";
+import { RoomFilterSchemaValue } from "./filter-dropdown";
 import { normalizeRoom } from "./normalize-room";
 import RoomContext from "./room-context";
 
 export default function RoomsPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [pendingSearch, setPendingSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Partial<Room>>({});
+  const [filters, setFilters] = useState<RoomFilterSchemaValue>({});
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   // Build customParams object for API
   function buildCustomParams() {
     const customParams: Record<string, string> = {};
-    if (filters.location) customParams.location = filters.location;
-    // if (filters.seats) customParams.min_capacity = filters.seats;
+    if (filters.locations && filters.locations.length)
+      customParams.locations = filters.locations.join(",");
     if (filters.amenities && filters.amenities.length)
       customParams.amenities = filters.amenities.join(",");
-    // if (filters.available !== undefined && filters.available !== "")
-    //   customParams.available = filters.available;
+    if (filters.minSeats)
+      customParams.min_capacity = filters.minSeats.toString();
+    if (filters.maxSeats)
+      customParams.max_capacity = filters.maxSeats.toString();
+    if (filters.isActive !== undefined)
+      customParams.is_active = filters.isActive.toString();
     return customParams;
   }
 
@@ -47,6 +52,7 @@ export default function RoomsPage() {
     ...buildCustomParams(),
   });
 
+  // Suppose the number of locations and amenities are small enough to fetch all at once
   const { data: locations } = RoomAPI.useFetchRoomLocations({
     page: 1,
     nrows: 100,
@@ -81,6 +87,7 @@ export default function RoomsPage() {
     [normalizedRooms],
   );
 
+  // Infinite scroll effect
   useEffect(() => {
     if (!loadMoreRef.current || isFetchingNextPage) return;
     const observer = new IntersectionObserver((observedItems) => {
@@ -105,23 +112,25 @@ export default function RoomsPage() {
       }}
     >
       <div className="mx-auto my-auto min-h-screen px-10 py-5">
-        <div className="subtitle mx-auto mb-2 h-full py-2">Meeting Room</div>
-        <div className="ml-auto flex items-center justify-center gap-2 whitespace-nowrap sm:justify-end">
-          <Input
-            className="min-w-24 max-w-64"
-            type="text"
-            name="search"
-            value={pendingSearch}
-            onChange={handleSearchInputChange}
-            onKeyDown={handleSearchKeyDown}
-            placeholder="Search here"
-          />
+        <div className="mb-3 flex w-full flex-col items-center justify-between md:flex-row">
+          <div className="subtitle mb-2 h-full py-2">Meeting Room</div>
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <Input
+              className="min-w-24 max-w-64"
+              type="text"
+              name="search"
+              value={pendingSearch}
+              onChange={handleSearchInputChange}
+              onKeyDown={handleSearchKeyDown}
+              placeholder="Search room name"
+            />
 
-          <FilterPopOver />
+            <FilterPopOver />
 
-          <Link href="/meeting-room/add" passHref>
-            <Button variant="confirm">Add Room</Button>
-          </Link>
+            <Link href="/meeting-room/add" passHref>
+              <Button variant="confirm">Add Room</Button>
+            </Link>
+          </div>
         </div>
 
         {isError && (
