@@ -188,6 +188,8 @@ export default function LoginPage() {
                 type="button"
                 className="pr-2"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
               >
                 {showPassword ? <Eye /> : <EyeClosed />}
               </button>
