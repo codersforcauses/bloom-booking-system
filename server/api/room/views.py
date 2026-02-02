@@ -46,7 +46,8 @@ def parse_optional_datetime(value, field_name):
     if value is None:
         return None
     # Fix URL-encoded '+' turning into space
-    value = value.replace(" ", "+", 1) if " " in value and "+" not in value else value
+    value = value.replace(
+        " ", "+", 1) if " " in value and "+" not in value else value
     # Parse datetime string
     parsed_datetime = parse_datetime(value)
     if parsed_datetime is None:
@@ -111,7 +112,8 @@ class RoomViewSet(viewsets.ModelViewSet):
         # Get start_datetime & end_datetime from params
         start_datetime = request.query_params.get("start_datetime")
         end_datetime = request.query_params.get("end_datetime")
-        start_datetime = parse_optional_datetime(start_datetime, 'start_datetime')
+        start_datetime = parse_optional_datetime(
+            start_datetime, 'start_datetime')
         end_datetime = parse_optional_datetime(end_datetime, 'end_datetime')
         # if start_datetime is earlier than now, set to now
         current_time = localtime(now())
@@ -124,7 +126,8 @@ class RoomViewSet(viewsets.ModelViewSet):
             for room in page:
                 # Availability is based on is_active status
                 availability = bool(room.is_active)
-                results.append({"room_id": room.id, "availability": availability})
+                results.append(
+                    {"room_id": room.id, "availability": availability})
         # If end_datetime is earlier than now, the room cannot be booked
         elif end_datetime < current_time:
             for room in page:
@@ -135,8 +138,10 @@ class RoomViewSet(viewsets.ModelViewSet):
                 if not room.is_active:
                     availability = False
                 else:
-                    availability = self._calculate_boolean_availability(room, start_datetime, end_datetime)
-                results.append({"room_id": room.id, "availability": availability})
+                    availability = self._calculate_boolean_availability(
+                        room, start_datetime, end_datetime)
+                results.append(
+                    {"room_id": room.id, "availability": availability})
         # Return paginated response
         return self.get_paginated_response(results)
 
@@ -172,7 +177,7 @@ class RoomViewSet(viewsets.ModelViewSet):
             return Response(
                 {"detail": "Date range too large. Please limit to 42 days or fewer."},
                 status=400
-                )
+            )
         # Update start_date to be today if it's in the past
         if start_date < today:
             start_date = today
@@ -188,7 +193,8 @@ class RoomViewSet(viewsets.ModelViewSet):
         Returns False only if no free interval intersects the requested time range.
         Assumption: Room starttime and endtime are on the same day.
         """
-        availability_slots = self._get_availability_slots(room, start_datetime, end_datetime)
+        availability_slots = self._get_availability_slots(
+            room, start_datetime, end_datetime)
         for as_start, as_end in availability_slots:
             if as_end > start_datetime and as_start < end_datetime:
                 return True
@@ -201,7 +207,8 @@ class RoomViewSet(viewsets.ModelViewSet):
         """
         start_datetime = make_aware(datetime.combine(start_date, time.min))
         end_datetime = make_aware(datetime.combine(end_date, time.max))
-        flattened_availability_slots = self._get_availability_slots(room, start_datetime, end_datetime)
+        flattened_availability_slots = self._get_availability_slots(
+            room, start_datetime, end_datetime)
         # group slots by date
         availability_slots = defaultdict(list)
         for fi_start, fi_end in flattened_availability_slots:
@@ -227,19 +234,23 @@ class RoomViewSet(viewsets.ModelViewSet):
         for booking in bookings:
             duration = booking.end_datetime - booking.start_datetime
             if booking.recurrence_rule:
-                booking_recurrence_rule = booking.recurrence_rule   # handle rdate_list, exdate_list if needed
+                # handle rdate_list, exdate_list if needed
+                booking_recurrence_rule = booking.recurrence_rule
                 # get start time of occurrences between the date of start_datetime and the date of end_datetime
                 booking_occurrences = _expand_recurrences(
                     localtime(booking.start_datetime),
                     booking_recurrence_rule,
                 ).between(
-                    make_aware(datetime.combine(start_datetime.date(), time.min)),
+                    make_aware(datetime.combine(
+                        start_datetime.date(), time.min)),
                     make_aware(datetime.combine(end_datetime.date(), time.max))
                 )
                 for occurrence_start in booking_occurrences:
-                    booked_slots.append((localtime(occurrence_start), localtime(occurrence_start) + duration))
+                    booked_slots.append(
+                        (localtime(occurrence_start), localtime(occurrence_start) + duration))
             else:
-                booked_slots.append((localtime(booking.start_datetime), localtime(booking.end_datetime)))
+                booked_slots.append(
+                    (localtime(booking.start_datetime), localtime(booking.end_datetime)))
 
         # Step 2: get all available slots based on room's recurrence rules
         availability_slots = []
@@ -252,10 +263,11 @@ class RoomViewSet(viewsets.ModelViewSet):
                         localtime(room.start_datetime),
                         localtime(room.end_datetime),
                         booked_slots
-                        ))
+                    ))
         else:
             duration = room.end_datetime - room.start_datetime
-            room_recurrence_rule = room.recurrence_rule    # handle rdate_list, exdate_list if needed
+            # handle rdate_list, exdate_list if needed
+            room_recurrence_rule = room.recurrence_rule
             # get start time of occurrences between the date of start_datetime and the date of end_datetime
             room_occurrences = _expand_recurrences(
                 localtime(room.start_datetime),
@@ -271,7 +283,7 @@ class RoomViewSet(viewsets.ModelViewSet):
                         localtime(occurrence_start),
                         localtime(occurrence_end),
                         booked_slots
-                        ))
+                    ))
         return availability_slots
 
     # Helper function to subtract booked slots from room availability

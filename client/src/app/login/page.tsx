@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeClosed } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,6 +27,8 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+// Dynamic rendering is required to ensure fresh authentication state and prevent caching of sensitive routes.
+
 export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
@@ -39,7 +42,7 @@ export default function LoginPage() {
 function LoginForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [loginSuccess, setLoginSuccess] = useState(false);
-
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [redirectTo] = useState(() => {
@@ -179,13 +182,28 @@ function LoginForm() {
           >
             Password
           </Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Enter Password"
-            autoComplete="current-password"
-            {...register("password")}
-          />
+
+          <div className="body flex w-full items-center justify-between rounded-md border bg-background shadow-bloom-input outline-none">
+            <input
+              id="password"
+              className="h-full w-full px-3 py-2 outline-none placeholder:text-bloom-gray"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter Password"
+              autoComplete="current-password"
+              {...register("password")}
+            />
+
+            <button
+              type="button"
+              className="pr-2"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <Eye /> : <EyeClosed />}
+            </button>
+          </div>
+
           {errors.password && (
             <p className="text-xs text-bloom-red">{errors.password.message}</p>
           )}
