@@ -7,25 +7,17 @@ interface ReCAPTCHAV2Props {
   setVerified: (verified: boolean) => void;
 }
 
+// v2 - I'm not a robot checkbox
+// Usage: By initialising [verified, setVerified] in the parent component and passing setVerified into ReCAPTCHAV2,
+//        the parent component can obtain and utilise the verification status of ReCAPTCHAV2
 const ReCAPTCHAV2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-  const isDev = process.env.NODE_ENV === "development";
 
-  // ✅ DEV: if sitekey missing, auto-verify so the app is usable locally
   useEffect(() => {
-    if (!siteKey && isDev) {
-      console.warn(
-        "RECAPTCHA_SITE_KEY is missing. Auto-verifying in development mode.",
-      );
-      setVerified(true);
+    if (!siteKey) {
+      console.error("RECAPTCHA_SITE_KEY is missing in environment variables.");
     }
-  }, [siteKey, isDev, setVerified]);
-
-  // ✅ If sitekey missing, don't render the widget (prevents crash)
-  if (!siteKey) {
-    return null;
-  }
+  }, [siteKey]);
 
   const handleCaptchaSubmission = async (token: string | null) => {
     try {
@@ -57,11 +49,7 @@ const ReCAPTCHAV2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
   };
 
   return (
-    <ReCAPTCHA
-      sitekey={siteKey}
-      ref={recaptchaRef}
-      onChange={handleCaptchaSubmission}
-    />
+    <ReCAPTCHA sitekey={siteKey || ""} onChange={handleCaptchaSubmission} />
   );
 };
 
