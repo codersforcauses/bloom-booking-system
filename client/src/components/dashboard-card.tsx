@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export type DashboardCardProps = {
   value: number | string;
   label: string;
-  color: string;
+  colorClass?: string;
   icon: IconType;
   onClick?: () => void;
 };
@@ -25,7 +25,10 @@ export function DashboardCard(props: DashboardCardProps) {
       onClick={props.onClick}
     >
       <div
-        className={`flex items-center justify-between rounded-[inherit] border-l-8 px-5 py-3 ${props.color}`}
+        className={cn(
+          "flex items-center justify-between rounded-[inherit] border-l-8 px-5 py-3",
+          props.colorClass,
+        )}
       >
         {/* Value + label */}
         <div className="flex flex-col justify-center gap-0">

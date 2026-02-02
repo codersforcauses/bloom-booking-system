@@ -12,26 +12,26 @@ const metrics: DashboardCardProps[] = [
     label: "Total Meeting Rooms",
     value: 5,
     icon: SiGoogleclassroom,
-    color: "border-bloom-yellow text-bloom-yellow",
+    colorClass: "border-bloom-yellow text-bloom-yellow",
     onClick: () => {}, // shadow
   },
   {
     label: "Total Bookings",
     value: 20,
     icon: SiGooglecalendar,
-    color: "border-bloom-blue text-bloom-blue",
+    colorClass: "border-bloom-blue text-bloom-blue",
   },
   {
     label: "Weekly Bookings",
     value: 2,
     icon: BiCalendarEdit,
-    color: "border-bloom-red text-bloom-red",
+    colorClass: "border-bloom-red text-bloom-red",
   },
   {
     label: "Total Users",
     value: 3,
     icon: BsPersonCheck,
-    color: "border-bloom-orbit text-bloom-orbit",
+    colorClass: "border-bloom-orbit text-bloom-orbit",
   },
 ];
 
