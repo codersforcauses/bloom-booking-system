@@ -7,11 +7,11 @@ import InputField from "@/components/input";
 import ReCAPTCHA_v2 from "@/components/recaptcha";
 import { Button } from "@/components/ui/button";
 
-const itemSchema = z.object({
+const bookingSchema = z.object({
   email: z.email("Invalid email."),
 });
 
-type ItemFormValues = z.infer<typeof itemSchema>;
+type BookingFormValues = z.infer<typeof bookingSchema>;
 
 interface FindMyBookingFormProps {
   onVerified: (email: string) => void;
@@ -20,25 +20,21 @@ interface FindMyBookingFormProps {
 export default function FindMyBookingForm({
   onVerified,
 }: FindMyBookingFormProps) {
-  const [verified, setVerified] = useState(true);
+  const [verified, setVerified] = useState(false);
 
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<ItemFormValues>({
-    resolver: zodResolver(itemSchema),
+  } = useForm<BookingFormValues>({
+    resolver: zodResolver(bookingSchema),
     defaultValues: {
       email: "",
     },
   });
 
-  const onSubmit = async (data: ItemFormValues) => {
-    try {
-      onVerified(data.email); // pass email back to wrapper
-    } catch (error) {
-      console.error("Error searching bookings:", error);
-    }
+  const onSubmit = (data: BookingFormValues) => {
+    onVerified(data.email);
   };
 
   return (

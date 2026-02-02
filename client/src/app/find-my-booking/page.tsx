@@ -103,7 +103,7 @@ function BookingPage({
   useEffect(() => {
     // email changed send back to email form
     if (email !== searchParams.visitor_email) {
-      router.push("/booking");
+      router.push("/find-my-booking");
     }
   }, [email, searchParams.visitor_email, router]);
 

@@ -1,11 +1,11 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
-import { FilterPopover } from "@/app/(public)/find-my-booking/filter";
-import { CustomFetchBookingParams } from "@/app/(public)/find-my-booking/page";
-import BookingTable from "@/app/(public)/find-my-booking/table";
+import { FilterPopover } from "@/app/find-my-booking/filter";
+import { CustomFetchBookingParams } from "@/app/find-my-booking/page";
+import BookingTable from "@/app/find-my-booking/table";
 import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import { DownloadCsvButton } from "@/components/download-csv-button";
 import InputField from "@/components/input";
@@ -51,6 +51,21 @@ function BookingPage() {
     }),
   );
 
+  const pushParams = useCallback(
+    (params: Partial<CustomFetchBookingParams>) => {
+      const updatedParams = { ...searchParams, ...params };
+      setSearchParams(updatedParams);
+
+      const urlParams = pickKeys(
+        updatedParams,
+        ...(Object.keys(urlVisibleParams) as (keyof typeof urlVisibleParams)[]),
+      );
+
+      router.push(`${pathname}?${toQueryString(urlParams)}`);
+    },
+    [searchParams, router, pathname, urlVisibleParams],
+  );
+
   const { data, isLoading, totalPages } = useFetchBookings(searchParams);
 
   useEffect(() => {
@@ -59,19 +74,7 @@ function BookingPage() {
     if (searchParams.page && totalPages > 0 && totalPages < searchParams.page) {
       pushParams({ page: totalPages });
     }
-  }, [isLoading, totalPages, searchParams.page]);
-
-  const pushParams = (params: Partial<CustomFetchBookingParams>) => {
-    let updatedParams = { ...searchParams, ...params };
-    setSearchParams(updatedParams);
-
-    const urlParams = pickKeys(
-      updatedParams,
-      ...(Object.keys(urlVisibleParams) as (keyof typeof urlVisibleParams)[]),
-    );
-
-    router.push(`${pathname}?${toQueryString(urlParams)}`);
-  };
+  }, [isLoading, totalPages, searchParams.page, pushParams]);
 
   /**
    * Single page-wide AlertDialog

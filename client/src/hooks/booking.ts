@@ -3,7 +3,10 @@ import { useMemo } from "react";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
-import { PaginatedBookingResponse } from "@/lib/api-types";
+import {
+  emptyPaginatedResponse,
+  PaginatedBookingResponse,
+} from "@/lib/api-types";
 
 export function useFetchBookings(params: PaginationSearchParams) {
   const { page = 1, nrows = 5, search, ...customParams } = params;
@@ -11,12 +14,8 @@ export function useFetchBookings(params: PaginationSearchParams) {
   const offset = (page - 1) * nrows;
 
   // Exclude keys that start with "_"
-  const filteredParams = useMemo(
-    () =>
-      Object.fromEntries(
-        Object.entries(customParams).filter(([key]) => !key.startsWith("_")),
-      ),
-    [customParams],
+  const filteredParams = Object.fromEntries(
+    Object.entries(customParams).filter(([key]) => !key.startsWith("_")),
   );
 
   const { data, isLoading, isError, error, refetch } =
@@ -31,7 +30,7 @@ export function useFetchBookings(params: PaginationSearchParams) {
             ...(filteredParams ? { ...filteredParams } : {}),
           },
         });
-        return response.data ?? [];
+        return response.data ?? emptyPaginatedResponse();
       },
     });
 
