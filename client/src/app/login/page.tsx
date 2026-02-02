@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeClosed } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -31,7 +32,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loginSuccess, setLoginSuccess] = useState(false);
-
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [redirectTo] = useState(() => {
@@ -134,7 +135,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="min-h-layout-header flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-3xl border border-slate-100 bg-white px-10 py-12 shadow-md">
         <h1 className="mb-2 text-center text-2xl font-semibold text-slate-900">
           Login
@@ -174,13 +175,28 @@ export default function LoginPage() {
             >
               Password
             </Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter Password"
-              autoComplete="current-password"
-              {...register("password")}
-            />
+
+            <div className="body flex w-full items-center justify-between rounded-md border bg-background shadow-bloom-input outline-none">
+              <input
+                id="password"
+                className="h-full w-full px-3 py-2 outline-none placeholder:text-bloom-gray"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter Password"
+                autoComplete="current-password"
+                {...register("password")}
+              />
+
+              <button
+                type="button"
+                className="pr-2"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? <Eye /> : <EyeClosed />}
+              </button>
+            </div>
+
             {errors.password && (
               <p className="text-xs text-bloom-red">
                 {errors.password.message}
