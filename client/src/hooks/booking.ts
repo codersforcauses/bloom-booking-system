@@ -45,21 +45,29 @@ export function useFetchBookings(params: PaginationSearchParams) {
   };
 }
 
-export function useFetchBooking(bookingId: number, visitorEmail?: string) {
-  return useQuery<BookingResponse, AxiosError>({
-    queryKey: ["bookings", bookingId, visitorEmail],
+type ApiError = { message?: string; detail?: string };
+
+export function useFetchBooking(
+  bookingId: number,
+  requireEmail: boolean,
+  visitorEmail?: string,
+) {
+  return useQuery<BookingResponse, AxiosError<ApiError>>({
+    queryKey: ["bookings", bookingId, visitorEmail, requireEmail],
     queryFn: async ({ signal }) => {
       const response = await api.get(`/bookings/${bookingId}/`, {
-        params: { email: visitorEmail },
+        params: requireEmail ? { visitor_email: visitorEmail } : undefined,
         signal,
       });
       return response.data;
     },
-    enabled: !!bookingId,
+    enabled: requireEmail
+      ? Boolean(visitorEmail) && Boolean(bookingId)
+      : Boolean(bookingId),
   });
 }
 
-export function useCancelBooking(bookingId: number) {
+export function useCancelBooking(bookingId: number, onSuccess: () => void) {
   const queryClient = useQueryClient();
   return useMutation<
     BookingResponse,
@@ -67,6 +75,7 @@ export function useCancelBooking(bookingId: number) {
     { visitor_email: string; cancel_reason: string }
   >({
     mutationFn: async (payload) => {
+      console.log(payload);
       const response = await api.patch(`/bookings/${bookingId}/`, payload);
       return response.data;
     },
@@ -74,6 +83,10 @@ export function useCancelBooking(bookingId: number) {
       await queryClient.invalidateQueries({
         queryKey: ["bookings", bookingId],
       });
+      onSuccess();
+    },
+    onError: (error) => {
+      console.log("Cancel booking failed:", error);
     },
   });
 }

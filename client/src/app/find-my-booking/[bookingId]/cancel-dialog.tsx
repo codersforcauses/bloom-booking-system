@@ -1,6 +1,5 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -37,7 +36,7 @@ const CANCEL_REASONS = [
   "Other",
 ] as const;
 
-const BookingDeleteSchema = z.object({
+const BookingCancelSchema = z.object({
   reason: z.enum(CANCEL_REASONS, { message: "Select a valid reason" }),
   message: z
     .string()
@@ -45,7 +44,7 @@ const BookingDeleteSchema = z.object({
     .optional(),
 });
 
-export type BookingDeleteSchemaValue = z.infer<typeof BookingDeleteSchema>;
+export type BookingCancelSchemaValue = z.infer<typeof BookingCancelSchema>;
 
 interface DeleteBookingDialogProps {
   bookingId: number;
@@ -60,8 +59,8 @@ export default function DeleteBookingDialog({
   isOpen,
   onOpenChange,
 }: DeleteBookingDialogProps) {
-  const form = useForm<BookingDeleteSchemaValue>({
-    resolver: zodResolver(BookingDeleteSchema),
+  const form = useForm<BookingCancelSchemaValue>({
+    resolver: zodResolver(BookingCancelSchema),
     defaultValues: {
       reason: "Change of plans",
       message: "",
@@ -69,10 +68,14 @@ export default function DeleteBookingDialog({
     mode: "onChange",
   });
 
-  const { mutate, isPending, isError, error } = useCancelBooking(bookingId);
+  const { mutate, isPending, isError, error } = useCancelBooking(
+    bookingId,
+    () => {
+      onOpenChange(false);
+    },
+  );
 
-  const onSubmit = (data: BookingDeleteSchemaValue) => {
-    console.log("Cancel data:", data);
+  const onSubmit = (data: BookingCancelSchemaValue) => {
     if (!bookingId || !data) return;
     let reasonText: string = data.reason.trim();
     if (data.message?.trim()) {
@@ -85,7 +88,6 @@ export default function DeleteBookingDialog({
       cancel_reason: reasonText,
     };
     mutate(payload);
-    onOpenChange(false);
   };
 
   return (
@@ -154,7 +156,7 @@ export default function DeleteBookingDialog({
             <p className="mb-2 text-sm text-bloom-red">
               {error instanceof Error
                 ? error.message
-                : "Update failed. Please try again."}
+                : "Cancellation failed. Please try again."}
             </p>
           )}
           <div className="flex items-center justify-center gap-2">
@@ -166,7 +168,7 @@ export default function DeleteBookingDialog({
               type="submit"
               disabled={isPending || !form.formState.isValid}
             >
-              {isPending ? "Cancelling..." : "Cancel"}
+              {isPending ? "Submitting..." : "Submit"}
             </Button>
           </div>
         </Form>
