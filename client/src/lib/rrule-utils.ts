@@ -29,7 +29,7 @@ export const getAvailableSlots = (
   const fakeUtcSearchEnd = new Date(searchEndString + "Z");
 
   if (room.recurrence_rule) {
-    // Use RRule if it exists (pretend it is in utz)
+    // Use RRule if it exists (pretend it is in utc)
     const options = RRule.parseString(room.recurrence_rule);
     options.dtstart = fakeUtcStart;
     const rule = new RRule(options);

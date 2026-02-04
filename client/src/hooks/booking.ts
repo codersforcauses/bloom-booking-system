@@ -75,7 +75,6 @@ export function useCancelBooking(bookingId: number, onSuccess: () => void) {
     { visitor_email: string; cancel_reason: string }
   >({
     mutationFn: async (payload) => {
-      console.log(payload);
       const response = await api.patch(`/bookings/${bookingId}/`, payload);
       return response.data;
     },
@@ -86,7 +85,7 @@ export function useCancelBooking(bookingId: number, onSuccess: () => void) {
       onSuccess();
     },
     onError: (error) => {
-      console.log("Cancel booking failed:", error);
+      console.error("Cancel booking failed:", error);
     },
   });
 }

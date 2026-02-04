@@ -46,19 +46,19 @@ const BookingCancelSchema = z.object({
 
 export type BookingCancelSchemaValue = z.infer<typeof BookingCancelSchema>;
 
-interface DeleteBookingDialogProps {
+interface CancelBookingDialogProps {
   bookingId: number;
   visitorEmail: string;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export default function DeleteBookingDialog({
+export default function CancelBookingDialog({
   bookingId,
   visitorEmail,
   isOpen,
   onOpenChange,
-}: DeleteBookingDialogProps) {
+}: CancelBookingDialogProps) {
   const form = useForm<BookingCancelSchemaValue>({
     resolver: zodResolver(BookingCancelSchema),
     defaultValues: {
@@ -92,7 +92,7 @@ export default function DeleteBookingDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="round-md rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
+      <DialogContent className="rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
         <DialogTitle className="text-center">
           Reason to cancel booking
         </DialogTitle>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 
 interface ReCAPTCHAV2Props {

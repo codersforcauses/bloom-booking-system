@@ -55,7 +55,6 @@ export default function UpdateBookingDialog({
   // const { mutate, isPending, isError, error } = useUpdateBooking(bookingId);
 
   const onSubmit = (data: BookingUpdateSchemaValue) => {
-    console.log("Update data:", data);
     const payload = {
       // to be added later
     };
@@ -65,7 +64,7 @@ export default function UpdateBookingDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="round-md rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
+      <DialogContent className="rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
         <DialogTitle className="text-center">Update Booking</DialogTitle>
         <Form
           form={form}

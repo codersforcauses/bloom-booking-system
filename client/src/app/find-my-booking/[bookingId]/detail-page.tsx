@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { RRule } from "rrule";
 
@@ -12,7 +12,7 @@ import { normaliseRoom } from "@/lib/normalise-room";
 import { resolveErrorMessage } from "@/lib/utils";
 
 import CancelBookingDialog from "./cancel-dialog";
-import UpdateBookingDialog from "./update-diaglog";
+import UpdateBookingDialog from "./update-dialog";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
