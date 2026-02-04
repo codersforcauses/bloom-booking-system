@@ -35,9 +35,6 @@ export default function CustomRepeatModal({
     useState<CustomRepeatValue["frequency"]>("week");
   const [days, setDays] = useState<string[]>(["tue"]);
   const [endType, setEndType] = useState<CustomRepeatValue["endType"]>("on");
-  // NOTE: Avoid hardcoded historical defaults — using fixed dates (2021/2022) will make the UI
-  // default to stale values and could immediately end recurrences. Prefer `new Date()` or
-  // `undefined` and only require these when the corresponding end option is chosen.
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [occurrences, setOccurrences] = useState<string>("1");
   const [startDate] = useState<Date | undefined>(new Date());
