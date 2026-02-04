@@ -1,5 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect,useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -59,6 +60,8 @@ export default function CancelBookingDialog({
   isOpen,
   onOpenChange,
 }: CancelBookingDialogProps) {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const form = useForm<BookingCancelSchemaValue>({
     resolver: zodResolver(BookingCancelSchema),
     defaultValues: {
@@ -68,8 +71,9 @@ export default function CancelBookingDialog({
     mode: "onChange",
   });
 
-  const { mutate, isPending, isError, error } = useCancelBooking(
+  const { mutate, isPending } = useCancelBooking(
     bookingId,
+    setErrorMessage,
     () => {
       onOpenChange(false);
     },
@@ -77,6 +81,7 @@ export default function CancelBookingDialog({
 
   const onSubmit = (data: BookingCancelSchemaValue) => {
     if (!bookingId || !data) return;
+    setErrorMessage(null);
     let reasonText: string = data.reason.trim();
     if (data.message?.trim()) {
       reasonText = `${data.reason}. Detail: ${data.message.trim()}`;
@@ -89,6 +94,12 @@ export default function CancelBookingDialog({
     };
     mutate(payload);
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      setErrorMessage(null);
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -152,12 +163,8 @@ export default function CancelBookingDialog({
               </FormItem>
             )}
           />
-          {isError && (
-            <p className="mb-2 text-sm text-bloom-red">
-              {error instanceof Error
-                ? error.message
-                : "Cancellation failed. Please try again."}
-            </p>
+          {errorMessage && (
+            <p className="mb-2 text-sm text-bloom-red">{errorMessage}</p>
           )}
           <div className="flex items-center justify-center gap-2">
             <DialogClose asChild>
