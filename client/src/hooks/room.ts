@@ -3,13 +3,13 @@ import { AxiosError } from "axios";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
-import { RoomResponse } from "@/lib/api-types";
 import {
   AmenityResponse,
   LocationResponse,
   PaginatedAmenityResponse,
   PaginatedLocationResponse,
   PaginatedRoomResponse,
+  RoomResponse,
   RoomShortResponse,
 } from "@/lib/api-types";
 
