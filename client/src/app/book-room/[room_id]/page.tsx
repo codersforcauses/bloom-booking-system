@@ -445,10 +445,7 @@ function BookRoomForm() {
     unavailable_dates = unavailable_dates
       .filter((date) => !ignore_days_of_week.includes(date.getDay()))
       // Array.includes does not work on Date objects thus use ISO strings
-      .filter(
-        (date) =>
-          !available_dates.includes(date.toISOString().substring(0, 10)),
-      );
+      .filter((date) => !available_dates.includes(format(date, "yyyy-MM-dd")));
     return unavailable_dates;
   }
 
@@ -622,11 +619,7 @@ function BookRoomForm() {
    */
   function getDateTimeSlots(date: Date | undefined): TimeSlot[] {
     if (date === undefined) return [];
-    // Prevents timezone offset messing with date string using .toISOString()
-    const date_string =
-      `${date.getFullYear()}-` +
-      `${(date.getMonth() + 1).toString().padStart(2, "0")}-` +
-      `${date.getDate().toString().padStart(2, "0")}`;
+    const date_string = format(date, "yyyy-MM-dd");
     const date_availability = availableTimeSlots.find(
       (o: DateTimeSlots) => o.date === date_string,
     );
@@ -643,7 +636,7 @@ function BookRoomForm() {
   function timeInTimeSlots(time: string, slots: TimeSlot[]): boolean {
     for (let i = 0; i < slots.length; i++) {
       const slot = slots[i];
-      const date = new Date(slot.start.toISOString().substring(0, 10));
+      const date = new Date(format(slot.start, "yyyy-MM-dd"));
       const datetime = new Date(formatDateTime(date, time));
       if (datetime >= slot.start && datetime <= slot.end) return true;
     }
