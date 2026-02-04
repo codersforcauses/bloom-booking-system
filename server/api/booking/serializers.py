@@ -4,7 +4,7 @@ from .models import Booking
 from api.room.models import Room
 import re
 from dateutil.rrule import rruleset, rrulestr
-from django.utils.timezone import localtime, make_aware
+from django.utils.timezone import localtime
 from datetime import datetime, time
 from django.db.models import Q
 
