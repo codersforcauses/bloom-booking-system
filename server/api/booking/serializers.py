@@ -138,6 +138,7 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                 return a_start < b_end and a_end > b_start
 
             # helper: same one used in the availability api
+            # Convert DTSTART to local timezone (where the recurrence rule apply)
             def _expand_recurrences(base_start_datetime, rrule_str, rdate_list=None, exdate_list=None):
                 tz = timezone.get_current_timezone()
                 start_local = timezone.localtime(base_start_datetime, tz)
@@ -188,13 +189,13 @@ class BookingSerializer(DynamicFieldsModelSerializer):
             # build the window for the new booking
             new_duration = end_datetime - start_datetime
             if recurrence_rule:
+                tz = timezone.get_current_timezone()
+                now_local = timezone.localtime(timezone.now(), tz)
+                limit_end = now_local + timezone.timedelta(days=366)
+
                 # creates the window but theres a 366 day upper bound so if a collision were to happen only after a year, then this would miss it
-                new_occ_starts = _expand_recurrences(
-                    localtime(start_datetime),
-                    recurrence_rule,
-                ).between(
-                    make_aware(datetime.combine(start_datetime.date(), time.min)),
-                    make_aware(datetime.combine((start_datetime + timezone.timedelta(days=366)).date(), time.max)),
+                new_occ_starts = _expand_recurrences(start_datetime, recurrence_rule).between(
+                    timezone.make_aware(datetime.combine(now_local.date(), time.min), tz), limit_end,
                 )
 
                 new_intervals = [(localtime(s), localtime(s) + new_duration) for s in new_occ_starts]
@@ -204,6 +205,13 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                     })
                 window_start = min(s for s, _ in new_intervals)
                 window_end = max(e for _, e in new_intervals)
+
+                # reject bookings if it goes beyond a year
+                next_after_limit = _expand_recurrences(start_datetime, recurrence_rule).after(limit_end, inc=False)
+                if next_after_limit is not None:
+                    raise serializers.ValidationError({
+                        "recurrence_rule": "Bookings cannot extend beyond 366 days into the future."
+                    })
             else:
                 new_intervals = [
                     (localtime(start_datetime), localtime(end_datetime))]
