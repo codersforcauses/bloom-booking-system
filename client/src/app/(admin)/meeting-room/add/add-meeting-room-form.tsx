@@ -3,24 +3,17 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import AmenityModal from "@/app/(admin)/meeting-room/add/add-amenities";
-import CustomRepeatModal, {
-  type CustomRepeatValue,
-} from "@/app/(admin)/meeting-room/add/custom-repeat";
 import { AlertDialog } from "@/components/alert-dialog";
 import InputField from "@/components/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import RoomAPI from "@/hooks/room";
 import api from "@/lib/api";
-import type {
-  AmenityResponse,
-  LocationResponse,
-  RoomResponse,
-} from "@/lib/api-types";
 import { Room } from "@/types/card";
 
+import AmenityModal from "./add-amenities";
 import LocationModal from "./add-location";
+import CustomRepeatModal, { type CustomRepeatValue } from "./custom-repeat";
 
 export default function AddMeetingRoomForm() {
   const router = useRouter();
@@ -107,7 +100,7 @@ export default function AddMeetingRoomForm() {
       name,
       img: "",
       location_id: locationId,
-      capacity_id: capacityId,
+      capacity: capacityId,
       start_datetime: start,
       end_datetime: end,
       recurrence_rule: formData.recurrence_rule || "",
@@ -124,14 +117,12 @@ export default function AddMeetingRoomForm() {
       // Use FormData for multipart file upload
       const formDataMultipart = new FormData();
       formDataMultipart.append("name", validatedData.name);
+      formDataMultipart.append("is_active", "true"); // TODO: need to check with team
       formDataMultipart.append(
         "location_id",
         validatedData.location_id.toString(),
       );
-      formDataMultipart.append(
-        "capacity_id",
-        validatedData.capacity_id.toString(),
-      );
+      formDataMultipart.append("capacity", validatedData.capacity.toString());
       formDataMultipart.append("start_datetime", validatedData.start_datetime);
       formDataMultipart.append("end_datetime", validatedData.end_datetime);
       if (validatedData.recurrence_rule) {
@@ -144,19 +135,14 @@ export default function AddMeetingRoomForm() {
         formDataMultipart.append("img", imageFile);
       }
 
-      const response = await api.post("/rooms/", formDataMultipart);
-      const created = response.data;
-
       if (Array.isArray(formData.amenities) && formData.amenities.length > 0) {
-        await Promise.all(
-          formData.amenities.map((a) =>
-            api.post(`/rooms/${created.id}/amenities/`, {
-              amenity_id: Number(a),
-            }),
-          ),
+        formDataMultipart.append(
+          "amenities_ids",
+          JSON.stringify(formData.amenities.map(Number)),
         );
       }
 
+      await api.post("/rooms/", formDataMultipart);
       setShowSuccessDialog(true);
     } catch (error) {
       console.error("Failed to add room:", error);
@@ -577,9 +563,9 @@ export default function AddMeetingRoomForm() {
         variant="success"
         title="Awesome!"
         description="Your request for meeting room creation was successful"
-        onClose={() => {
+        onConfirm={() => {
           setShowSuccessDialog(false);
-          router.push("/dashboard");
+          // router.push("/dashboard");
         }}
       />
     </>
