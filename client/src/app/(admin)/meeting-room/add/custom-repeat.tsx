@@ -41,6 +41,15 @@ export default function CustomRepeatModal({
 
   if (!open) return null;
 
+  const handleReset = () => {
+    setInterval("1");
+    setFrequency("week");
+    setDays(["tue"]);
+    setEndType("on");
+    setEndDate(new Date());
+    setOccurrences("1");
+  };
+
   const handleDone = () => {
     onDone({
       interval,
@@ -217,16 +226,10 @@ export default function CustomRepeatModal({
 
         {/* Action buttons */}
         <div className="flex flex-col justify-end gap-2 pt-2 sm:flex-row">
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="w-full border-bloom-blue bg-white text-bloom-blue sm:w-auto"
-          >
-            Cancel
+          <Button onClick={handleReset} variant="outline">
+            Clear
           </Button>
-          <Button onClick={handleDone} className="w-full text-white sm:w-auto">
-            Done
-          </Button>
+          <Button onClick={handleDone}>Done</Button>
         </div>
       </Card>
     </div>
