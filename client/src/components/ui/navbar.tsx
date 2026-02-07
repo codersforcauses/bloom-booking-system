@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { SetStateAction, useEffect, useState } from "react";
+import { useState } from "react";
 import { HiOutlineUser } from "react-icons/hi";
 
 import { useAuth } from "@/contexts/auth-context";
@@ -64,7 +64,7 @@ const NavbarLinks = ({
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-white">
