@@ -8,7 +8,12 @@ import {
   useState,
 } from "react";
 
-import { checkAuth } from "@/lib/api";
+import {
+  checkAuth,
+  clearTokens,
+  setAccessToken,
+  setRefreshToken,
+} from "@/lib/api";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -33,8 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isValid) {
         setIsLoggedIn(true);
       } else {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        clearTokens();
         setIsLoggedIn(false);
       }
     };
@@ -43,14 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (accessToken: string, refreshToken: string) => {
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
+    setAccessToken(accessToken);
+    setRefreshToken(refreshToken);
     setIsLoggedIn(true);
   };
 
   const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    clearTokens();
     setIsLoggedIn(false);
   };
 

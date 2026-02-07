@@ -24,6 +24,11 @@ const setAccessToken = (accessToken: string) =>
 const getRefreshToken = () =>
   typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
 
+const setRefreshToken = (refreshToken: string) =>
+  typeof window !== "undefined"
+    ? localStorage.setItem("refreshToken", refreshToken)
+    : undefined;
+
 const clearTokens = () => {
   if (typeof window === "undefined") return;
   localStorage.removeItem("accessToken");
@@ -195,7 +200,7 @@ const checkAuth = async (): Promise<boolean> => {
 };
 
 export default api;
-export { checkAuth, logout, setAccessToken };
+export { checkAuth, clearTokens,logout, setAccessToken, setRefreshToken };
 
 // Helper functions for typed API calls
 export async function apiGet<T>(url: string, config?: object): Promise<T> {
