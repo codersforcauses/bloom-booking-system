@@ -153,7 +153,22 @@ export default function AddMeetingRoomForm() {
   };
 
   const handleCancel = () => {
-    router.push("/dashboard");
+    setFormData({
+      title: "",
+      seats: 0,
+      location: "",
+      amenities: [],
+      image: "",
+      available: true,
+      availablility: "",
+      bookings: 0,
+      start_datetime: "",
+      end_datetime: "",
+      recurrence_rule: "",
+    });
+    setImageFile(null);
+    setRepeat("");
+    setErrors({});
   };
 
   // Build dynamic location options
@@ -542,7 +557,7 @@ export default function AddMeetingRoomForm() {
                   variant="outline"
                   className="border-bloom-blue bg-white text-bloom-blue"
                 >
-                  Cancel
+                  Clear
                 </Button>
                 <Button
                   onClick={handleSubmit}
