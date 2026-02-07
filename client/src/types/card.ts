@@ -4,7 +4,7 @@ export type Room = {
   image: string;
   location: string;
   available: boolean;
-  availablility?: string;
+  availability?: string;
   seats: number;
   amenities: string[];
   bookings?: number;
@@ -25,7 +25,7 @@ export const roomsMock: Room[] = [
     seats: 4,
     location: "Pune Hinjewadi",
     available: true,
-    availablility: "8:00am - 5:00pm, Mon - Fri",
+    availability: "8:00am - 5:00pm, Mon - Fri",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
     bookings: 10,
     removed: true,
@@ -37,7 +37,7 @@ export const roomsMock: Room[] = [
     seats: 8,
     location: "St Catherine's college, 2 Park Road",
     available: false,
-    availablility: "8:00am - 7:00pm, Mon - Fri",
+    availability: "8:00am - 7:00pm, Mon - Fri",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
     bookings: 5,
   },
@@ -48,7 +48,7 @@ export const roomsMock: Room[] = [
     seats: 8,
     location: "UNIT-1B PNQ- HJ",
     available: true,
-    availablility: "9:00am - 5:00pm, Mon - Fri",
+    availability: "9:00am - 5:00pm, Mon - Fri",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
     bookings: 3,
   },
@@ -59,7 +59,7 @@ export const roomsMock: Room[] = [
     seats: 4,
     location: "St Catherine's college, 2 Park Road",
     available: true,
-    availablility: "12;00pm - 7:00pm, Wed - Fri",
+    availability: "12;00pm - 7:00pm, Wed - Fri",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
     bookings: 8,
     removed: true,
@@ -71,7 +71,7 @@ export const roomsMock: Room[] = [
     seats: 4,
     location: "UNIT-1B PNQ- HJ",
     available: false,
-    availablility: "10:00am - 4:00pm, Mon - Tues",
+    availability: "10:00am - 4:00pm, Mon - Tues",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
     bookings: 7,
   },
@@ -82,7 +82,7 @@ export const roomsMock: Room[] = [
     seats: 4,
     location: "Pune Hinjewadi",
     available: true,
-    availablility: "9:00am - 3:00pm, Mon - Thurs",
+    availability: "9:00am - 3:00pm, Mon - Thurs",
     amenities: ["Audio", "Video", "HDMI", "White Board", "Sound System"],
     bookings: 5,
   },
