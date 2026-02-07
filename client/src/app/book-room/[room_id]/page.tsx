@@ -9,7 +9,6 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { responseCookiesToRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
@@ -35,7 +34,7 @@ import {
 } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 import api from "@/lib/api";
-import { cn, resolveErrorMessage } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Room } from "@/types/card";
 
 /**
@@ -244,7 +243,9 @@ function BookRoomForm() {
     .object({
       name: z.string().min(1, "This is a required field."),
       email: z.email("Must be a valid email address."),
-      date: z.date().min(yesterday_date, "Cannot be a date in the past."),
+      date: z
+        .date({ message: "Invalid date format or invalid / unavailable date." })
+        .min(yesterday_date, "Cannot be a date in the past."),
       start_time: z.iso.time("Must be a valid time."),
       end_time: z.iso.time("Must be a valid time."),
     })
@@ -754,7 +755,8 @@ function BookRoomForm() {
    *
    * @param date The date the day picker was changed to.
    */
-  function handleDateChange(date: Date | undefined) {
+  function handleDateChange(date: Date | string | undefined) {
+    if (typeof date === "string") return;
     const timeslots = getDateTimeSlots(date);
     setSelectTimeSlots(timeslots);
     const start_options = getTimeSelectOptionsInSlots(timeslots);

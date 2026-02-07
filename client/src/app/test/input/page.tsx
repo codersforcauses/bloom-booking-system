@@ -35,7 +35,7 @@ export default function TestInputPage() {
   const [timeManual, setTimeManual] = React.useState("");
   const [timeSelect, setTimeSelect] = React.useState("");
 
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
+  const [date, setDate] = React.useState<Date | string | undefined>(undefined);
 
   const [searchValue, setSearchValue] = React.useState("");
 

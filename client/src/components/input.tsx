@@ -8,14 +8,13 @@
 // - Time-Select (08:00–17:00, 30-min intervals)
 // - Search
 
-import { format, isValid, parse } from "date-fns";
-import { Calendar as CalendarIcon,SearchIcon } from "lucide-react";
-import React, { useEffect,useState } from "react";
+import { isValid } from "date-fns";
+import { Calendar as CalendarIcon, SearchIcon } from "lucide-react";
+import React, { useState } from "react";
 import { Matcher, MonthChangeEventHandler } from "react-day-picker";
 
 import Badge from "@/components/badge";
 import { Calendar } from "@/components/calendar";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -28,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDateFieldChange } from "@/hooks/date-field";
 import { cn } from "@/lib/utils";
 
 type FieldKind =
@@ -83,8 +83,8 @@ type BadgeFieldProps = BaseFieldProps & {
 
 type DateFieldProps = BaseFieldProps & {
   kind: "date";
-  value: Date | undefined;
-  onChange: (value: Date | undefined) => void;
+  value: Date | string | undefined;
+  onChange: (value: Date | string | undefined) => void;
   defaultMonth?: Date;
   disabledDates?: Matcher | Matcher[];
   onMonthChange?: MonthChangeEventHandler;
@@ -277,39 +277,18 @@ function renderSelectFieldControl(props: SelectFieldProps) {
 }
 
 function renderDateFieldControl(props: DateFieldProps) {
-  const [inputValue, setInputValue] = useState("");
-
-  // Sync input text when the parent value changes e.g., from Calendar
-  useEffect(() => {
-    if (props.value) {
-      setInputValue(format(props.value, "dd/MM/yyyy"));
-    } else {
-      setInputValue("");
-    }
-  }, [props.value]);
-
-  // Handle user typing
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const text = e.target.value;
-    setInputValue(text);
-
-    const parsedDate = parse(text, "dd/MM/yyyy", new Date());
-
-    if (isValid(parsedDate) && parsedDate.getFullYear() > 1970) {
-      props.onChange(parsedDate);
-    } else if (text === "") {
-      props.onChange(undefined);
-    }
-  };
+  const { inputValue, viewMonth, setViewMonth, handleInputChange, handleBlur } =
+    useDateFieldChange(props);
 
   return (
     <div className="relative w-full">
-      <Input
+      <input
         type="text"
         placeholder={props.placeholder ?? "dd/MM/yyyy"}
         value={inputValue}
         onChange={handleInputChange}
-        className="body w-full bg-transparent px-3 py-2 pr-10 outline-none placeholder:text-bloom-gray"
+        onBlur={handleBlur}
+        className="body w-full border-none bg-transparent px-3 py-2 pr-10 outline-none placeholder:text-bloom-gray focus:ring-0 focus:ring-offset-0"
       />
 
       <Popover>
@@ -319,18 +298,30 @@ function renderDateFieldControl(props: DateFieldProps) {
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1"
             tabIndex={-1}
           >
-            <CalendarIcon className="h-4 w-4 text-bloom-gray" />
+            <CalendarIcon className="h-4 w-4" />
           </button>
         </PopoverTrigger>
 
-        <PopoverContent align="end" className="p-0">
+        <PopoverContent align="end" className="p-1">
           <Calendar
             mode="single"
-            selected={props.value}
+            selected={
+              props.value instanceof Date && isValid(props.value)
+                ? props.value
+                : undefined
+            }
             onSelect={props.onChange}
-            defaultMonth={props.defaultMonth}
+            month={
+              viewMonth instanceof Date && isValid(viewMonth)
+                ? viewMonth
+                : new Date()
+            }
+            onMonthChange={(month) => {
+              // first day of the month
+              setViewMonth(month);
+              props.onMonthChange?.(month);
+            }}
             disabled={props.disabledDates}
-            onMonthChange={props.onMonthChange}
             initialFocus
           />
         </PopoverContent>
