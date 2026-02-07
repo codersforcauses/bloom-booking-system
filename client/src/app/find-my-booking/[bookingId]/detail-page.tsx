@@ -23,13 +23,13 @@ function formatDateTime(iso: string) {
 type DetailPageProps = {
   bookingId: number;
   visitorEmail?: string; // visitorEmail is optional for admin
-  requireEmail?: boolean;
+  isAdminPage?: boolean;
 };
 
 export default function DetailPage({
   bookingId,
   visitorEmail,
-  requireEmail = false,
+  isAdminPage = true,
 }: DetailPageProps) {
   const router = useRouter();
 
@@ -38,7 +38,7 @@ export default function DetailPage({
     isLoading: isFetchBookingLoading,
     isError: isFetchBookingError,
     error: bookingError,
-  } = useFetchBooking(bookingId, requireEmail, visitorEmail || undefined);
+  } = useFetchBooking(bookingId, isAdminPage, visitorEmail || undefined);
   const {
     data: room,
     isLoading: isFetchRoomLoading,
@@ -161,12 +161,12 @@ export default function DetailPage({
           <div className="mt-10 flex flex-wrap gap-4">
             {!cancelled ? (
               <>
-                <Button
+                {/* <Button
                   variant="confirm"
                   onClick={() => setUpdateDialogOpen(true)}
                 >
                   Reschedule
-                </Button>
+                </Button> */}
                 <Button
                   variant="warning"
                   onClick={() => setCancelDialogOpen(true)}

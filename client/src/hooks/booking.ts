@@ -49,19 +49,19 @@ type ApiError = { message?: string; detail?: string };
 
 export function useFetchBooking(
   bookingId: number,
-  requireEmail: boolean,
+  isAdminPage: boolean,
   visitorEmail?: string,
 ) {
   return useQuery<BookingResponse, AxiosError<ApiError>>({
-    queryKey: ["bookings", bookingId, visitorEmail, requireEmail],
+    queryKey: ["bookings", bookingId, visitorEmail, isAdminPage],
     queryFn: async ({ signal }) => {
       const response = await api.get(`/bookings/${bookingId}/`, {
-        params: requireEmail ? { visitor_email: visitorEmail } : undefined,
+        params: !isAdminPage ? { visitor_email: visitorEmail } : undefined,
         signal,
       });
       return response.data;
     },
-    enabled: requireEmail
+    enabled: !isAdminPage
       ? Boolean(visitorEmail) && Boolean(bookingId)
       : Boolean(bookingId),
   });

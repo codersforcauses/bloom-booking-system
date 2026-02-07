@@ -1,8 +1,10 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { AlertDialog, AlertDialogProps } from "@/components/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -44,6 +46,16 @@ export default function UpdateBookingDialog({
   isOpen,
   onOpenChange,
 }: UpdateBookingDialogProps) {
+  const [dialogConfig, setDialogConfig] = useState<AlertDialogProps>({
+    open: false,
+    variant: undefined,
+    title: undefined,
+    description: undefined,
+  });
+
+  const closeDialog = () =>
+    setDialogConfig((prev) => ({ ...prev, open: false }));
+
   const form = useForm<BookingUpdateSchemaValue>({
     resolver: zodResolver(BookingUpdateSchema),
     defaultValues: {
@@ -63,15 +75,16 @@ export default function UpdateBookingDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
-        <DialogTitle className="text-center">Update Booking</DialogTitle>
-        <Form
-          form={form}
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="border-none p-4"
-        >
-          {/* <FormField
+    <>
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
+          <DialogTitle className="text-center">Update Booking</DialogTitle>
+          <Form
+            form={form}
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="border-none p-4"
+          >
+            {/* <FormField
             name="message"
             control={form.control}
             render={({ field }) => (
@@ -92,27 +105,37 @@ export default function UpdateBookingDialog({
               </FormItem>
             )}
           /> */}
-          {/* {isError && (
+            {/* {isError && (
             <p className="mb-2 text-sm text-bloom-red">
               {error instanceof Error
                 ? error.message
                 : "Update failed. Please try again."}
             </p>
           )} */}
-          <div className="flex items-center justify-center gap-2">
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button
-              variant="confirm"
-              type="submit"
-              // disabled={isPending || !form.formState.isValid}
-            >
-              {/* {isPending ? "Updating..." : "Update"} */} Submit
-            </Button>
-          </div>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            <div className="flex items-center justify-center gap-2">
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button
+                variant="confirm"
+                type="submit"
+                // disabled={isPending || !form.formState.isValid}
+              >
+                {/* {isPending ? "Updating..." : "Update"} */} Submit
+              </Button>
+            </div>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      <AlertDialog
+        open={dialogConfig.open}
+        variant={dialogConfig.variant}
+        title={dialogConfig.title}
+        description={dialogConfig.description}
+        showIcon={true}
+        onClose={closeDialog}
+        onConfirm={closeDialog}
+      />
+    </>
   );
 }

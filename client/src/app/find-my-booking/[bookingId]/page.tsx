@@ -22,7 +22,7 @@ export default function Page() {
     <DetailPage
       bookingId={bookingId}
       visitorEmail={visitorEmail}
-      requireEmail={true}
+      isAdminPage={false}
     />
   );
 }
