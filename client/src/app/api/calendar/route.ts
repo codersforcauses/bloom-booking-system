@@ -81,8 +81,6 @@ export async function GET(request: Request) {
       queryParams.timeMax = perthEnd.toISOString();
     }
 
-    console.log("Querying Google Calendar with params:", queryParams);
-
     const response = await calendar.events.list(queryParams);
     return NextResponse.json(response.data.items || []);
   } catch (error: unknown) {

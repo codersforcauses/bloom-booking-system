@@ -403,7 +403,7 @@ function BookRoomForm() {
    * Get the dates that are not included in availability api response.
    *
    * @param available_timeslots An array of DateTimeSlots representing the
-   * available timeslots of a room (from `api/rooms/{id}/availablity` response)
+   * available timeslots of a room (from `api/rooms/{id}/availability` response)
    * @param ignore_days_of_week An array of numbers representing days (Sun=0) to
    * ignore when looking for unavailable days
    * @returns An array of Dates between now and the last date of
@@ -475,7 +475,7 @@ function BookRoomForm() {
 
   // Probably best to replace this with a prop to the function/component to avoid calling the api twice
   /**
-   * Calls the `api/room/{room_id}` api endpoint to get the room availablity
+   * Calls the `api/room/{room_id}` api endpoint to get the room availability
    * information (start time, end time, recurrence_rule).
    * @returns The room's availability rules (NOT its available timeslots).
    */
@@ -569,7 +569,7 @@ function BookRoomForm() {
   }
 
   /**
-   * Fetches the room's availablity rules and available timeslots and sets the
+   * Fetches the room's availability rules and available timeslots and sets the
    * disabledDates state variable accoringly.
    */
   async function fetchAvailability() {
@@ -1007,7 +1007,7 @@ export default function BookRoomPage() {
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFgwJ/lYpukQAAAABJRU5ErkJggg==",
     location: "",
     available: false,
-    availablility: "",
+    availability: "",
     seats: 0,
     amenities: [],
     removed: false,
@@ -1133,7 +1133,7 @@ export default function BookRoomPage() {
           seats: data.capacity,
           location: data.location.name,
           available: data.is_active,
-          availablility: formAvailabilityString(
+          availability: formAvailabilityString(
             data.start_datetime,
             data.end_datetime,
             data.recurrence_rule,
