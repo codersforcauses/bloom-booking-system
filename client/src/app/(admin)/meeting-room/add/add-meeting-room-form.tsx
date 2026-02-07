@@ -555,7 +555,6 @@ export default function AddMeetingRoomForm() {
                   onClick={handleCancel}
                   disabled={isSubmitting}
                   variant="outline"
-                  className="border-bloom-blue bg-white text-bloom-blue"
                 >
                   Clear
                 </Button>
