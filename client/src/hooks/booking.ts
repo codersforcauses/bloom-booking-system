@@ -5,7 +5,6 @@ import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
 import type { BookingResponse } from "@/lib/api-types";
 import { PaginatedBookingResponse } from "@/lib/api-types";
-import { resolveErrorMessage } from "@/lib/utils";
 
 export function useFetchBookings(params: PaginationSearchParams) {
   const { page = 1, nrows = 5, search, ...customParams } = params;
@@ -70,8 +69,8 @@ export function useFetchBooking(
 
 export function useCancelBooking(
   bookingId: number,
-  setErrorMessage: (message: string) => void,
   onSuccess: () => void,
+  onError: (error: AxiosError) => void,
 ) {
   const queryClient = useQueryClient();
   return useMutation<
@@ -91,9 +90,7 @@ export function useCancelBooking(
     },
     onError: (error) => {
       console.error("Cancel booking failed:", error);
-      setErrorMessage(
-        resolveErrorMessage(error, "Cancellation failed. Please try again."),
-      );
+      onError(error);
     },
   });
 }

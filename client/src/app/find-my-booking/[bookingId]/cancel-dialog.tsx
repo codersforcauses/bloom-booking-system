@@ -1,9 +1,10 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { AlertDialog, AlertDialogProps } from "@/components/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCancelBooking } from "@/hooks/booking";
+import { resolveErrorMessage } from "@/lib/utils";
 
 const CANCEL_REASONS = [
   "Change of plans",
@@ -60,7 +62,15 @@ export default function CancelBookingDialog({
   isOpen,
   onOpenChange,
 }: CancelBookingDialogProps) {
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [dialogConfig, setDialogConfig] = useState<AlertDialogProps>({
+    open: false,
+    variant: undefined,
+    title: undefined,
+    description: undefined,
+  });
+
+  const closeDialog = () =>
+    setDialogConfig((prev) => ({ ...prev, open: false }));
 
   const form = useForm<BookingCancelSchemaValue>({
     resolver: zodResolver(BookingCancelSchema),
@@ -73,15 +83,30 @@ export default function CancelBookingDialog({
 
   const { mutate, isPending } = useCancelBooking(
     bookingId,
-    setErrorMessage,
     () => {
       onOpenChange(false);
+      setDialogConfig({
+        open: true,
+        variant: "success",
+        title: "Awesome!",
+        description: "Your booking is cancelled successfully.",
+      });
+    },
+    (error) => {
+      setDialogConfig({
+        open: true,
+        variant: "error",
+        title: "Sorry!",
+        description: resolveErrorMessage(
+          error,
+          "Cancellation failed. Please try again.",
+        ),
+      });
     },
   );
 
   const onSubmit = (data: BookingCancelSchemaValue) => {
     if (!bookingId || !data) return;
-    setErrorMessage(null);
     let reasonText: string = data.reason.trim();
     if (data.message?.trim()) {
       reasonText = `${data.reason}. Detail: ${data.message.trim()}`;
@@ -95,91 +120,93 @@ export default function CancelBookingDialog({
     mutate(payload);
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      setErrorMessage(null);
-    }
-  }, [isOpen]);
-
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
-        <DialogTitle className="text-center">
-          Reason to cancel booking
-        </DialogTitle>
-        <Form
-          form={form}
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="border-none p-4"
-        >
-          <FormField
-            name="reason"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="mb-2">
-                <FormControl>
-                  <Label>
-                    Reason
-                    <Select
-                      value={field.value || "Change of plans"}
-                      onValueChange={field.onChange}
-                      disabled={isPending}
-                    >
-                      <SelectTrigger className="mt-2 rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-base">
-                        <SelectValue placeholder="Select a reason" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CANCEL_REASONS.map((reason) => (
-                          <SelectItem key={reason} value={reason}>
-                            {reason}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Label>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="message"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="mb-2">
-                <FormControl>
-                  <Label>
-                    Message
-                    <Textarea
-                      placeholder="Message (optional)"
-                      className="mt-2"
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                      disabled={isPending}
-                    />
-                  </Label>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {errorMessage && (
-            <p className="mb-2 text-sm text-bloom-red">{errorMessage}</p>
-          )}
-          <div className="flex items-center justify-center gap-2">
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button
-              variant="warning"
-              type="submit"
-              disabled={isPending || !form.formState.isValid}
-            >
-              {isPending ? "Submitting..." : "Submit"}
-            </Button>
-          </div>
-        </Form>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
+          <DialogTitle className="text-center">
+            Reason to cancel booking
+          </DialogTitle>
+          <Form
+            form={form}
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="border-none p-4"
+          >
+            <FormField
+              name="reason"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="mb-2">
+                  <FormControl>
+                    <Label>
+                      Reason
+                      <Select
+                        value={field.value || "Change of plans"}
+                        onValueChange={field.onChange}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger className="mt-2 rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-base">
+                          <SelectValue placeholder="Select a reason" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CANCEL_REASONS.map((reason) => (
+                            <SelectItem key={reason} value={reason}>
+                              {reason}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Label>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="message"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="mb-2">
+                  <FormControl>
+                    <Label>
+                      Message
+                      <Textarea
+                        placeholder="Message (optional)"
+                        className="mt-2"
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        disabled={isPending}
+                      />
+                    </Label>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex items-center justify-center gap-2">
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button
+                variant="warning"
+                type="submit"
+                disabled={isPending || !form.formState.isValid}
+              >
+                {isPending ? "Submitting..." : "Submit"}
+              </Button>
+            </div>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      <AlertDialog
+        open={dialogConfig.open}
+        variant={dialogConfig.variant}
+        title={dialogConfig.title}
+        description={dialogConfig.description}
+        showIcon={true}
+        onClose={closeDialog}
+        onConfirm={closeDialog}
+      />
+    </>
   );
 }
