@@ -405,4 +405,4 @@ class BookingViewTest(APITestCase):
 
         self.assertEqual(event_data["summary"], f"Booking of {self.room.name} - Alice Johnson")
         self.assertIn("description", event_data)
-        self.assertEqual(event_data["extendedProperties"]["private"].get("roomId"), str(self.room.id))
+        self.assertEqual(event_data["extendedProperties"]["shared"].get("roomId"), str(self.room.id))
