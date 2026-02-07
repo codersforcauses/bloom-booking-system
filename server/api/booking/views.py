@@ -125,11 +125,11 @@ class BookingViewSet(viewsets.ModelViewSet):
                 send_booking_confirmed_email(
                     recipients=[booking.visitor_email],
                     context={
-                        "room_name": booking.room,
+                        "room_name": booking.room.name,
                         "start_datetime": booking.start_datetime,
                         "end_datetime": booking.end_datetime,
                         "visitor_name": booking.visitor_name,
-                        "location_name": booking.room.location
+                        "location_name": booking.room.location.name,
                     }
                 )
             except Exception as email_error:
@@ -208,7 +208,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                         'id', 'status', 'cancel_reason', 'updated_at'))
 
                     # Send cancellation email
-                    # A non-critical feature - booking creation should not fail if email sending fails
+                    # A non-critical feature - booking cancellation should not fail if email sending fails
                     try:
                         send_booking_cancelled_email(
                             recipients=[visitor_email],
@@ -271,7 +271,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                     updated_booking, fields=('id', 'status', 'updated_at'))
 
                 # Send updated booking confirmation email
-                # A non-critical feature - booking creation should not fail if email sending fails
+                # A non-critical feature - booking update should not fail if email sending fails
                 try:
                     send_booking_confirmed_email(
                         recipients=[updated_booking.visitor_email],
