@@ -9,6 +9,7 @@ import {
   PaginatedAmenityResponse,
   PaginatedLocationResponse,
   PaginatedRoomResponse,
+  RoomResponse,
   RoomShortResponse,
 } from "@/lib/api-types";
 
@@ -200,6 +201,19 @@ function useDeleteRoomAmenity() {
   });
 }
 
+type ApiError = { message?: string; detail?: string };
+
+function useFetchRoom(id: number) {
+  return useQuery<RoomResponse, AxiosError<ApiError>>({
+    queryKey: ["room", id], // for caching
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const response = await api.get(`/rooms/${id}/`);
+      return response.data;
+    },
+  });
+}
+
 const RoomAPI = {
   useFetchRooms,
   useSearchRooms,
@@ -213,6 +227,7 @@ const RoomAPI = {
   useCreateRoomAmenity,
   useUpdateRoomAmenity,
   useDeleteRoomAmenity,
+  useFetchRoom,
 };
 
 export { useFetchRooms, useSearchRooms };
