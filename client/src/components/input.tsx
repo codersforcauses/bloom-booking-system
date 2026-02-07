@@ -8,13 +8,14 @@
 // - Time-Select (08:00–17:00, 30-min intervals)
 // - Search
 
-import { format } from "date-fns";
-import { SearchIcon } from "lucide-react";
-import React, { useState } from "react";
+import { format, isValid, parse } from "date-fns";
+import { Calendar as CalendarIcon,SearchIcon } from "lucide-react";
+import React, { useEffect,useState } from "react";
 import { Matcher, MonthChangeEventHandler } from "react-day-picker";
 
 import Badge from "@/components/badge";
 import { Calendar } from "@/components/calendar";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -276,34 +277,65 @@ function renderSelectFieldControl(props: SelectFieldProps) {
 }
 
 function renderDateFieldControl(props: DateFieldProps) {
-  const hasValue = !!props.value;
-  const label = hasValue
-    ? format(props.value as Date, "dd/MM/yyyy")
-    : (props.placeholder ?? "Select date");
+  const [inputValue, setInputValue] = useState("");
+
+  // Sync input text when the parent value changes e.g., from Calendar
+  useEffect(() => {
+    if (props.value) {
+      setInputValue(format(props.value, "dd/MM/yyyy"));
+    } else {
+      setInputValue("");
+    }
+  }, [props.value]);
+
+  // Handle user typing
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value;
+    setInputValue(text);
+
+    const parsedDate = parse(text, "dd/MM/yyyy", new Date());
+
+    if (isValid(parsedDate) && parsedDate.getFullYear() > 1970) {
+      props.onChange(parsedDate);
+    } else if (text === "") {
+      props.onChange(undefined);
+    }
+  };
 
   return (
-    <Popover>
-      <PopoverTrigger
-        className={
-          "body w-full bg-transparent px-3 py-2 text-left outline-none " +
-          (!hasValue ? "text-bloom-gray" : "")
-        }
-      >
-        {label}
-      </PopoverTrigger>
+    <div className="relative w-full">
+      <Input
+        type="text"
+        placeholder={props.placeholder ?? "dd/MM/yyyy"}
+        value={inputValue}
+        onChange={handleInputChange}
+        className="body w-full bg-transparent px-3 py-2 pr-10 outline-none placeholder:text-bloom-gray"
+      />
 
-      <PopoverContent align="start" className="p-0">
-        <Calendar
-          mode="single"
-          selected={props.value}
-          onSelect={props.onChange}
-          defaultMonth={props.defaultMonth}
-          disabled={props.disabledDates}
-          onMonthChange={props.onMonthChange}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1"
+            tabIndex={-1}
+          >
+            <CalendarIcon className="h-4 w-4 text-bloom-gray" />
+          </button>
+        </PopoverTrigger>
+
+        <PopoverContent align="end" className="p-0">
+          <Calendar
+            mode="single"
+            selected={props.value}
+            onSelect={props.onChange}
+            defaultMonth={props.defaultMonth}
+            disabled={props.disabledDates}
+            onMonthChange={props.onMonthChange}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
 
