@@ -12,7 +12,6 @@ import { normaliseRoom } from "@/lib/normalise-room";
 import { resolveErrorMessage } from "@/lib/utils";
 
 import CancelBookingDialog from "./cancel-dialog";
-import UpdateBookingDialog from "./update-dialog";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -47,7 +46,6 @@ export default function DetailPage({
   } = API.useFetchRoom(booking?.room.id ?? 0);
 
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
 
   const normailisedRoom = useMemo(() => {
     if (!room) return null;
@@ -161,12 +159,18 @@ export default function DetailPage({
           <div className="mt-10 flex flex-wrap gap-4">
             {!cancelled ? (
               <>
-                {/* <Button
+                <Button
                   variant="confirm"
-                  onClick={() => setUpdateDialogOpen(true)}
+                  onClick={() => {
+                    // to do: fix the routing
+                    const url = isAdminPage
+                      ? `/bookings/edit/${booking.id}`
+                      : `/book-room/edit/${booking.id}`;
+                    router.push(url);
+                  }}
                 >
                   Reschedule
-                </Button> */}
+                </Button>
                 <Button
                   variant="warning"
                   onClick={() => setCancelDialogOpen(true)}
@@ -185,14 +189,6 @@ export default function DetailPage({
           </div>
         </div>
       </div>
-
-      {/* Update Modal */}
-      <UpdateBookingDialog
-        // to be added later
-        isOpen={updateDialogOpen}
-        onOpenChange={setUpdateDialogOpen}
-      ></UpdateBookingDialog>
-
       {/* Cancel Modal */}
       <CancelBookingDialog
         bookingId={booking.id}

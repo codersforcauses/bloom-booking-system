@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { AlertDialog, AlertDialogProps } from "@/components/alert-dialog";
+import ReCAPTCHAV2 from "@/components/recaptcha";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -62,6 +63,7 @@ export default function CancelBookingDialog({
   isOpen,
   onOpenChange,
 }: CancelBookingDialogProps) {
+  const [verified, setVerified] = useState<boolean>(false);
   const [dialogConfig, setDialogConfig] = useState<AlertDialogProps>({
     open: false,
     variant: undefined,
@@ -183,6 +185,9 @@ export default function CancelBookingDialog({
                 </FormItem>
               )}
             />
+            <div className="flex items-center justify-center py-1">
+              <ReCAPTCHAV2 setVerified={setVerified} />
+            </div>
             <div className="flex items-center justify-center gap-2">
               <DialogClose asChild>
                 <Button variant="outline">Cancel</Button>
@@ -190,7 +195,7 @@ export default function CancelBookingDialog({
               <Button
                 variant="warning"
                 type="submit"
-                disabled={isPending || !form.formState.isValid}
+                disabled={isPending || !form.formState.isValid || !verified}
               >
                 {isPending ? "Submitting..." : "Submit"}
               </Button>
