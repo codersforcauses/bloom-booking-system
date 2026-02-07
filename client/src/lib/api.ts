@@ -200,7 +200,7 @@ const checkAuth = async (): Promise<boolean> => {
 };
 
 export default api;
-export { checkAuth, clearTokens,logout, setAccessToken, setRefreshToken };
+export { checkAuth, clearTokens, logout, setAccessToken, setRefreshToken };
 
 // Helper functions for typed API calls
 export async function apiGet<T>(url: string, config?: object): Promise<T> {
