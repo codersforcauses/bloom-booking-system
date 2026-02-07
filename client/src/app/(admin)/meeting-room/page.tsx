@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AdminRoomCard } from "@/components/room-card";
@@ -11,16 +12,20 @@ import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 import { Room } from "@/types/card";
 
 import FilterPopOver from "./filter-button";
-import { RoomFilterSchemaValue } from "./filter-dropdown";
+import type { RoomFilterSchemaValue } from "./filter-dropdown";
 import { normalizeRoom } from "./normalize-room";
 import RoomContext from "./room-context";
+import StatusDialog from "./status-dialog";
 
 export default function RoomsPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [pendingSearch, setPendingSearch] = useState<string>("");
   const [filters, setFilters] = useState<RoomFilterSchemaValue>({});
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [statusDialogOpen, setStatusDialogOpen] = useState<boolean>(false);
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
 
   // Build customParams object for API
   function buildCustomParams() {
@@ -53,14 +58,16 @@ export default function RoomsPage() {
   });
 
   // Suppose the number of locations and amenities are small enough to fetch all at once
-  const { data: locations } = RoomAPI.useFetchRoomLocations({
-    page: 1,
-    nrows: 100,
-  });
-  const { data: amenities } = RoomAPI.useFetchRoomAmenities({
-    page: 1,
-    nrows: 100,
-  });
+  const { data: locations, isLoading: isLocationsLoading } =
+    RoomAPI.useFetchRoomLocations({
+      page: 1,
+      nrows: 100,
+    });
+  const { data: amenities, isLoading: isAmenitiesLoading } =
+    RoomAPI.useFetchRoomAmenities({
+      page: 1,
+      nrows: 100,
+    });
 
   // Always normalize rooms for rendering
   const normalizedRooms = useMemo(
@@ -78,7 +85,7 @@ export default function RoomsPage() {
     }
   }
 
-  function handleFilterChange(newFilters: Partial<Room>) {
+  function handleFilterChange(newFilters: RoomFilterSchemaValue) {
     setFilters(newFilters);
   }
 
@@ -106,7 +113,9 @@ export default function RoomsPage() {
       value={{
         roomNames,
         locations: (locations as LocationResponse[]) || [],
+        isLocationsLoading,
         amenities: (amenities as AmenityResponse[]) || [],
+        isAmenitiesLoading,
         onFilterChange: handleFilterChange,
         filterValues: filters,
       }}
@@ -134,16 +143,17 @@ export default function RoomsPage() {
         </div>
 
         {isError && (
-          <div className="mb-4 rounded bg-red-100 px-4 py-2 text-red-700">
+          <div className="mb-4 text-bloom-red">
             {error instanceof Error
               ? error.message
               : "Failed to load rooms. Please try again."}
           </div>
         )}
-        {isLoading && (
-          <div className="mb-4 rounded bg-yellow-100 px-4 py-2 text-yellow-700">
-            Loading rooms…
-          </div>
+
+        {/* To do: Show loading state */}
+
+        {normalizedRooms.length === 0 && !isLoading && !isError && (
+          <div className="mb-4">No rooms found. Please try again.</div>
         )}
 
         <div className="grid min-w-80 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -151,15 +161,30 @@ export default function RoomsPage() {
             <AdminRoomCard
               key={room.id}
               room={room}
-              onView={() => alert("View")}
-              onEdit={() => alert("Edit")}
-              onRemove={() => alert("Remove")}
+              onView={() => {
+                router.push(`/calendar/${room.id}`);
+              }}
+              onEdit={() => {
+                router.push(`/meeting-room/edit/${room.id}`);
+              }}
+              onStatusChange={() => {
+                setSelectedRoom(room);
+                setStatusDialogOpen(true);
+              }}
             />
           ))}
           {/* an invisible marker that trigger fetch when scrolling into view */}
           <div ref={loadMoreRef} style={{ height: 1 }} />
         </div>
       </div>
+      {selectedRoom && (
+        <StatusDialog
+          room={{ id: selectedRoom.id, name: selectedRoom.title }}
+          action={selectedRoom.available ? "setInactive" : "setActive"}
+          isOpen={statusDialogOpen}
+          onOpenChange={setStatusDialogOpen}
+        />
+      )}
     </RoomContext.Provider>
   );
 }

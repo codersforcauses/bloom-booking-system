@@ -25,21 +25,34 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Combobox from "../../../components/combobox";
 import RoomContext from "./room-context";
 
-const RoomFilterSchema = z.object({
-  locations: z.array(z.string()).optional(),
-  amenities: z.array(z.string()).optional(),
-  minSeats: z
-    .number()
-    .int()
-    .min(1, { message: "Must be a positive number" })
-    .optional(),
-  maxSeats: z
-    .number()
-    .int()
-    .min(1, { message: "Must be a positive number" })
-    .optional(),
-  isActive: z.boolean().optional(),
-});
+const RoomFilterSchema = z
+  .object({
+    locations: z.array(z.string()).optional(),
+    amenities: z.array(z.string()).optional(),
+    minSeats: z
+      .number()
+      .int()
+      .min(1, { message: "Must be a positive number" })
+      .optional(),
+    maxSeats: z
+      .number()
+      .int()
+      .min(1, { message: "Must be a positive number" })
+      .optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.minSeats !== undefined && data.maxSeats !== undefined) {
+        return data.minSeats <= data.maxSeats;
+      }
+      return true;
+    },
+    {
+      message: "Maximum seats cannot be smaller than minimum seats",
+      path: ["maxSeats"],
+    },
+  );
 
 export type RoomFilterSchemaValue = z.infer<typeof RoomFilterSchema>;
 
@@ -47,7 +60,14 @@ export default function FilterDropdown() {
   const ctx = React.useContext(RoomContext);
   if (!ctx) throw new Error("RoomContext not found");
 
-  const { locations, amenities, onFilterChange, filterValues } = ctx;
+  const {
+    locations,
+    isLocationsLoading,
+    amenities,
+    isAmenitiesLoading,
+    onFilterChange,
+    filterValues,
+  } = ctx;
 
   const form = useForm<RoomFilterSchemaValue>({
     resolver: zodResolver(RoomFilterSchema),
@@ -115,6 +135,7 @@ export default function FilterDropdown() {
                         items={locations}
                         values={field.value || []}
                         onValueChange={field.onChange}
+                        isLoading={isLocationsLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -141,6 +162,7 @@ export default function FilterDropdown() {
                         items={amenities}
                         values={field.value || []}
                         onValueChange={field.onChange}
+                        isLoading={isAmenitiesLoading}
                       />
                     </FormControl>
                     <FormMessage />

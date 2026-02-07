@@ -12,6 +12,7 @@ export type Room = {
   start_datetime?: string;
   end_datetime?: string;
   recurrence_rule?: string;
+  isActive?: boolean;
 };
 
 const defaultImage =

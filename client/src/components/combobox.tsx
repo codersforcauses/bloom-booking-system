@@ -11,7 +11,7 @@ import {
   useComboboxAnchor,
 } from "@/components/ui/combobox";
 
-type Items = {
+type Item = {
   id: string | number;
   name: string;
   [key: string]: any;
@@ -19,7 +19,7 @@ type Items = {
 
 type ComboboxProps = {
   name: string;
-  items: Items[];
+  items: Item[];
   values: string[];
   onValueChange: (values: string[]) => void;
   isLoading?: boolean;
@@ -42,7 +42,8 @@ export default function Combobox({
           <ComboboxChip key={item}>{item}</ComboboxChip>
         ))}
         <ComboboxChipsInput
-          placeholder={values.length === 0 ? `Select ${name}...` : ""}
+          className="placeholder:text-muted-foreground"
+          placeholder={values.length === 0 ? `Select ${name}` : ""}
         />
       </ComboboxChips>
 
@@ -53,7 +54,7 @@ export default function Combobox({
           </div>
         )}
         <ComboboxList>
-          {items.map((item: Items) => (
+          {items.map((item: Item) => (
             <ComboboxItem key={item.id} value={item.name}>
               {item.name}
             </ComboboxItem>

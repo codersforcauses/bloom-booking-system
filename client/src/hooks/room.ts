@@ -1,4 +1,9 @@
-import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
@@ -9,8 +14,10 @@ import {
   PaginatedAmenityResponse,
   PaginatedLocationResponse,
   PaginatedRoomResponse,
+  RoomResponse,
   RoomShortResponse,
 } from "@/lib/api-types";
+import { resolveErrorMessage } from "@/lib/utils";
 
 // switch to use useInfiniteQuery to handle infinite scrolling
 function useFetchRooms(params: PaginationSearchParams) {
@@ -76,6 +83,31 @@ function useSearchRooms(search?: string, limit = 20) {
       return response.data.results;
     },
     enabled: !!search,
+  });
+}
+
+// Refetch room list after updating status (to do: optimise by using context)
+function useUpdateRoomStatus(
+  id: number,
+  setErrorMessage: (message: string) => void,
+  onSuccess: () => void,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<RoomResponse, AxiosError, { is_active: boolean }>({
+    mutationFn: async (payload) => {
+      const response = await api.patch(`/rooms/${id}/`, payload);
+      return response.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      onSuccess();
+    },
+    onError: (error) => {
+      console.error("Cancel booking failed:", error);
+      setErrorMessage(
+        resolveErrorMessage(error, "Cancellation failed. Please try again."),
+      );
+    },
   });
 }
 
@@ -232,5 +264,5 @@ const RoomAPI = {
   useDeleteRoomAmenity,
 };
 
-export { useFetchRooms, useSearchRooms };
+export { useFetchRooms, useSearchRooms, useUpdateRoomStatus };
 export default RoomAPI;
