@@ -72,13 +72,6 @@ type PaginatedResponse<T> = {
   results: T[];
 };
 
-export const emptyPaginatedResponse = <T>(): PaginatedResponse<T> => ({
-  count: 0,
-  next: null,
-  previous: null,
-  results: [],
-});
-
 export type PaginatedRoomResponse = PaginatedResponse<RoomResponse>;
 export type PaginatedLocationResponse = PaginatedResponse<LocationResponse>;
 export type PaginatedAmenityResponse = PaginatedResponse<AmenityResponse>;
