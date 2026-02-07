@@ -127,7 +127,10 @@ def send_simple_email(
             html_message=html_message,
         )
     except SMTPAuthenticationError:
-        logger.error(f"Failed to send email: Authentication error with EMAIL_HOST_USER {from_email}.")
+        logger.error(
+            "Failed to send email: SMTP authentication error. from_email=%r",
+            from_email,
+        )
         return 0
     except SMTPResponseException as e:
         if e.smtp_code == 530:
