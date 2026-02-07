@@ -164,7 +164,7 @@ export default function AddMeetingRoomForm() {
 
   return (
     <>
-      <div className="min-h-screen py-6">
+      <div className="min-h-screen p-6">
         <div className="mx-auto max-w-6xl">
           <h2 className="mb-6 text-2xl font-bold">Meeting Rooms</h2>
 
@@ -229,47 +229,46 @@ export default function AddMeetingRoomForm() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Amenities Section - Using Badge Component */}
                 <div>
-                  <div className="flex items-end gap-3">
-                    <div className="flex-1">
-                      <InputField
-                        kind="badge"
-                        name="amenities"
-                        label="Amenities"
-                        options={amenitiesFromAPI.map((a) => a.name)}
-                        value={
-                          Array.isArray(formData.amenities)
-                            ? formData.amenities.map((amenityId) => {
-                                const numericId =
-                                  typeof amenityId === "string"
-                                    ? parseInt(amenityId, 10)
-                                    : amenityId;
-                                const amenity = amenitiesFromAPI.find(
-                                  (a) => a.id === numericId,
-                                );
-                                return amenity?.name || `Amenity ${amenityId}`;
-                              })
-                            : []
-                        }
-                        onChange={(selectedNames) => {
-                          const selectedIds = selectedNames
-                            .map((name) => {
-                              const amenity = amenitiesFromAPI.find(
-                                (a) => a.name === name,
-                              );
-                              return amenity ? amenity.id.toString() : null;
-                            })
-                            .filter((id): id is string => id !== null);
-                          setFormData((prev) => ({
-                            ...prev,
-                            amenities: selectedIds,
-                          }));
-                        }}
-                      />
-                    </div>
-                    {/* + Add badge button */}
+                  <InputField
+                    kind="badge"
+                    name="amenities"
+                    label="Amenities"
+                    options={amenitiesFromAPI.map((a) => a.name)}
+                    value={
+                      Array.isArray(formData.amenities)
+                        ? formData.amenities.map((amenityId) => {
+                            const numericId =
+                              typeof amenityId === "string"
+                                ? parseInt(amenityId, 10)
+                                : amenityId;
+                            const amenity = amenitiesFromAPI.find(
+                              (a) => a.id === numericId,
+                            );
+                            return amenity?.name || `Amenity ${amenityId}`;
+                          })
+                        : []
+                    }
+                    onChange={(selectedNames) => {
+                      const selectedIds = selectedNames
+                        .map((name) => {
+                          const amenity = amenitiesFromAPI.find(
+                            (a) => a.name === name,
+                          );
+                          return amenity ? amenity.id.toString() : null;
+                        })
+                        .filter((id): id is string => id !== null);
+                      setFormData((prev) => ({
+                        ...prev,
+                        amenities: selectedIds,
+                      }));
+                    }}
+                  />
+                  {/* + Add badge button */}
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <Button
                       type="button"
                       onClick={() => setAddAmenityOpen(true)}
+                      className="caption inline-flex h-auto items-center rounded-md border bg-[hsl(var(--secondary))] px-2 py-0.5 text-[hsl(var(--card-foreground))]"
                     >
                       + Add
                     </Button>
@@ -302,9 +301,9 @@ export default function AddMeetingRoomForm() {
                     Upload Image
                   </label>
 
-                  <div className="flex items-stretch gap-2">
-                    <div className="flex min-h-[38px] flex-1 items-center rounded-l-md border bg-background px-3 shadow-[0_4px_0_0_#D1D5DB]">
-                      <span className="body text-[var(--bloom-gray)] opacity-100">
+                  <div className="flex items-stretch">
+                    <div className="flex min-h-10 flex-1 items-center rounded-l-md border border-b-4 border-b-gray-300 bg-background px-3">
+                      <span className="text-bloom-gray opacity-100">
                         {imageFile ? imageFile.name : "No file selected"}
                       </span>
                     </div>
@@ -312,7 +311,7 @@ export default function AddMeetingRoomForm() {
                     <Button
                       type="button"
                       onClick={() => document.getElementById("image")?.click()}
-                      className="rounded-l-none rounded-r-md text-white shadow-[0_4px_0_0_#D1D5DB]"
+                      className="rounded-l-none rounded-r-md border-b-4 border-b-gray-300 text-white"
                     >
                       Choose File
                     </Button>
