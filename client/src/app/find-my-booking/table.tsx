@@ -109,7 +109,7 @@ export default function BookingTable({
   ];
 
   const renderActions = (row: BookingResponse) => {
-    const isActive = row.status === "COMPLETED";
+    const isActive = row.status === "CONFIRMED";
 
     return (
       <span className="flex space-x-2">
