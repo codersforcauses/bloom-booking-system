@@ -1,3 +1,4 @@
+"use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeClosed } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,9 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api, { setAccessToken } from "@/lib/api";
 import { delay } from "@/lib/utils";
-
-"use client";
-login;
 
 /**
  * - POST /users/login/ with username/password
