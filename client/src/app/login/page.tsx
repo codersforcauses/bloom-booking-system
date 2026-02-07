@@ -1,5 +1,3 @@
-"use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeClosed } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api, { setAccessToken } from "@/lib/api";
 import { delay } from "@/lib/utils";
+
+"use client";
+login;
 
 /**
  * - POST /users/login/ with username/password
@@ -119,8 +120,8 @@ export default function LoginPage() {
       }
 
       await delay(800);
+      router.refresh();
       router.push(redirectTo);
-      // router.refresh();
     } catch (err: any) {
       const message =
         err?.response?.data?.detail ||

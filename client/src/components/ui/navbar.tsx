@@ -88,6 +88,7 @@ export default function Navbar() {
     };
     checkAuth();
   }, []);
+  console.log(isLoggedIn);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-white">
