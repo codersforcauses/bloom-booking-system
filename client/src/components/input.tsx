@@ -77,6 +77,7 @@ type BadgeFieldProps = BaseFieldProps & {
   options: string[];
   value: string[];
   onChange: (value: string[]) => void;
+  actionElement?: React.ReactNode;
 };
 
 type DateFieldProps = BaseFieldProps & {
@@ -215,6 +216,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
               </button>
             );
           })}
+          {badgeProps.actionElement}
         </div>
       )}
 
