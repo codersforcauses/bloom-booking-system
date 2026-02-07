@@ -1,12 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
-import {
-  emptyPaginatedResponse,
-  PaginatedBookingResponse,
-} from "@/lib/api-types";
+import { PaginatedBookingResponse } from "@/lib/api-types";
 
 export function useFetchBookings(params: PaginationSearchParams) {
   const { page = 1, nrows = 5, search, ...customParams } = params;
@@ -30,7 +26,7 @@ export function useFetchBookings(params: PaginationSearchParams) {
             ...(filteredParams ? { ...filteredParams } : {}),
           },
         });
-        return response.data ?? emptyPaginatedResponse();
+        return response.data;
       },
     });
 

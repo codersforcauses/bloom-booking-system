@@ -38,7 +38,7 @@ export default function FindMyBookingForm({
   };
 
   return (
-    <div className="min-h-layout-header mx-auto flex flex-col items-center justify-center space-y-6 bg-[hsl(var(--card))] p-6 text-[hsl(var(--card-foreground))]">
+    <div className="min-h-layout-header mx-auto flex flex-col items-center justify-center space-y-6">
       <form
         className="flex flex-col items-center justify-center gap-8"
         onSubmit={handleSubmit(onSubmit)}
