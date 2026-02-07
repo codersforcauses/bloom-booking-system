@@ -12,7 +12,9 @@
     "format": "prettier -w src",
     "format:check": "prettier -c src",
     "typecheck": "tsc --noEmit",
-    "prepare": "cd .. && husky client/.husky"
+    "prepare": "cd .. && husky client/.husky",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
@@ -69,6 +71,12 @@
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.12",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "storybook": "^10.2.7",
+    "@storybook/nextjs": "^10.2.7",
+    "@storybook/addon-a11y": "^10.2.7",
+    "@storybook/addon-docs": "^10.2.7",
+    "@storybook/addon-onboarding": "^10.2.7",
+    "eslint-plugin-storybook": "^10.2.7"
   }
 }
