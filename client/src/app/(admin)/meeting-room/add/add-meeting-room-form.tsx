@@ -262,17 +262,16 @@ export default function AddMeetingRoomForm() {
                         amenities: selectedIds,
                       }));
                     }}
+                    actionElement={
+                      <Button
+                        type="button"
+                        onClick={() => setAddAmenityOpen(true)}
+                        className="caption inline-flex h-auto items-center rounded-md border bg-[hsl(var(--secondary))] px-2 py-0.5 text-[hsl(var(--card-foreground))]"
+                      >
+                        + Add
+                      </Button>
+                    }
                   />
-                  {/* + Add badge button */}
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      onClick={() => setAddAmenityOpen(true)}
-                      className="caption inline-flex h-auto items-center rounded-md border bg-[hsl(var(--secondary))] px-2 py-0.5 text-[hsl(var(--card-foreground))]"
-                    >
-                      + Add
-                    </Button>
-                  </div>
                 </div>
 
                 <AmenityModal
