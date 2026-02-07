@@ -8,6 +8,8 @@ import {
   useState,
 } from "react";
 
+import { checkAuth } from "@/lib/api";
+
 interface AuthContextType {
   isLoggedIn: boolean;
   login: (accessToken: string, refreshToken: string) => void;
@@ -20,8 +22,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken");
-    setIsLoggedIn(!!accessToken);
+    const validateToken = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        setIsLoggedIn(false);
+        return;
+      }
+
+      const isValid = await checkAuth();
+      if (isValid) {
+        setIsLoggedIn(true);
+      } else {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        setIsLoggedIn(false);
+      }
+    };
+
+    validateToken();
   }, []);
 
   const login = (accessToken: string, refreshToken: string) => {
