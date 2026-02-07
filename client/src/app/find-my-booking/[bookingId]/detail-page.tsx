@@ -110,82 +110,88 @@ export default function DetailPage({
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
       <div className="mt-8 grid gap-8 lg:grid-cols-[380px_1fr] lg:items-start lg:gap-12">
         {/* Left */}
-        <div className="rounded-lg border bg-white shadow-sm">
-          {normailisedRoom ? (
-            <RoomCard room={normailisedRoom} />
-          ) : (
-            <div className="p-6 text-sm text-muted-foreground">
-              Room information is not available.
-            </div>
-          )}
+        <div className="max-lg:flex max-lg:items-center max-lg:justify-center">
+          <div className="w-full max-w-[500px]">
+            {normailisedRoom ? (
+              <RoomCard room={normailisedRoom} />
+            ) : (
+              <div className="p-6 text-sm text-muted-foreground">
+                Room information is not available.
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right */}
-        <div className="rounded-lg border bg-white p-10 shadow-sm">
-          <div className="grid gap-y-3">
-            {[
-              ["Booking ID", booking.id],
-              ["Name", booking.visitor_name],
-              ["Email", booking.visitor_email],
-              ["Start", formatDateTime(booking.start_datetime)],
-              ["End", formatDateTime(booking.end_datetime)],
-              [
-                "Recurrence",
-                booking.recurrence_rule
-                  ? RRule.fromString(booking.recurrence_rule).toText()
-                  : "-",
-              ],
-              [
-                "Status",
-                <span
-                  key="status"
-                  className={cancelled ? "font-medium text-bloom-red" : ""}
+        <div className="max-lg:flex max-lg:items-center max-lg:justify-center">
+          <div className="w-full max-w-[500px] rounded-lg border bg-white p-10 shadow-sm">
+            <div className="grid gap-y-3">
+              {[
+                ["Booking ID", booking.id],
+                ["Name", booking.visitor_name],
+                ["Email", booking.visitor_email],
+                ["Start", formatDateTime(booking.start_datetime)],
+                ["End", formatDateTime(booking.end_datetime)],
+                [
+                  "Recurrence",
+                  booking.recurrence_rule
+                    ? RRule.fromString(booking.recurrence_rule).toText()
+                    : "-",
+                ],
+                [
+                  "Status",
+                  <span
+                    key="status"
+                    className={cancelled ? "font-medium text-bloom-red" : ""}
+                  >
+                    {booking.status}
+                  </span>,
+                ],
+              ].map(([label, value]) => (
+                <div
+                  key={label as string}
+                  className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-16"
                 >
-                  {booking.status}
-                </span>,
-              ],
-            ].map(([label, value]) => (
-              <div
-                key={label as string}
-                className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-16"
-              >
-                <div className="text-muted-foreground">{label}</div>
-                <div>{value}</div>
-              </div>
-            ))}
-          </div>
+                  <div className="text-muted-foreground">{label}</div>
+                  <div>{value}</div>
+                </div>
+              ))}
+            </div>
 
-          {/* Action Buttons */}
-          <div className="mt-10 flex flex-wrap gap-4">
-            {!cancelled ? (
-              <>
+            {/* Action Buttons */}
+            <div className="mt-10 flex flex-wrap gap-4">
+              {!cancelled ? (
+                <>
+                  <Button
+                    variant="confirm"
+                    onClick={() => {
+                      // to do: fix the routing
+                      const url = isAdminPage
+                        ? `/bookings/edit/${booking.id}`
+                        : `/book-room/edit/${booking.id}`;
+                      router.push(url);
+                    }}
+                  >
+                    Reschedule
+                  </Button>
+                  <Button
+                    variant="warning"
+                    onClick={() => setCancelDialogOpen(true)}
+                  >
+                    Cancel booking
+                  </Button>
+                </>
+              ) : (
                 <Button
                   variant="confirm"
-                  onClick={() => {
-                    // to do: fix the routing
-                    const url = isAdminPage
-                      ? `/bookings/edit/${booking.id}`
-                      : `/book-room/edit/${booking.id}`;
-                    router.push(url);
-                  }}
+                  onClick={() =>
+                    router.push(`/booking-room/${booking.room.id}`)
+                  }
                 >
-                  Reschedule
+                  Book again
                 </Button>
-                <Button
-                  variant="warning"
-                  onClick={() => setCancelDialogOpen(true)}
-                >
-                  Cancel booking
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="confirm"
-                onClick={() => router.push(`/booking-room/${booking.room.id}`)}
-              >
-                Book again
-              </Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
