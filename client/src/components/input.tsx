@@ -11,6 +11,7 @@
 import { format } from "date-fns";
 import { SearchIcon } from "lucide-react";
 import React, { useState } from "react";
+import { Matcher, MonthChangeEventHandler } from "react-day-picker";
 
 import Badge from "@/components/badge";
 import { Calendar } from "@/components/calendar";
@@ -63,7 +64,7 @@ type NumberFieldProps = BaseFieldProps & {
   step?: number;
 };
 
-type SelectOption = { label: string; value: string };
+export type SelectOption = { label: string; value: string; disabled?: boolean };
 type SelectFieldProps = BaseFieldProps & {
   kind: "select";
   options: SelectOption[];
@@ -82,6 +83,9 @@ type DateFieldProps = BaseFieldProps & {
   kind: "date";
   value: Date | undefined;
   onChange: (value: Date | undefined) => void;
+  defaultMonth?: Date;
+  disabledDates?: Matcher | Matcher[];
+  onMonthChange?: MonthChangeEventHandler;
 };
 
 type TimeFieldProps = BaseFieldProps & {
@@ -260,7 +264,7 @@ function renderSelectFieldControl(props: SelectFieldProps) {
       </SelectTrigger>
       <SelectContent>
         {props.options.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
+          <SelectItem key={opt.value} value={opt.value} disabled={opt.disabled}>
             {opt.label}
           </SelectItem>
         ))}
@@ -291,6 +295,9 @@ function renderDateFieldControl(props: DateFieldProps) {
           mode="single"
           selected={props.value}
           onSelect={props.onChange}
+          defaultMonth={props.defaultMonth}
+          disabled={props.disabledDates}
+          onMonthChange={props.onMonthChange}
           initialFocus
         />
       </PopoverContent>
