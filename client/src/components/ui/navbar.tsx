@@ -64,7 +64,7 @@ const NavbarLinks = ({
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-white">
