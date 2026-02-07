@@ -158,7 +158,10 @@ export default function CustomRepeatModal({
                     name="endDate"
                     label=""
                     value={endDate}
-                    onChange={setEndDate}
+                    onChange={(date) => {
+                      if (typeof date == "string") return;
+                      else setEndDate(date);
+                    }}
                     placeholder="Fri 30/05/2022"
                     className="mb-0"
                   />
