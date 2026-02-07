@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth-context";
-import api from "@/lib/api";
+import api, { checkAuth } from "@/lib/api";
 import { delay } from "@/lib/utils";
 
 /**
@@ -46,34 +46,15 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Call the internal API to verify the JWT token
-        const res = await fetch("/api/check-auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ accessToken }),
-        });
-        if (res.ok) {
-          router.push(redirectTo);
-        } else {
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.error("Error while validating authentication token:", err);
+    const checkAuthStatus = async () => {
+      const isValid = await checkAuth();
+      if (isValid) {
+        router.push(redirectTo);
+      } else {
         setIsLoading(false);
       }
     };
-    checkAuth();
+    checkAuthStatus();
   }, [router, redirectTo]);
 
   const {

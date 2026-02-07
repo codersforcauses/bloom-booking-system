@@ -178,8 +178,24 @@ const logout = () => {
   }
 };
 
+const checkAuth = async (): Promise<boolean> => {
+  const accessToken = getAccessToken();
+  if (!accessToken) return false;
+
+  try {
+    const res = await fetch("/api/check-auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessToken }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+};
+
 export default api;
-export { logout, setAccessToken };
+export { checkAuth,logout, setAccessToken };
 
 // Helper functions for typed API calls
 export async function apiGet<T>(url: string, config?: object): Promise<T> {
