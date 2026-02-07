@@ -43,7 +43,7 @@ const variantMap: Record<
 
 export type AlertDialogVariant = "success" | "error" | "confirm" | "info";
 
-interface AlertDialogProps {
+export interface AlertDialogProps {
   title?: string;
   description?: string;
   variant?: AlertDialogVariant;
