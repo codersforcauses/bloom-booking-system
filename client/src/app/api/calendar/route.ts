@@ -67,7 +67,7 @@ export async function GET(request: Request) {
     const queryParams: calendar_v3.Params$Resource$Events$List = {
       calendarId: process.env.GOOGLE_CALENDAR_ID,
       singleEvents: true,
-      privateExtendedProperty: [`roomId=${roomId}`], // use sharedExtendedProperty if using different service accounts
+      sharedExtendedProperty: [`roomId=${roomId}`],
     };
 
     if (startParam) {
