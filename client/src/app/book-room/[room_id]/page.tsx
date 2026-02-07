@@ -6,6 +6,7 @@ import {
   endOfMonth,
   endOfWeek,
   format,
+  startOfDay,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
@@ -664,17 +665,14 @@ function BookRoomForm() {
 
     const room_start = roomAvailability.start_datetime.getTime();
     const room_end = roomAvailability.end_datetime.getTime();
-    const start_of_day = new Date(
-      `${format(roomAvailability.start_datetime, "yyyy-MM-dd")}T00:00:00`,
-    );
-    const d = new Date(start_of_day);
+    const d = new Date(startOfDay(roomAvailability.start_datetime));
     while (d.getTime() <= room_end) {
       if (d.getTime() >= room_start) {
         const time = d.toTimeString().substring(0, 5);
         time_options.push({
           value: time,
           label: time,
-          disabled: !timeInTimeSlots(d.toTimeString().substring(0, 5), slots),
+          disabled: !timeInTimeSlots(time, slots),
         });
       }
       d.setTime(d.getTime() + slot_length);
