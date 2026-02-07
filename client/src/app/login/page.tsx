@@ -9,7 +9,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import api, { setAccessToken } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
+import api from "@/lib/api";
 import { delay } from "@/lib/utils";
 
 /**
@@ -33,6 +34,7 @@ export default function LoginPage() {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
   const searchParams = useSearchParams();
   const [redirectTo] = useState(() => {
     const next = searchParams.get("next");
@@ -110,16 +112,11 @@ export default function LoginPage() {
 
       clearErrors();
       setLoginSuccess(true);
-      setAccessToken(access);
-
-      // refresh token is used by api.ts refresh flow, so we must store it too
-      if (typeof window !== "undefined") {
-        localStorage.setItem("refreshToken", refresh);
-      }
+      login(access, refresh);
 
       await delay(800);
-      router.refresh();
       router.push(redirectTo);
+      router.refresh();
     } catch (err: any) {
       const message =
         err?.response?.data?.detail ||

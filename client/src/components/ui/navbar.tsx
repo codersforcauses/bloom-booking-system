@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SetStateAction, useEffect, useState } from "react";
 import { HiOutlineUser } from "react-icons/hi";
 
+import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 
 import { Button } from "./button";
@@ -24,7 +25,7 @@ const NavbarLinks = ({
             Dashboard
           </Button>
         </Link>
-        <Link href="/meeting-rooms">
+        <Link href="/meeting-room">
           <Button variant="text" onClick={() => setOpen(false)}>
             Meeting Rooms
           </Button>
@@ -63,32 +64,7 @@ const NavbarLinks = ({
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  useEffect(() => {
-    const checkAuth = async () => {
-      const accessToken = localStorage.getItem("accessToken");
-      if (!accessToken) {
-        setIsLoggedIn(false);
-        return;
-      }
-      try {
-        const res = await fetch("/api/check-auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ accessToken }),
-        });
-        if (res.ok) {
-          setIsLoggedIn(true);
-        }
-      } catch (err) {
-        setIsLoggedIn(false);
-      }
-    };
-    checkAuth();
-  }, []);
-  console.log(isLoggedIn);
+  const { isLoggedIn, logout } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-white">
