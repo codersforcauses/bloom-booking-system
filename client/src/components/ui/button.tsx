@@ -10,7 +10,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         confirm: "bg-bloom-blue hover:bg-bloom-blue-light rounded-lg",
-        outline: "border border-black hover:bg-bloom-blue-light rounded-lg",
+        outline:
+          "border border-black bg-white hover:bg-bloom-blue-light rounded-lg",
         warning: "bg-bloom-red text-white hover:bg-bloom-red-light rounded-lg",
         login: "items-center hover:bg-bloom-yellow rounded-none bg-bloom-gray",
         text: "border-b border-transparent hover:border-b hover:border-black rounded-none px-0",
@@ -21,6 +22,8 @@ const buttonVariants = cva(
         sm: "h-9 px-3",
         lg: "h-11 px-8",
         icon: "h-10 w-10",
+        "icon-xs":
+          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
       },
     },
     defaultVariants: {
@@ -31,7 +34,8 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }

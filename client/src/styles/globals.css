@@ -44,6 +44,7 @@
     --bloom-yellow-light: #f6e6a0ff;
     --bloom-orbit: #2332ffff;
     --bloom-orbit-light: #a5a8e1ff;
+    --bloom-shadow: #d1d5db;
 
     /* Used to offset the height of the navbar if centering a whole page */
     --layout-header-height: 106px;
@@ -134,5 +135,20 @@
     mask-image: conic-gradient(from 40deg, transparent 0%, black 100%);
     mask-size: cover;
     mask-repeat: no-repeat;
+  }
+  .animate-float {
+    animation: animateFloat 3s ease-in-out infinite;
+  }
+}
+
+@keyframes animateFloat {
+  0% {
+    transform: translateY(-20px);
+  }
+  50% {
+    transform: translateY(20px);
+  }
+  100% {
+    transform: translateY(-20px);
   }
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function AdminLayout({
@@ -9,6 +9,11 @@ export default function AdminLayout({
 }) {
   const [isValidating, setIsValidating] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const nextPath =
+    pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
+  const redirectTo = `/login?next=${encodeURIComponent(nextPath)}`;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -16,7 +21,7 @@ export default function AdminLayout({
       // If no token found, redirect to login
       if (!accessToken) {
         setIsValidating(true); // keep validating state while redirecting to avoid race conditions
-        router.push("/login");
+        router.push(redirectTo);
         return;
       }
       try {
@@ -34,19 +39,19 @@ export default function AdminLayout({
         } else {
           // If response is not ok (non-2xx), redirect to login
           setIsValidating(true); // keep validating state while redirecting to avoid race conditions
-          router.push("/login");
+          router.push(redirectTo);
           return;
         }
       } catch (err) {
         console.error("Error while validating authentication token:", err);
         // If any error occurs, redirect to login
         setIsValidating(true); // keep validating state while redirecting to avoid race conditions
-        router.push("/login");
+        router.push(redirectTo);
         return;
       }
     };
     checkAuth();
-  }, [router]);
+  }, [router, redirectTo]);
 
   // While validating, render nothing (or add a skeleton screen later)
   if (isValidating) {

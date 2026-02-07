@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaCheckCircle, FaInfoCircle, FaTimesCircle } from "react-icons/fa";
 import { MdOutlineHelpOutline } from "react-icons/md";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
@@ -35,11 +34,16 @@ const variantMap: Record<
     color: "var(--bloom-yellow)",
     confirmText: "Yes",
   },
+  info: {
+    icon: <FaInfoCircle size={48} />,
+    color: "var(--bloom-blue)",
+    confirmText: "Got it",
+  },
 };
 
-export type AlertDialogVariant = "success" | "error" | "confirm";
+export type AlertDialogVariant = "success" | "error" | "confirm" | "info";
 
-interface AlertDialogProps {
+export interface AlertDialogProps {
   title?: string;
   description?: string;
   variant?: AlertDialogVariant;
@@ -51,11 +55,11 @@ interface AlertDialogProps {
 }
 
 /**
- * AlertDialog component for showing success, error, and confirm dialogs.
+ * AlertDialog component for showing success, error, confirm, and info dialogs.
  *
  * Features:
- * - Supports `success`, `error`, and `confirm` variants.
- * - Shows an icon corresponding to the variant (`FaCheckCircle`, `FaTimesCircle`, `MdOutlineHelpOutline`).
+ * - Supports `success`, `error`, `confirm`, and `info` variants.
+ * - Shows an icon corresponding to the variant (`FaCheckCircle`, `FaTimesCircle`, `MdOutlineHelpOutline`, `FaInfoCircle`).
  * - Displays a loading spinner when `onConfirm` is running (`isPending` state).
  * - For `confirm` variants, shows a Cancel button alongside the confirm button.
  * - Fully controlled `open` state if `open` prop is provided.
@@ -68,6 +72,7 @@ interface AlertDialogProps {
  *   - "success": shows a success icon and "Ok" button
  *   - "error": shows an error icon and "Ok" button
  *   - "confirm": shows a question icon and "Yes/Cancel" buttons
+ *   - "info": shows an info icon and "Got it" button
  * @param showIcon Whether to display the icon above the content. Defaults to `true`.
  * @param onConfirm Callback executed when the confirm button is clicked. Can be async.
  * @param onClose Callback executed when the dialog is closed (Cancel button, outside click, or after confirm).
@@ -136,7 +141,7 @@ function AlertDialog({
             </DialogTitle>
           )}
           {description && (
-            <DialogDescription className="text-center">
+            <DialogDescription className="whitespace-pre-line text-center">
               {isPending ? "Processing..." : description}
             </DialogDescription>
           )}
