@@ -6,10 +6,10 @@ import {
   endOfMonth,
   endOfWeek,
   format,
+  startOfDay,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { responseCookiesToRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
@@ -665,15 +665,16 @@ function BookRoomForm() {
 
     const room_start = roomAvailability.start_datetime.getTime();
     const room_end = roomAvailability.end_datetime.getTime();
-
-    const d = new Date(room_start);
+    const d = new Date(startOfDay(roomAvailability.start_datetime));
     while (d.getTime() <= room_end) {
-      const time = d.toTimeString().substring(0, 5);
-      time_options.push({
-        value: time,
-        label: time,
-        disabled: !timeInTimeSlots(d.toTimeString().substring(0, 5), slots),
-      });
+      if (d.getTime() >= room_start) {
+        const time = d.toTimeString().substring(0, 5);
+        time_options.push({
+          value: time,
+          label: time,
+          disabled: !timeInTimeSlots(time, slots),
+        });
+      }
       d.setTime(d.getTime() + slot_length);
     }
 
