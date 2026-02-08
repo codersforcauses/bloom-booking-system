@@ -1008,7 +1008,7 @@ export default function BookRoomPage() {
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFgwJ/lYpukQAAAABJRU5ErkJggg==",
     location: "",
     available: false,
-    availablility: "",
+    availability: "",
     seats: 0,
     amenities: [],
     removed: false,
@@ -1134,7 +1134,7 @@ export default function BookRoomPage() {
           seats: data.capacity,
           location: data.location.name,
           available: data.is_active,
-          availablility: formAvailabilityString(
+          availability: formAvailabilityString(
             data.start_datetime,
             data.end_datetime,
             data.recurrence_rule,

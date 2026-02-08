@@ -249,6 +249,20 @@ function useDeleteRoomAmenity() {
   });
 }
 
+// copied from issue 115
+type ApiError = { message?: string; detail?: string };
+
+function useFetchRoom(roomId: number) {
+  return useQuery<RoomResponse, AxiosError<ApiError>>({
+    queryKey: ["room", roomId],
+    enabled: roomId > 0,
+    queryFn: async () => {
+      const response = await api.get(`/rooms/${roomId}/`);
+      return response.data;
+    },
+  });
+}
+
 const RoomAPI = {
   useFetchRooms,
   useSearchRooms,
@@ -262,6 +276,7 @@ const RoomAPI = {
   useCreateRoomAmenity,
   useUpdateRoomAmenity,
   useDeleteRoomAmenity,
+  useFetchRoom,
 };
 
 export { useFetchRooms, useSearchRooms, useUpdateRoomStatus };

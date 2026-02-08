@@ -1,7 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
+import type { BookingResponse } from "@/lib/api-types";
 import { PaginatedBookingResponse } from "@/lib/api-types";
 
 export function useFetchBookings(params: PaginationSearchParams) {
@@ -41,4 +43,54 @@ export function useFetchBookings(params: PaginationSearchParams) {
     error,
     refetch,
   };
+}
+
+type ApiError = { message?: string; detail?: string };
+
+export function useFetchBooking(
+  bookingId: number,
+  isAdminPage: boolean,
+  visitorEmail?: string,
+) {
+  return useQuery<BookingResponse, AxiosError<ApiError>>({
+    queryKey: ["bookings", bookingId, visitorEmail, isAdminPage],
+    queryFn: async ({ signal }) => {
+      const response = await api.get(`/bookings/${bookingId}/`, {
+        params: !isAdminPage ? { visitor_email: visitorEmail } : undefined,
+        signal,
+      });
+      return response.data;
+    },
+    enabled: !isAdminPage
+      ? Boolean(visitorEmail) && Boolean(bookingId)
+      : Boolean(bookingId),
+  });
+}
+
+export function useCancelBooking(
+  bookingId: number,
+  onSuccess: () => void,
+  onError: (error: AxiosError) => void,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    BookingResponse,
+    AxiosError,
+    { visitor_email: string; cancel_reason: string }
+  >({
+    mutationFn: async (payload) => {
+      const response = await api.patch(`/bookings/${bookingId}/`, payload);
+      return response.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["bookings", bookingId],
+      });
+      onSuccess();
+    },
+    onError: (error) => {
+      console.error("Cancel booking failed:", error);
+      onError(error);
+    },
+  });
 }

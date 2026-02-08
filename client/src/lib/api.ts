@@ -216,3 +216,13 @@ export async function apiPost<T, B = unknown>(
   const res = await api.post<T>(url, body, config);
   return res.data;
 }
+
+// Helper function for PATCH requests
+export async function apiPatch<T, B = unknown>(
+  url: string,
+  body?: B,
+  config?: object,
+): Promise<T> {
+  const res = await api.patch<T>(url, body, config);
+  return res.data;
+}
