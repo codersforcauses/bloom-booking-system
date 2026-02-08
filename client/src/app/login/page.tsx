@@ -1,5 +1,4 @@
 "use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeClosed } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +9,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import api, { setAccessToken } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
+import api, { checkAuth } from "@/lib/api";
 import { delay } from "@/lib/utils";
 
 /**
@@ -44,6 +44,7 @@ function LoginForm() {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
   const searchParams = useSearchParams();
   const [redirectTo] = useState(() => {
     const next = searchParams.get("next");
@@ -55,34 +56,15 @@ function LoginForm() {
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Call the internal API to verify the JWT token
-        const res = await fetch("/api/check-auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ accessToken }),
-        });
-        if (res.ok) {
-          router.push(redirectTo);
-        } else {
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.error("Error while validating authentication token:", err);
+    const checkAuthStatus = async () => {
+      const isValid = await checkAuth();
+      if (isValid) {
+        router.push(redirectTo);
+      } else {
         setIsLoading(false);
       }
     };
-    checkAuth();
+    checkAuthStatus();
   }, [router, redirectTo]);
 
   const {
@@ -121,16 +103,11 @@ function LoginForm() {
 
       clearErrors();
       setLoginSuccess(true);
-      setAccessToken(access);
-
-      // refresh token is used by api.ts refresh flow, so we must store it too
-      if (typeof window !== "undefined") {
-        localStorage.setItem("refreshToken", refresh);
-      }
+      login(access, refresh);
 
       await delay(800);
       router.push(redirectTo);
-      // router.refresh();
+      router.refresh();
     } catch (err: any) {
       const message =
         err?.response?.data?.detail ||
