@@ -9,6 +9,7 @@ export function normalizeRoom(apiRoom: RoomResponse): Room {
     image: apiRoom.img,
     location: apiRoom.location.name,
     available: apiRoom.is_active,
+    isActive: apiRoom.is_active,
     seats: apiRoom.capacity,
     amenities: apiRoom.amenities?.map((a) => a.name) ?? [],
     // Optionally add more fields if needed

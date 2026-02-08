@@ -191,22 +191,21 @@ type AdminRoomCardProps = {
   hideIcon?: boolean;
   onView?: () => void;
   onEdit?: () => void;
-  onRemove?: () => void;
+  onStatusChange?: () => void;
 };
 
 /**
  * Admin card for managing room details.
  *
  * Displays full room info: name, location, seats, amenities, and bookings.
- * Includes admin action buttons: View Bookings, Edit, Remove.
- * Supports disabling the Remove button if room is already removed.
+ * Includes admin action buttons: View Bookings, Edit, Set inactive / active.
  *
  * @param {Object} props
  * @param {Room} props.room Room data object.
  * @param {boolean} [props.hideIcon=false] Hide amenity icons if true.
  * @param {() => void} [props.onView] Callback for View Bookings button.
  * @param {() => void} [props.onEdit] Callback for Edit button.
- * @param {() => void} [props.onRemove] Callback for Remove button.
+ * @param {() => void} [props.onStatusChange] Callback for status change button.
  *
  * @example
  * const room = {
@@ -215,15 +214,14 @@ type AdminRoomCardProps = {
  *   location: "Level 1 Block E",
  *   seats: 20,
  *   amenities: ["White Board", "Audio"],
- *   bookings: 10,
- *   removed: false,
+ *   isActive: true,
  * };
  *
  * <AdminRoomCard
  *   room={room}
  *   onView={() => console.log("View")}
  *   onEdit={() => console.log("Edit")}
- *   onRemove={() => console.log("Remove")}
+ *   onStatusChange={() => console.log("Status Change")}
  * />
  */
 function AdminRoomCard({
@@ -231,7 +229,7 @@ function AdminRoomCard({
   hideIcon,
   onView,
   onEdit,
-  onRemove,
+  onStatusChange,
 }: AdminRoomCardProps) {
   const roomDetails = [
     { label: "Room Name", value: room.title },
@@ -241,7 +239,6 @@ function AdminRoomCard({
       label: "Amenities",
       value: <Amenities amenities={room.amenities} hideIcon={hideIcon} />,
     },
-    { label: "Bookings", value: room.bookings },
   ];
 
   return (
@@ -283,16 +280,25 @@ function AdminRoomCard({
         >
           Edit
         </Button>
-        <Button
-          className={cn(
-            "caption h-6 bg-bloom-red text-white hover:bg-bloom-red-light",
-            room.removed && "cursor-not-allowed bg-gray-400 hover:bg-gray-400",
-          )}
-          onClick={onRemove}
-          disabled={room.removed}
-        >
-          {room.removed ? "Removed" : "Remove"}
-        </Button>
+        {room.isActive ? (
+          <Button
+            className={cn(
+              "caption h-6 bg-bloom-red text-white hover:bg-bloom-red-light",
+            )}
+            onClick={onStatusChange}
+          >
+            Set inactive
+          </Button>
+        ) : (
+          <Button
+            className={cn(
+              "caption hover:bg-bloom-red-blue-light h-6 bg-bloom-blue text-white",
+            )}
+            onClick={onStatusChange}
+          >
+            Set active
+          </Button>
+        )}
       </div>
     </div>
   );
