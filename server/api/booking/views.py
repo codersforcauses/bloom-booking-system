@@ -16,6 +16,8 @@ from ..email_utils import send_booking_confirmed_email, send_booking_cancelled_e
 import logging
 import csv
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,8 @@ class ListBookingFilter(django_filters.FilterSet):
         fields = ["visitor_name", "visitor_email", "room_ids", "location_ids"]
 
 
+@method_decorator(ratelimit(key='ip', rate='200/h', block=True), name='list')
+@method_decorator(ratelimit(key='ip', rate='200/h', block=True), name='retrieve')
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.select_related(
         "room").order_by('-start_datetime', '-created_at')
@@ -99,6 +103,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         return None
 
     # custom create logic to integrate Google calendar api
+    @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
     def create(self, request, *args, **kwargs):
         header_error = self._check_custom_header(request)
         if header_error:
@@ -178,6 +183,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             )
 
     # custom PATCH (including both booking update and deletion)
+    @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
     def partial_update(self, request, *args, **kwargs):
         header_error = self._check_custom_header(request)
         if header_error:
