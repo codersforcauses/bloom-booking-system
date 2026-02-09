@@ -11,6 +11,8 @@ from .google_calendar.events import create_event, update_event, delete_event
 from googleapiclient.errors import HttpError
 from django.db import transaction
 import logging
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,8 @@ class ListBookingFilter(django_filters.FilterSet):
         fields = ["visitor_name", "visitor_email", "room_ids"]
 
 
+@method_decorator(ratelimit(key='ip', rate='200/h', block=True), name='list')
+@method_decorator(ratelimit(key='ip', rate='200/h', block=True), name='retrieve')
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.select_related(
         "room").order_by('-start_datetime', '-created_at')
@@ -82,6 +86,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         return queryset
 
     # custom create logic to integrate Google calendar api
+    @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
     def create(self, request, *args, **kwargs):
         """Create booking with Google Calendar integration and transaction rollback."""
         try:
@@ -131,6 +136,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             )
 
     # custom PATCH (including both booking update and deletion)
+    @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         visitor_email = request.data.get('visitor_email')

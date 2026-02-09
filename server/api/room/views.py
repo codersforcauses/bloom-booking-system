@@ -15,6 +15,8 @@ from datetime import datetime, time
 from django.utils.timezone import localdate, make_aware, localtime, now
 from collections import defaultdict
 from rest_framework.exceptions import ValidationError
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 # Viewset is library that provides CRUD operations for api
 # Admin have create update delete permissions everyone can read
 # get request can filter by name, location, capacity for get
@@ -65,6 +67,12 @@ def parse_optional_datetime(value, field_name):
     return parsed_datetime
 
 
+@method_decorator(ratelimit(key='ip', rate='200/h', block=True), name='list')
+@method_decorator(ratelimit(key='ip', rate='200/h', block=True), name='retrieve')
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='create')
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='update')
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='partial_update')
+@method_decorator(ratelimit(key='ip', rate='10/m', block=True), name='destroy')
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
