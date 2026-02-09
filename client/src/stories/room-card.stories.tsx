@@ -117,6 +117,66 @@ export const RoomCard_Interactive: StoryObj<RoomControls> = {
   },
 };
 
+/* ----------------------------
+   RoomCard preset edge-cases
+---------------------------- */
+
+export const RoomCard_NoAmenities: StoryObj<typeof RoomCard> = {
+  name: "RoomCard / No amenities",
+  render: () => (
+    <SingleCard>
+      <RoomCard room={{ ...baseRoom, amenities: [] }} />
+    </SingleCard>
+  ),
+};
+
+export const RoomCard_UnknownAmenities: StoryObj<typeof RoomCard> = {
+  name: "RoomCard / Unknown amenities",
+  render: () => (
+    <SingleCard>
+      <RoomCard
+        room={{
+          ...baseRoom,
+          amenities: ["Laser Projector", "Coffee Machine", "Audio"], // should fall back to Default icon/text handling
+        }}
+      />
+    </SingleCard>
+  ),
+};
+
+export const RoomCard_LongStrings: StoryObj<typeof RoomCard> = {
+  name: "RoomCard / Long strings",
+  render: () => (
+    <SingleCard>
+      <RoomCard
+        room={{
+          ...baseRoom,
+          title:
+            "Meeting Room A — Extremely Long Name For Wrapping/Overflow Testing",
+          location:
+            "Level 2 — Block B — A Very Long Location String To Check Layout Behaviour In The Grid",
+          availablility: "Unavailable — maintenance in progress (ETA unknown)",
+        }}
+      />
+    </SingleCard>
+  ),
+};
+
+export const RoomCard_AvailabilityMissing: StoryObj<typeof RoomCard> = {
+  name: "RoomCard / Availability missing",
+  render: () => (
+    <SingleCard>
+      <RoomCard
+        room={{
+          ...baseRoom,
+          availablility: undefined,
+          available: false,
+        }}
+      />
+    </SingleCard>
+  ),
+};
+
 export const BookingRoomCard_Interactive: StoryObj<RoomControls> = {
   name: "BookingRoomCard / Interactive",
   args: {
