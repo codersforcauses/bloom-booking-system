@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import React from "react";
 import { BiCalendarEdit } from "react-icons/bi";
 import { BsPersonCheck } from "react-icons/bs";
@@ -9,6 +10,7 @@ import { DashboardCard, DashboardCardProps } from "@/components/dashboard-card";
 import { useFetchDashboardStats } from "@/hooks/dashboard";
 
 export function BookingsStats() {
+  const router = useRouter();
   const { data, isLoading } = useFetchDashboardStats();
 
   const metrics: DashboardCardProps[] = [
@@ -17,7 +19,7 @@ export function BookingsStats() {
       value: data?.total_meeting_rooms ?? 0,
       icon: SiGoogleclassroom,
       colorClass: "border-bloom-yellow text-bloom-yellow",
-      onClick: () => {}, // shadow
+      onClick: () => router.push("/meeting-room"),
     },
     {
       label: "Total Bookings",
