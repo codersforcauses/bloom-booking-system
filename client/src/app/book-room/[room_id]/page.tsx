@@ -324,13 +324,14 @@ function BookRoomForm() {
       .then((response) => {
         const res = response.data;
         const date = new Date(Date.parse(res.start_datetime));
-        // Substring (0,5) gives just the HH:MM part of the string
-        const start_time = new Date(Date.parse(res.start_datetime))
-          .toTimeString()
-          .substring(0, 5);
-        const end_time = new Date(Date.parse(res.end_datetime))
-          .toTimeString()
-          .substring(0, 5);
+        const start_time = format(
+          new Date(Date.parse(res.start_datetime)),
+          "HH:mm",
+        );
+        const end_time = format(
+          new Date(Date.parse(res.end_datetime)),
+          "HH:mm",
+        );
         enum MonthString {
           Jan,
           Feb,
@@ -676,11 +677,11 @@ function BookRoomForm() {
 
     const d = new Date(room_start);
     while (d.getTime() <= room_end) {
-      const time = d.toTimeString().substring(0, 5);
+      const time = format(d, "HH:mm");
       time_options.push({
         value: time,
         label: time,
-        disabled: !timeInTimeSlots(d.toTimeString().substring(0, 5), slots),
+        disabled: !timeInTimeSlots(time, slots),
       });
       d.setTime(d.getTime() + slot_length);
     }
@@ -730,16 +731,12 @@ function BookRoomForm() {
    */
   function enableAllDayIfApplicable(timeslots: TimeSlot[]) {
     if (timeslots.length === 1) {
-      const room_start_time = roomAvailability.start_datetime
-        .toTimeString()
-        .substring(0, 5);
-      const room_end_time = roomAvailability.end_datetime
-        .toTimeString()
-        .substring(0, 5);
+      const room_start_time = format(roomAvailability.start_datetime, "HH:mm");
+      const room_end_time = format(roomAvailability.end_datetime, "HH:mm");
 
       const slot = timeslots[0];
-      const slot_start_time = slot.start.toTimeString().substring(0, 5);
-      const slot_end_time = slot.end.toTimeString().substring(0, 5);
+      const slot_start_time = format(slot.start, "HH:mm");
+      const slot_end_time = format(slot.end, "HH:mm");
 
       if (
         slot_start_time === room_start_time &&
@@ -799,8 +796,7 @@ function BookRoomForm() {
     // Uncheck all day if start time changed from room opening time
     if (
       allDay &&
-      start_time !==
-        roomAvailability.start_datetime.toTimeString().substring(0, 5)
+      start_time !== format(roomAvailability.start_datetime, "HH:mm")
     ) {
       setAllDay(false);
     }
@@ -812,10 +808,7 @@ function BookRoomForm() {
    * @param end_time
    */
   function handleEndTimeChange(end_time: string) {
-    if (
-      allDay &&
-      end_time !== roomAvailability.end_datetime.toTimeString().substring(0, 5)
-    ) {
+    if (allDay && end_time !== format(roomAvailability.end_datetime, "HH:mm")) {
       setAllDay(false);
     }
   }
@@ -832,12 +825,8 @@ function BookRoomForm() {
       return;
     }
     if (checked) {
-      const room_start_time = roomAvailability.start_datetime
-        .toTimeString()
-        .substring(0, 5);
-      const room_end_time = roomAvailability.end_datetime
-        .toTimeString()
-        .substring(0, 5);
+      const room_start_time = format(roomAvailability.start_datetime, "HH:mm");
+      const room_end_time = format(roomAvailability.end_datetime, "HH:mm");
       form.setValue("start_time", room_start_time);
       form.setValue("end_time", room_end_time);
       handleStartTimeChange(room_start_time);
