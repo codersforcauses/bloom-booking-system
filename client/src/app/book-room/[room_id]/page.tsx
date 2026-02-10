@@ -6,7 +6,6 @@ import {
   endOfMonth,
   endOfWeek,
   format,
-  startOfDay,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
@@ -212,6 +211,10 @@ function BookRoomForm() {
    */
   const [verified, setVerified] = useState<boolean>(false);
   /**
+   * The token from reCAPTCHA verification, to be sent to the server for verification
+   */
+  const [reCAPTCHAToken, setReCAPTCHAToken] = useState<string | null>(null);
+  /**
    * The state of the form submission
    */
   const [submitPending, setSubmitPending] = useState<boolean>(false);
@@ -303,6 +306,7 @@ function BookRoomForm() {
       start_datetime: formatDateTime(data.date, data.start_time),
       end_datetime: formatDateTime(data.date, data.end_time),
       recurrence_rule: "",
+      g_recaptcha_response: reCAPTCHAToken || "",
     };
     const alert_dialog_props: AlertDialogProps = {
       title: "",
@@ -312,7 +316,11 @@ function BookRoomForm() {
       onConfirm: close_dialog,
       onClose: close_dialog,
     };
-    api({ url: "bookings/", method: "post", data: payload })
+    api({
+      url: "bookings/",
+      method: "post",
+      data: payload,
+    })
       .then((response) => {
         const res = response.data;
         const date = new Date(Date.parse(res.start_datetime));
@@ -665,16 +673,15 @@ function BookRoomForm() {
 
     const room_start = roomAvailability.start_datetime.getTime();
     const room_end = roomAvailability.end_datetime.getTime();
-    const d = new Date(startOfDay(roomAvailability.start_datetime));
+
+    const d = new Date(room_start);
     while (d.getTime() <= room_end) {
-      if (d.getTime() >= room_start) {
-        const time = d.toTimeString().substring(0, 5);
-        time_options.push({
-          value: time,
-          label: time,
-          disabled: !timeInTimeSlots(time, slots),
-        });
-      }
+      const time = d.toTimeString().substring(0, 5);
+      time_options.push({
+        value: time,
+        label: time,
+        disabled: !timeInTimeSlots(d.toTimeString().substring(0, 5), slots),
+      });
       d.setTime(d.getTime() + slot_length);
     }
 
@@ -982,7 +989,10 @@ function BookRoomForm() {
       >
         {allDayEnabled ? "All day" : "All day (Unavailable for selected date)"}
       </Checkbox>
-      <ReCAPTCHAV2 setVerified={setVerified} />
+      <ReCAPTCHAV2
+        setVerified={setVerified}
+        setReCAPTCHAToken={setReCAPTCHAToken}
+      />
       <Button
         type="submit"
         className="w-1/6 min-w-[8rem] font-bold"
