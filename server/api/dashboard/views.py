@@ -17,7 +17,6 @@ def get_dashboard_stats(request):
     today = timezone.now()
     week_start = today - timedelta(days=today.weekday())
     week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
-    
     # gathering statistics
     stats = {
         'total_meeting_rooms': Room.objects.filter(is_active=True).count(),
@@ -27,5 +26,4 @@ def get_dashboard_stats(request):
         ).count(),
         'total_users': CustomUser.objects.count()
     }
-    
     return Response(stats)
