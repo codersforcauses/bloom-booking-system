@@ -93,26 +93,9 @@ export default function Home() {
     async (url: string, availabilityUrl: string, params?: Params) => {
       setLoading(true);
       try {
-        // fetch room data and availability data parallelly
-        const [roomsRes, availabilityRes] = await Promise.all([
-          api.get(url, { params }),
-          api.get(availabilityUrl, { params }),
-        ]);
-        const data = roomsRes.data;
-        const availabilityData = availabilityRes.data;
-        const newRooms = normaliseRooms(data.results, availabilityData.results);
-        // if it is not the first page, append the data to the previous
-        if (!data.previous) {
-          setRooms(newRooms);
-        } else {
-          setRooms((prev) => [...prev, ...newRooms]);
-        }
-        // set next url to prepare for pagination
-        setNextUrl(data.next);
-        setNextAvailabilityUrl(availabilityData.next);
+        await fetchRoomsRecursive(url, availabilityUrl, params);
       } catch (error) {
         console.error("Failed to fetch rooms", error);
-        // Reset to a safe empty state on error
         setRooms([]);
         setNextUrl(null);
       } finally {
@@ -121,6 +104,38 @@ export default function Home() {
     },
     [],
   );
+
+  const fetchRoomsRecursive = async (
+    url: string,
+    availabilityUrl: string,
+    params?: Params,
+  ) => {
+    const [roomsRes, availabilityRes] = await Promise.all([
+      api.get(url, { params }),
+      api.get(availabilityUrl, { params }),
+    ]);
+
+    const data = roomsRes.data;
+    const availabilityData = availabilityRes.data;
+
+    const newRooms = normaliseRooms(data.results, availabilityData.results);
+
+    const visibleRooms = newRooms.filter((room) => room.available);
+    const visibleCount = visibleRooms.length;
+
+    setRooms((prev) => (!data.previous ? newRooms : [...prev, ...newRooms]));
+
+    setNextUrl(data.next);
+    setNextAvailabilityUrl(availabilityData.next);
+
+    if (visibleCount === 0 && data.next && availabilityData.next) {
+      return await fetchRoomsRecursive(
+        data.next,
+        availabilityData.next,
+        params,
+      );
+    }
+  };
 
   // initial load
   useEffect(() => {
