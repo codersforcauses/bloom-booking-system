@@ -27,12 +27,15 @@ export const useDateFieldChange = (props: DateFieldProps) => {
     props.defaultMonth || new Date(),
   );
 
-  // helper function to tell if a date is disabled (in case user input )
+  // helper function to tell if a date is disabled
   const isDateDisabled = (date: Date) => {
-    if (!props.disabledDates || !Array.isArray(props.disabledDates))
-      return false;
+    if (!props.disabledDates) return false;
 
-    return props.disabledDates.some((matcher: Matcher) => {
+    const matchers = Array.isArray(props.disabledDates)
+      ? props.disabledDates
+      : [props.disabledDates];
+
+    return matchers.some((matcher: Matcher) => {
       // Check "before" matcher (e.g., { before: new Date() })
       if (
         typeof matcher === "object" &&
@@ -60,6 +63,18 @@ export const useDateFieldChange = (props: DateFieldProps) => {
     });
   };
 
+  // helper function to check if a date is meaningful
+  const getIsMeaningfulDate = (text: string): boolean => {
+    const parsedDate = parse(text, "dd/MM/yyyy", new Date());
+    const currentYear = new Date().getFullYear();
+
+    return (
+      isValid(parsedDate) &&
+      parsedDate.getFullYear() > currentYear - 1 &&
+      parsedDate.getFullYear() < currentYear + 50
+    );
+  };
+
   // Sync input text when the parent value changes e.g., from Calendar
   useEffect(() => {
     if (
@@ -73,7 +88,7 @@ export const useDateFieldChange = (props: DateFieldProps) => {
       if (!props.value) setInputValue("");
       setViewMonth(props.defaultMonth || new Date()); // if value is empty or invalid, set month view to default
     }
-  }, [props.value]);
+  }, [props.value, props.defaultMonth]);
 
   // Check if it's a valid date and has a reasonable year and then update props.value
   const validateAndUpdate = (text: string) => {
@@ -83,10 +98,7 @@ export const useDateFieldChange = (props: DateFieldProps) => {
     }
 
     const parsedDate = parse(text, "dd/MM/yyyy", new Date());
-    const isMeaningfulDate =
-      isValid(parsedDate) &&
-      parsedDate.getFullYear() > 1970 &&
-      parsedDate.getFullYear() < 2050;
+    const isMeaningfulDate = getIsMeaningfulDate(text);
     const isUnavailable = isMeaningfulDate && isDateDisabled(parsedDate);
 
     if (isMeaningfulDate && !isUnavailable) {
@@ -100,12 +112,7 @@ export const useDateFieldChange = (props: DateFieldProps) => {
     const text = e.target.value;
     setInputValue(text);
 
-    const parsedDate = parse(text, "dd/MM/yyyy", new Date());
-    const isMeaningfulDate =
-      isValid(parsedDate) &&
-      parsedDate.getFullYear() > 1970 &&
-      parsedDate.getFullYear() < 2050;
-
+    const isMeaningfulDate = getIsMeaningfulDate(text);
     // if it is meaningful date but text length is smaller than 10, the user may be in the process of entering, skip validating
     if (!isMeaningfulDate || text.length === 10) {
       validateAndUpdate(text);

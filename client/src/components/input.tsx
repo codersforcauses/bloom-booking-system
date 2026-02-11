@@ -284,6 +284,8 @@ function renderDateFieldControl(props: DateFieldProps) {
     <div className="relative w-full">
       <input
         type="text"
+        id={props.name}
+        name={props.name}
         placeholder={props.placeholder ?? "dd/MM/yyyy"}
         value={inputValue}
         onChange={handleInputChange}
@@ -297,6 +299,7 @@ function renderDateFieldControl(props: DateFieldProps) {
             type="button"
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1"
             tabIndex={-1}
+            aria-label="Open calendar"
           >
             <CalendarIcon className="h-4 w-4" />
           </button>
