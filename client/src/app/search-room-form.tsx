@@ -77,12 +77,14 @@ interface SearchRoomFormProps {
   form: UseFormReturn<RoomSearchSchemaValue>;
   onSubmit: (data: RoomSearchSchemaValue) => void;
   onReset: () => void;
+  loading: boolean;
 }
 
 export default function SearchRoomForm({
   form,
   onSubmit,
   onReset,
+  loading,
 }: SearchRoomFormProps) {
   const [locations, setLocations] = useState<
     { label: string; value: string }[]
@@ -340,9 +342,9 @@ export default function SearchRoomForm({
         <Button
           type="submit"
           variant="confirm"
-          disabled={!form.formState.isValid}
+          disabled={!form.formState.isValid || loading}
         >
-          Search
+          {loading ? "Searching..." : "Search"}
         </Button>
       </div>
     </Form>
