@@ -157,12 +157,6 @@ function BookingPage({
             title="Back"
             aria-label="Back"
             disabled={isLoading}
-            className={cn(
-              "gap-2 border-2 bg-white p-2 hover:bg-muted",
-              !isLoading
-                ? "border-bloom-blue text-bloom-blue"
-                : "border-gray-300 text-gray-300",
-            )}
           >
             Back
           </Button>
@@ -178,7 +172,6 @@ function BookingPage({
                 _selectedRooms: rooms,
               });
             }}
-            className="border-bloom-blue text-bloom-blue"
           />
         </div>
       </div>

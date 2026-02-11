@@ -19,6 +19,44 @@ import {
 } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
+export interface RoomAvailability {
+  recurrence_rule: string;
+  start_datetime: Date;
+  end_datetime: Date;
+}
+
+/**
+ * Calls the `api/room/{room_id}` api endpoint to get the room availability
+ * information (start time, end time, recurrence_rule).
+ * @returns The room's availability rules (NOT its available timeslots).
+ */
+function useFetchRoomAvailability(room_id: number) {
+  return useQuery<RoomAvailability>({
+    queryKey: ["room-availability", room_id],
+    enabled: room_id > 0,
+    queryFn: async () => {
+      const apiUrl = `/rooms/${room_id}/`;
+      try {
+        const response = await api({ url: apiUrl, method: "get" });
+        const data = response.data;
+        return {
+          recurrence_rule: data.recurrence_rule,
+          start_datetime: new Date(data.start_datetime),
+          end_datetime: new Date(data.end_datetime),
+        };
+      } catch (error) {
+        // TODO : Handle error
+        console.error("Unable to fetch room availability", error);
+        return {
+          recurrence_rule: "",
+          start_datetime: new Date(0),
+          end_datetime: new Date(0),
+        };
+      }
+    },
+  });
+}
+
 // switch to use useInfiniteQuery to handle infinite scrolling
 function useFetchRooms(params: PaginationSearchParams) {
   const { nrows = 10, search, ...customParams } = params;
@@ -277,6 +315,7 @@ const RoomAPI = {
   useUpdateRoomAmenity,
   useDeleteRoomAmenity,
   useFetchRoom,
+  useFetchRoomAvailability,
 };
 
 export { useFetchRooms, useSearchRooms, useUpdateRoomStatus };

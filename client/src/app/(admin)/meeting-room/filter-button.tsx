@@ -1,3 +1,5 @@
+import { FaFilter } from "react-icons/fa";
+
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -11,7 +13,10 @@ export default function FilterPopOver() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline">Filter</Button>
+        <Button variant="outline">
+          <FaFilter size={16} />
+          Filter
+        </Button>
       </PopoverTrigger>
 
       <PopoverContent align="center" sideOffset={8}>

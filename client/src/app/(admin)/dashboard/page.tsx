@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
@@ -14,6 +15,7 @@ import {
   pickKeys,
   toQueryString,
 } from "@/components/pagination-bar";
+import { Button } from "@/components/ui/button";
 import { useFetchBookings } from "@/hooks/booking";
 import { RoomShortResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
@@ -143,8 +145,10 @@ function BookingPage() {
               });
             }}
             EnableEmail
-            className="border-bloom-blue text-bloom-blue"
           />
+          <Button asChild variant="confirm">
+            <Link href="/book-room">Book Room</Link>
+          </Button>
         </div>
       </div>
 

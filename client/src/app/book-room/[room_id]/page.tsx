@@ -23,7 +23,7 @@ import {
 } from "@/components/alert-dialog";
 import InputField, { SelectOption } from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
-import { RoomCard } from "@/components/room-card";
+import { PLACEHOLDER_IMAGE,RoomCard  } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -34,9 +34,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
+import RoomAPI from "@/hooks/room";
 import api from "@/lib/api";
 import { cn, resolveErrorMessage } from "@/lib/utils";
 import { Room } from "@/types/card";
+
+import {
+  DayNumber,
+  formatDateTime,
+  getAMPMTimeString,
+  getDaysFromRRule,
+  GoogleCalendarDayConversion,
+} from "./room-utils";
 
 /**
  * Information about the Room's opening hours
@@ -61,90 +70,6 @@ interface TimeSlot {
 interface DateTimeSlots {
   date: string;
   slots: TimeSlot[];
-}
-
-/**
- * Converts google calendar day strings to 3 lettter day strings
- */
-const GoogleCalendarDayConversion = new Map();
-GoogleCalendarDayConversion.set("MO", "Mon");
-GoogleCalendarDayConversion.set("TU", "Tue");
-GoogleCalendarDayConversion.set("WE", "Wed");
-GoogleCalendarDayConversion.set("TH", "Thu");
-GoogleCalendarDayConversion.set("FR", "Fri");
-GoogleCalendarDayConversion.set("SA", "Sat");
-GoogleCalendarDayConversion.set("SU", "Sun");
-
-/**
- * Convert between 3 letter day strings and their respective number
- */
-const DayNumber = new Map();
-DayNumber.set("Mon", 0);
-DayNumber.set("Tue", 1);
-DayNumber.set("Wed", 2);
-DayNumber.set("Thu", 3);
-DayNumber.set("Fri", 4);
-DayNumber.set("Sat", 5);
-DayNumber.set("Sun", 6);
-DayNumber.set(0, "Mon");
-DayNumber.set(1, "Tue");
-DayNumber.set(2, "Wed");
-DayNumber.set(3, "Thu");
-DayNumber.set(4, "Fri");
-DayNumber.set(5, "Sat");
-DayNumber.set(6, "Sun");
-
-/**
- * Combine a date object and a HH:MM time string to a ISO string, if time string
- * is empty will return the same time as date param
- * @param date a Date object
- * @param time a valid time in format HH:MM
- * @returns a Date object with the same date as date param and time contained in time string
- */
-function formatDateTime(date: Date, time: string) {
-  const full_date = new Date(date);
-  if (time !== "") {
-    const time_split = time.split(":");
-    const hours = Number(time_split[0]);
-    const mins = Number(time_split[1]);
-    full_date.setHours(hours);
-    full_date.setMinutes(mins);
-  }
-  const iso_string = full_date.toISOString();
-  return iso_string;
-}
-
-/**
- * Extracts the days from the BYDAY argument of a google calendar
- * reccurence rule into an array.
- * @param rrule A valid google calendar recurrence rule
- * @returns An array of google calendar days e.g. ["MO","TU"]
- */
-function getDaysFromRRule(rrule: string) {
-  if (rrule === undefined) return [];
-  const rule = rrule.startsWith("RRULE:") ? rrule.substring(7) : rrule;
-  const rule_info = rule.split(";");
-  for (let i = 0; i < rule_info.length; i++) {
-    if (rule_info[i].startsWith("BYDAY")) {
-      const days_str = rule_info[i].split("=")[1];
-      const days = days_str.split(",");
-      return days;
-    }
-  }
-  return [];
-}
-
-/**
- * Return the time in 12 hour hour:minutes am/pm format
- * @param datetime A valid Date object
- * @returns a string in AM/PM time e.g. 9:00am, 10:00pm
- */
-function getAMPMTimeString(datetime: Date) {
-  const hours = datetime.getHours();
-  const display_hours = hours % 12 || 12;
-  const display_mins = datetime.getMinutes().toString().padStart(2, "0");
-  const suffix = hours >= 12 ? "pm" : "am";
-  return `${display_hours}:${display_mins}${suffix}`;
 }
 
 /**
@@ -473,35 +398,7 @@ function BookRoomForm() {
     ]);
   }
 
-  // Probably best to replace this with a prop to the function/component to avoid calling the api twice
-  /**
-   * Calls the `api/room/{room_id}` api endpoint to get the room availablity
-   * information (start time, end time, recurrence_rule).
-   * @returns The room's availability rules (NOT its available timeslots).
-   */
-  async function fetchRoomAvailability() {
-    const apiUrl = `rooms/${room_id}/`;
-    let room_availability: RoomAvailability = {
-      recurrence_rule: "",
-      start_datetime: new Date(0),
-      end_datetime: new Date(0),
-    };
-    await api({ url: apiUrl, method: "get" })
-      .then((response) => {
-        const data = response.data;
-        room_availability = {
-          recurrence_rule: data.recurrence_rule,
-          start_datetime: new Date(data.start_datetime),
-          end_datetime: new Date(data.end_datetime),
-        };
-        setRoomAvailability(room_availability);
-      })
-      .catch((error) => {
-        // TODO : Handle error
-        console.error("Unable to fetch room availability", error);
-      });
-    return room_availability;
-  }
+  const { data: room_availability } = RoomAPI.useFetchRoomAvailability(room_id);
 
   /**
    * Fetches the available timeslots of the room in range
@@ -576,16 +473,14 @@ function BookRoomForm() {
     const start_datetime = new Date();
     const end_datetime = endOfWeek(endOfMonth(start_datetime));
 
-    const room_availability = fetchRoomAvailability();
     const available_timeslots = fetchAvailableTimeSlots({
       start_datetime: start_datetime,
       end_datetime: end_datetime,
     });
-    disableUnavailableDates(
-      await available_timeslots,
-      await room_availability,
-      { start_date: start_datetime, end_date: end_datetime },
-    );
+    disableUnavailableDates(await available_timeslots, room_availability, {
+      start_date: start_datetime,
+      end_date: end_datetime,
+    });
   }
 
   /**
@@ -1121,8 +1016,6 @@ export default function BookRoomPage() {
       return availability_string;
     }
 
-    const defaultImage =
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFgwJ/lYpukQAAAABJRU5ErkJggg==";
     const apiUrl = `rooms/${room_id}/`;
     await api({ url: apiUrl, method: "get" })
       .then((response) => {
@@ -1130,7 +1023,7 @@ export default function BookRoomPage() {
         const room: Room = {
           id: data.id,
           title: data.name,
-          image: data.img !== null ? data.img : defaultImage,
+          image: data.img !== null ? data.img : PLACEHOLDER_IMAGE,
           seats: data.capacity,
           location: data.location.name,
           available: data.is_active,
@@ -1162,14 +1055,14 @@ export default function BookRoomPage() {
   }, []);
 
   return (
-    <div className="h-fit min-h-screen w-screen bg-gray-100">
-      <div className="flex w-full items-center px-[1rem] pt-[1rem] md:px-[3rem]">
+    <div className="h-fit min-h-screen w-full bg-gray-100">
+      <div className="flex w-full items-center p-4">
         <h1 className="text-xl font-semibold">Book room</h1>
       </div>
       <div
         className={cn(
           "flex h-full w-full flex-col lg:flex-row",
-          "items-center justify-center gap-[1rem] p-[1rem] lg:items-start xl:gap-[3rem]",
+          "items-center justify-center gap-4 p-4 md:px-12 lg:items-start xl:gap-12",
         )}
       >
         {isLoading && <Spinner className="w-6" />}
@@ -1189,7 +1082,7 @@ export default function BookRoomPage() {
         )}
         {!isLoading && !error && (
           <>
-            <div className="w-fit max-w-[24rem]">
+            <div className="w-96">
               <RoomCard room={room} />
             </div>
             <BookRoomForm />

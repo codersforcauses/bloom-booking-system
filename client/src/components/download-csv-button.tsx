@@ -5,7 +5,6 @@ import { FaDownload } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
 import { useExportBookingsCsv } from "@/hooks/download-csv";
-import { cn } from "@/lib/utils";
 
 type DownloadCsvButtonProps = {
   path: string;
@@ -59,12 +58,7 @@ export function DownloadCsvButton({
       title="Download"
       aria-label="Download"
       disabled={isPending}
-      className={cn(
-        "gap-2 border-2 bg-white p-2 hover:bg-muted",
-        !isPending
-          ? "border-bloom-blue text-bloom-blue"
-          : "border-gray-300 text-gray-300",
-      )}
+      className="gap-2"
     >
       <FaDownload size={16} />
       {isPending ? "Downloading..." : "Download"}

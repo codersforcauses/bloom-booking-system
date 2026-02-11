@@ -3,10 +3,10 @@ import { AxiosError } from "axios";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
-import type { BookingResponse } from "@/lib/api-types";
+import type { BookingResponse, UpdateBookingRequest } from "@/lib/api-types";
 import { PaginatedBookingResponse } from "@/lib/api-types";
 
-export function useFetchBookings(params: PaginationSearchParams) {
+function useFetchBookings(params: PaginationSearchParams) {
   const { page = 1, nrows = 5, search, ...customParams } = params;
 
   const offset = (page - 1) * nrows;
@@ -47,7 +47,7 @@ export function useFetchBookings(params: PaginationSearchParams) {
 
 type ApiError = { message?: string; detail?: string };
 
-export function useFetchBooking(
+function useFetchBooking(
   bookingId: number,
   isAdminPage: boolean,
   visitorEmail?: string,
@@ -67,7 +67,7 @@ export function useFetchBooking(
   });
 }
 
-export function useCancelBooking(
+function useCancelBooking(
   bookingId: number,
   onSuccess: () => void,
   onError: (error: AxiosError) => void,
@@ -94,3 +94,26 @@ export function useCancelBooking(
     },
   });
 }
+
+function useUpdateBooking(id: number) {
+  const queryClient = useQueryClient();
+  return useMutation<BookingResponse, AxiosError, UpdateBookingRequest>({
+    mutationFn: async (payload) => {
+      const response = await api.patch(`/bookings/${id}/`, payload);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Update the single booking cache
+      queryClient.setQueryData(["bookings", id], data);
+      // Invalidate bookings list queries to refetch updated data
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
+export {
+  useCancelBooking,
+  useFetchBooking,
+  useFetchBookings,
+  useUpdateBooking,
+};
