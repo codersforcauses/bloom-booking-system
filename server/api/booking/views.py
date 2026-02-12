@@ -8,11 +8,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 import django_filters
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from .google_calendar.events import create_event, update_event, delete_event
 from googleapiclient.errors import HttpError
 from django.db import transaction
 from ..email_utils import send_booking_confirmed_email, send_booking_cancelled_email
 import logging
+import csv
+from django.http import HttpResponse
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +70,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         return BookingSerializer
 
     def get_permissions(self):
-        # GET /api/bookings/ and GET /bookings/{id}/ (when no visitor_email provided, admin only)
-        if self.action == "retrieve" or self.action == "list":
+        # GET /api/bookings/, GET /api/bookings/download/ and GET /bookings/{id}/ (when no visitor_email provided, admin only)
+        if self.action == "retrieve" or self.action == "list" or self.action == "download":
             visitor_email = self.request.query_params.get("visitor_email")
             if not visitor_email:
                 return [permissions.IsAuthenticated()]
@@ -337,6 +340,52 @@ class BookingViewSet(viewsets.ModelViewSet):
                 {"detail": "Failed to update Google Calendar event. Please try again later."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @action(detail=False, methods=['get'])
+    def download(self, request, *args, **kwargs):
+        """Download bookings as CSV file with the same filter parameters as GET endpoint."""
+        # Get the filtered queryset using the same logic as list()
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Create HTTP response with CSV content type
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="bookings.csv"'
+
+        # Create CSV writer
+        writer = csv.writer(response)
+
+        # Write header row
+        writer.writerow([
+            'ID',
+            'Room Name',
+            'Visitor Name',
+            'Visitor Email',
+            'Start DateTime',
+            'End DateTime',
+            'Recurrence Rule',
+            'Status',
+            'Cancel Reason',
+            'Created At',
+            'Updated At'
+        ])
+
+        # Write data rows
+        for booking in queryset:
+            writer.writerow([
+                booking.id,
+                booking.room.name,
+                booking.visitor_name,
+                booking.visitor_email,
+                booking.start_datetime,
+                booking.end_datetime,
+                booking.recurrence_rule,
+                booking.status,
+                booking.cancel_reason,
+                booking.created_at,
+                booking.updated_at
+            ])
+
+        return response
 
     # helper method for google calendar data construction
     def _build_event_data(self, booking):
