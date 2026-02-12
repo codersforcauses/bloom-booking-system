@@ -128,7 +128,9 @@ export default function BookingTable({
           )}
         >
           {isActive ? (
-            <Link href="#">
+            <Link
+              href={`/find-my-booking/${row.id}?email=${encodeURIComponent(row.visitor_email)}`}
+            >
               <BiCalendarEdit size={20} />
             </Link>
           ) : (
