@@ -27,12 +27,14 @@ type Params = {
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [nextAvailabilityUrl, setNextAvailabilityUrl] = useState<string | null>(
     null,
   );
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const lastSearchParams = useRef<RoomSearchSchemaValue | null>(null);
 
   const form = useForm<RoomSearchSchemaValue>({
     resolver: zodResolver(RoomSearchSchema),
@@ -79,63 +81,85 @@ export default function Home() {
       params.end_datetime = toDateStr + "T" + data.toTime + ":00";
     }
 
-    await fetchRooms("/rooms/", "/rooms/availability/", params);
+    await fetchRooms("/rooms/", "/rooms/availability/", params, true);
+    lastSearchParams.current = data;
   }
 
   // Reset search form and initial roomlist
-  const onReset = () => {
+  const onReset = async () => {
     form.reset();
-    fetchRooms("/rooms/", "/rooms/availability/");
+    await fetchRooms("/rooms/", "/rooms/availability/");
+    lastSearchParams.current = null;
   };
 
-  // Fetch Rooms (Scroll down to get next page)
-  const fetchRooms = useCallback(
-    async (url: string, availabilityUrl: string, params?: Params) => {
-      setLoading(true);
-      try {
-        await fetchRoomsRecursive(url, availabilityUrl, params);
-      } catch (error) {
-        console.error("Failed to fetch rooms", error);
-        setRooms([]);
-        setNextUrl(null);
-      } finally {
-        setLoading(false);
+  const fetchRoomsRecursive = useCallback(
+    async (
+      url: string,
+      availabilityUrl: string,
+      params?: Params,
+      accumulator: Room[] = [],
+    ) => {
+      const [roomsRes, availabilityRes] = await Promise.all([
+        api.get(url, { params }),
+        api.get(availabilityUrl, { params }),
+      ]);
+
+      const { data } = roomsRes;
+      const { data: availabilityData } = availabilityRes;
+
+      const newRooms = normaliseRooms(data.results, availabilityData.results);
+      const updatedRooms = [...accumulator, ...newRooms];
+      const visibleCount = newRooms.filter((room) => room.available).length;
+
+      if (visibleCount === 0 && data.next && availabilityData.next) {
+        return await fetchRoomsRecursive(
+          data.next,
+          availabilityData.next,
+          params,
+          updatedRooms,
+        );
       }
+
+      return {
+        allRooms: updatedRooms,
+        nextUrl: data.next,
+        nextAvailabilityUrl: availabilityData.next,
+      };
     },
     [],
   );
 
-  const fetchRoomsRecursive = async (
-    url: string,
-    availabilityUrl: string,
-    params?: Params,
-  ) => {
-    const [roomsRes, availabilityRes] = await Promise.all([
-      api.get(url, { params }),
-      api.get(availabilityUrl, { params }),
-    ]);
-
-    const data = roomsRes.data;
-    const availabilityData = availabilityRes.data;
-
-    const newRooms = normaliseRooms(data.results, availabilityData.results);
-
-    const visibleRooms = newRooms.filter((room) => room.available);
-    const visibleCount = visibleRooms.length;
-
-    setRooms((prev) => (!data.previous ? newRooms : [...prev, ...newRooms]));
-
-    setNextUrl(data.next);
-    setNextAvailabilityUrl(availabilityData.next);
-
-    if (visibleCount === 0 && data.next && availabilityData.next) {
-      return await fetchRoomsRecursive(
-        data.next,
-        availabilityData.next,
-        params,
-      );
-    }
-  };
+  // Fetch Rooms (Scroll down to get next page)
+  const fetchRooms = useCallback(
+    async (
+      url: string,
+      availabilityUrl: string,
+      params?: Params,
+      isSearch: boolean = false,
+    ) => {
+      setLoading(true);
+      if (isSearch) setIsSubmitting(true);
+      try {
+        const isInitialPage =
+          !url.includes("offset=") || url.includes("page=0");
+        const { allRooms, nextUrl, nextAvailabilityUrl } =
+          await fetchRoomsRecursive(url, availabilityUrl, params);
+        setRooms((prev) => (isInitialPage ? allRooms : [...prev, ...allRooms]));
+        setNextUrl(nextUrl);
+        setNextAvailabilityUrl(nextAvailabilityUrl);
+      } catch (error) {
+        console.error("Failed to fetch rooms", error);
+        // Reset to a safe empty state on error
+        setRooms([]);
+        setNextUrl(null);
+        setNextAvailabilityUrl(null);
+      } finally {
+        setLoading(false);
+        if (isSearch) setIsSubmitting(false);
+      }
+    },
+    [fetchRoomsRecursive],
+  );
 
   // initial load
   useEffect(() => {
@@ -164,7 +188,8 @@ export default function Home() {
           form={form}
           onSubmit={onSubmit}
           onReset={onReset}
-          loading={loading}
+          isSubmitting={isSubmitting}
+          lastSearchParams={lastSearchParams.current}
         />
       </div>
 
