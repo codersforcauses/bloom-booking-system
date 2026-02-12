@@ -31,7 +31,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="min-h-layout-header flex items-center justify-center px-4">
       <Suspense fallback={<div>Loading...</div>}>
         <LoginForm />
       </Suspense>
