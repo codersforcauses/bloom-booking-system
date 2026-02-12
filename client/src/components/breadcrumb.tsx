@@ -30,9 +30,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, className }) => {
                   {item.label}
                 </Link>
               ) : (
-                <span
-                  style={last ? { color: "var(--bloom-orbit)" } : undefined}
-                >
+                <span className={last ? "text-bloom-orbit" : undefined}>
                   {item.label}
                 </span>
               )}

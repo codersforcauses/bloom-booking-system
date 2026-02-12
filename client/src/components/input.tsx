@@ -6,12 +6,15 @@
 // - Date
 // - Time (HH:MM input)
 // - Time-Select (08:00–17:00, 30-min intervals)
+// - Search
 
 import { format } from "date-fns";
-import React from "react";
+import { SearchIcon } from "lucide-react";
+import React, { useState } from "react";
+import { Matcher, MonthChangeEventHandler } from "react-day-picker";
 
-import { Calendar } from "@/components/calendar";
 import Badge from "@/components/badge";
+import { Calendar } from "@/components/calendar";
 import {
   Popover,
   PopoverContent,
@@ -24,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 type FieldKind =
   | "text"
@@ -32,7 +36,8 @@ type FieldKind =
   | "badge"
   | "date"
   | "time"
-  | "time-select";
+  | "time-select"
+  | "search";
 
 type BaseFieldProps = {
   name: string;
@@ -59,7 +64,7 @@ type NumberFieldProps = BaseFieldProps & {
   step?: number;
 };
 
-type SelectOption = { label: string; value: string };
+export type SelectOption = { label: string; value: string; disabled?: boolean };
 type SelectFieldProps = BaseFieldProps & {
   kind: "select";
   options: SelectOption[];
@@ -72,12 +77,16 @@ type BadgeFieldProps = BaseFieldProps & {
   options: string[];
   value: string[];
   onChange: (value: string[]) => void;
+  actionElement?: React.ReactNode;
 };
 
 type DateFieldProps = BaseFieldProps & {
   kind: "date";
   value: Date | undefined;
   onChange: (value: Date | undefined) => void;
+  defaultMonth?: Date;
+  disabledDates?: Matcher | Matcher[];
+  onMonthChange?: MonthChangeEventHandler;
 };
 
 type TimeFieldProps = BaseFieldProps & {
@@ -90,6 +99,12 @@ type TimeSelectFieldProps = BaseFieldProps & {
   kind: "time-select";
   value: string; // "HH:MM"
   onChange: (value: string) => void;
+};
+
+type SearchFieldProps = BaseFieldProps & {
+  kind: "search";
+  value: string;
+  onSearch: (value: string) => void;
 };
 
 // THIS IS A PLACEHOLDER
@@ -115,7 +130,8 @@ export type InputFieldProps =
   | BadgeFieldProps
   | DateFieldProps
   | TimeFieldProps
-  | TimeSelectFieldProps;
+  | TimeSelectFieldProps
+  | SearchFieldProps;
 
 const InputField: React.FC<InputFieldProps> = (props) => {
   const { label, required, className, fieldClassName, error, name } = props;
@@ -134,10 +150,10 @@ const InputField: React.FC<InputFieldProps> = (props) => {
   const isTimeSelect = kind === "time-select";
   const timeSelectProps = isTimeSelect ? (props as TimeSelectFieldProps) : null;
 
-  const wrapperClasses = ["space-y-1", className].filter(Boolean).join(" ");
+  const wrapperClasses = ["space-y-2", className].filter(Boolean).join(" ");
   const fieldClasses = [
     "rounded-md border bg-background",
-    "shadow-[0_4px_0_0_#D1D5DB]",
+    "shadow-bloom-input",
     fieldClassName,
   ]
     .filter(Boolean)
@@ -159,15 +175,17 @@ const InputField: React.FC<InputFieldProps> = (props) => {
     control = renderTimeSelectFieldControl(timeSelectProps);
   } else if (kind === "badge" && badgeProps) {
     control = renderBadgeFieldControl(badgeProps);
+  } else if (kind === "search") {
+    control = renderSearchFieldControl(props as SearchFieldProps, name);
   } else {
     control = renderNotImplementedControl(kind);
   }
 
   return (
-    <div className={wrapperClasses}>
+    <div className={cn(wrapperClasses)}>
       <label htmlFor={name} className="body-sm-bold block">
         {label}
-        {required && <span className="text-[var(--bloom-red)]"> *</span>}
+        {required && <span className="text-bloom-red"> *</span>}
       </label>
 
       <div className={fieldClasses}>{control}</div>
@@ -198,10 +216,11 @@ const InputField: React.FC<InputFieldProps> = (props) => {
               </button>
             );
           })}
+          {badgeProps.actionElement}
         </div>
       )}
 
-      {error && <p className="caption text-[var(--bloom-red)]">{error}</p>}
+      {error && <p className="caption text-bloom-red">{error}</p>}
     </div>
   );
 };
@@ -213,7 +232,7 @@ function renderTextFieldControl(props: TextFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
+      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
       placeholder={props.placeholder ?? "Text"}
@@ -226,7 +245,7 @@ function renderNumberFieldControl(props: NumberFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
+      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
       placeholder={props.placeholder ?? "Number"}
@@ -247,7 +266,7 @@ function renderSelectFieldControl(props: SelectFieldProps) {
       </SelectTrigger>
       <SelectContent>
         {props.options.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
+          <SelectItem key={opt.value} value={opt.value} disabled={opt.disabled}>
             {opt.label}
           </SelectItem>
         ))}
@@ -267,7 +286,7 @@ function renderDateFieldControl(props: DateFieldProps) {
       <PopoverTrigger
         className={
           "body w-full bg-transparent px-3 py-2 text-left outline-none " +
-          (!hasValue ? "text-[var(--bloom-gray)]" : "")
+          (!hasValue ? "text-bloom-gray" : "")
         }
       >
         {label}
@@ -278,6 +297,9 @@ function renderDateFieldControl(props: DateFieldProps) {
           mode="single"
           selected={props.value}
           onSelect={props.onChange}
+          defaultMonth={props.defaultMonth}
+          disabled={props.disabledDates}
+          onMonthChange={props.onMonthChange}
           initialFocus
         />
       </PopoverContent>
@@ -316,7 +338,7 @@ function renderTimeFieldControl(props: TimeFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-[var(--bloom-gray)]"
+      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
       value={props.value}
       onChange={(e) => handleChange(e.target.value)}
       placeholder={props.placeholder ?? "HH:MM"}
@@ -347,7 +369,7 @@ function renderBadgeFieldControl(props: BadgeFieldProps) {
   return (
     <div className="flex min-h-[38px] flex-wrap items-center gap-2 px-1.5 py-1.5">
       {props.value.length === 0 ? (
-        <span className="body mx-1.5 text-[var(--bloom-gray)] opacity-100">
+        <span className="body mx-1.5 text-bloom-gray opacity-100">
           {props.placeholder ?? "Select amenities"}
         </span>
       ) : (
@@ -359,7 +381,7 @@ function renderBadgeFieldControl(props: BadgeFieldProps) {
               onClick={() =>
                 props.onChange(props.value.filter((v) => v !== item))
               }
-              className="ml-1 text-[var(--bloom-red)] hover:opacity-80"
+              className="ml-1 text-bloom-red hover:opacity-80"
             >
               ×
             </button>
@@ -370,9 +392,46 @@ function renderBadgeFieldControl(props: BadgeFieldProps) {
   );
 }
 
+function renderSearchFieldControl(props: SearchFieldProps, name: string) {
+  const [tempValue, setTempValue] = useState(props.value);
+
+  React.useEffect(() => {
+    setTempValue(props.value);
+  }, [props.value]);
+  const handleOnBlur = () => props.onSearch(tempValue);
+
+  const handleOnKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") props.onSearch(tempValue);
+  };
+
+  return (
+    <div
+      className={["flex flex-col", props.className].filter(Boolean).join(" ")}
+    >
+      <div
+        className={["relative", props.fieldClassName].filter(Boolean).join(" ")}
+      >
+        <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
+        <input
+          id={name}
+          name={name}
+          type="text"
+          className="body w-full rounded-md border bg-white px-3 py-1 pl-8 outline-none placeholder:text-[var(--bloom-gray)]"
+          placeholder={props.placeholder ?? "Search..."}
+          value={tempValue}
+          onChange={(e) => setTempValue(e.target.value)}
+          onBlur={handleOnBlur}
+          onKeyDown={handleOnKeyDown}
+        />
+      </div>
+    </div>
+  );
+}
+
 function renderNotImplementedControl(kind: FieldKind) {
   return (
-    <div className="body-sm text-[var(--bloom-red)]">
+    <div className="body-sm text-bloom-red">
       Not implemented yet: <span className="font-mono">{kind}</span>
     </div>
   );

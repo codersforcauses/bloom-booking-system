@@ -480,5 +480,18 @@ class BookingViewTest(APITestCase):
         self.assertIn("count", data)
         self.assertIn("results", data)
 
-        # Should limit results (default pagination is typically 10-20)
-        self.assertLessEqual(len(data["results"]), 20)
+        # Verify default limit is enforced (Django REST default is 10)
+        self.assertLessEqual(len(data["results"]), 10)
+
+        # Test with explicit limit parameter (e.g., limit=5)
+        response_limit_5 = self.client.get('/api/bookings/?limit=5')
+        self.assertEqual(response_limit_5.status_code, status.HTTP_200_OK)
+        data_limit_5 = response_limit_5.json()
+        self.assertEqual(len(data_limit_5["results"]), 5)
+
+        # Test with limit exceeding max_limit (if configured, e.g., max_limit=100)
+        response_large_limit = self.client.get('/api/bookings/?limit=9999')
+        self.assertEqual(response_large_limit.status_code, status.HTTP_200_OK)
+        data_large_limit = response_large_limit.json()
+        # If max_limit is set in pagination, update 100 to your max_limit value
+        self.assertLessEqual(len(data_large_limit["results"]), 100)
