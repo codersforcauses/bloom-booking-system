@@ -475,7 +475,7 @@ class BookingViewTest(APITestCase):
     def test_booking_download_cancelled_booking_with_reason(self):
         """Test that cancelled bookings include cancel_reason in CSV."""
         # Create a cancelled booking
-        cancelled_booking = Booking.objects.create(
+        Booking.objects.create(
             room=self.room,
             visitor_name='Cancelled User',
             visitor_email='cancelled@example.com',
@@ -504,7 +504,7 @@ class BookingViewTest(APITestCase):
     def test_booking_download_with_special_characters(self):
         """Test downloading bookings with special characters in fields."""
         # Create booking with special characters
-        special_booking = Booking.objects.create(
+        Booking.objects.create(
             room=self.room,
             visitor_name='Test "User" O\'Brien',
             visitor_email='test@example.com',
@@ -531,7 +531,7 @@ class BookingViewTest(APITestCase):
     def test_booking_download_with_recurrence_rule(self):
         """Test that bookings with recurrence rules are properly exported."""
         # Create booking with recurrence rule
-        recurring_booking = Booking.objects.create(
+        Booking.objects.create(
             room=self.room,
             visitor_name='Recurring User',
             visitor_email='recurring@example.com',
