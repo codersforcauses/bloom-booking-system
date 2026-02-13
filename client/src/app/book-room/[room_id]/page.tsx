@@ -23,7 +23,7 @@ import {
 } from "@/components/alert-dialog";
 import InputField, { SelectOption } from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
-import { PLACEHOLDER_IMAGE,RoomCard  } from "@/components/room-card";
+import { PLACEHOLDER_IMAGE,RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -866,7 +866,7 @@ function BookRoomForm() {
           )}
         />
       </div>
-      <Checkbox
+      {/* <Checkbox
         className="ml-6"
         checked={allDay}
         onCheckedChange={(checked) => {
@@ -876,7 +876,7 @@ function BookRoomForm() {
         disabled={!allDayEnabled}
       >
         {allDayEnabled ? "All day" : "All day (Unavailable for selected date)"}
-      </Checkbox>
+      </Checkbox> */}
       <ReCAPTCHAV2 setVerified={setVerified} />
       <Button
         type="submit"
@@ -899,8 +899,7 @@ export default function BookRoomPage() {
   const loading_room: Room = {
     id: -1,
     title: "Loading...",
-    image:
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFgwJ/lYpukQAAAABJRU5ErkJggg==",
+    image: PLACEHOLDER_IMAGE,
     location: "",
     available: false,
     availability: "",
@@ -1055,7 +1054,7 @@ export default function BookRoomPage() {
   }, []);
 
   return (
-    <div className="h-fit min-h-screen w-full bg-gray-100">
+    <div className="h-fit w-full">
       <div className="flex w-full items-center p-4">
         <h1 className="text-xl font-semibold">Book room</h1>
       </div>

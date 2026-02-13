@@ -137,7 +137,7 @@ function BookingPage({
   };
 
   return (
-    <div className="w-full rounded-xl bg-gray-100 p-6">
+    <div className="w-full rounded-xl p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold">List of Bookings</h2>
         <div className="flex gap-2">

@@ -13,7 +13,7 @@ export default function FilterPopOver() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" className="gap-2">
           <FaFilter size={16} />
           Filter
         </Button>

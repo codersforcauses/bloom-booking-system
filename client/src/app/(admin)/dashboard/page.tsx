@@ -105,7 +105,7 @@ function BookingPage() {
   const onClose = () => setAlert((prev) => ({ ...prev, open: false }));
 
   return (
-    <div className="w-full rounded-xl bg-gray-100 p-6">
+    <div className="w-full rounded-xl p-6">
       <BookingsStats />
 
       <div className="mb-4 flex items-center justify-between">

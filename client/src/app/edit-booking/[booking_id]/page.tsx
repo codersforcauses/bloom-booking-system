@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useParams,useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo,useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -13,7 +13,7 @@ import {
 } from "@/components/alert-dialog";
 import InputField, { SelectOption } from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
-import { PLACEHOLDER_IMAGE,RoomCard  } from "@/components/room-card";
+import { PLACEHOLDER_IMAGE, RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { useFetchBooking,useUpdateBooking  } from "@/hooks/booking";
+import { useFetchBooking, useUpdateBooking } from "@/hooks/booking";
 import RoomAPI from "@/hooks/room";
 import api from "@/lib/api";
 import { normaliseRoom } from "@/lib/normalise-room";
@@ -132,109 +132,113 @@ function EditBookingForm({ booking }: { booking: any }) {
         "flex flex-col gap-6 bg-white px-8 py-8 md:px-16 md:py-12",
       )}
     >
-      <FormField
-        name="name"
-        control={form.control}
-        render={({ field }) => (
-          <FormItem className="w-full">
-            <FormLabel className="font-bold">Name *</FormLabel>
-            <FormControl>
-              <Input
-                type="text"
-                required
-                name="name"
-                value={field.value || ""}
-                onChange={field.onChange}
-                disabled={true}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        name="email"
-        control={form.control}
-        render={({ field }) => (
-          <FormItem className="w-full">
-            <FormLabel className="font-bold">Email</FormLabel>
-            <FormControl>
-              <Input
-                type="text"
-                required
-                name="email"
-                value={field.value || ""}
-                onChange={field.onChange}
-                disabled={true}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <div className="flex flex-col gap-4 md:flex-row">
-        <FormField
-          name="date"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormControl>
-                <InputField
-                  kind="date"
-                  required
-                  name="date"
-                  label="Date"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="start_time"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormControl>
-                <InputField
-                  kind="text"
-                  required
-                  name="start_time"
-                  label="Start time"
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="end_time"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormControl>
-                <InputField
-                  kind="text"
-                  required
-                  name="end_time"
-                  label="End time"
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <div>
+        <div className="mb-4 flex flex-col gap-4 md:flex-row">
+          <FormField
+            name="name"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel className="font-bold">Name *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    required
+                    name="name"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    disabled={true}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="email"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel className="font-bold">Email *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    required
+                    name="email"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    disabled={true}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex flex-col gap-4 md:flex-row">
+          <FormField
+            name="date"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormControl>
+                  <InputField
+                    kind="date"
+                    required
+                    name="date"
+                    label="Date"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="start_time"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormControl>
+                  <InputField
+                    kind="text"
+                    required
+                    name="start_time"
+                    label="Start time"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="end_time"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormControl>
+                  <InputField
+                    kind="text"
+                    required
+                    name="end_time"
+                    label="End time"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </div>
       <ReCAPTCHAV2 setVerified={setVerified} />
       <Button
         type="submit"
-        className="w-1/6 min-w-[8rem] font-bold"
+        className="w-fit px-6"
         disabled={!verified || mutation.isPending}
       >
         {!mutation.isPending ? "Submit" : <Spinner className="w-6" />}
@@ -310,7 +314,7 @@ export default function EditBookingPage({
   }
 
   return (
-    <div className="h-fit min-h-screen w-full bg-gray-100">
+    <div className="w-full">
       <div className="flex w-full items-center px-[1rem] pt-[1rem] md:px-[3rem]">
         <h1 className="text-xl font-semibold">Edit booking</h1>
       </div>
