@@ -57,14 +57,14 @@ class BookingViewTest(APITestCase):
             google_event_id='test-google-event-id'
         )
 
-        self.other_booking = Booking.objects.create(
+        self.second_booking = Booking.objects.create(
             room=self.room,
             visitor_name='Jane Smith',
             visitor_email='jane@example.com',
             start_datetime=future_date.replace(
-                hour=13, minute=0, second=0, microsecond=0),
+                hour=15, minute=0, second=0, microsecond=0),
             end_datetime=future_date.replace(
-                hour=14, minute=0, second=0, microsecond=0),
+                hour=16, minute=0, second=0, microsecond=0),
             recurrence_rule="",
             status='CONFIRMED',
             google_event_id='test-google-event-id-2'
@@ -162,8 +162,10 @@ class BookingViewTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data["results"]), 1)
-        self.assertEqual(data["results"][0]["id"], self.booking.id)
+        self.assertEqual(len(data["results"]), 2)
+        booking_ids = [b["id"] for b in data["results"]]
+        self.assertIn(self.booking.id, booking_ids)
+        self.assertIn(self.second_booking.id, booking_ids)
 
     def test_booking_listing_with_visitor_email_query_param(self):
         """Test listing bookings with visitor_email query parameter (no auth required)."""
@@ -184,7 +186,7 @@ class BookingViewTest(APITestCase):
         url = f'/api/bookings/?room={self.room.name}'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()["results"]), 1)
+        self.assertEqual(len(response.json()["results"]), 2)
 
         # Test with non-matching room name
         url = '/api/bookings/?room=non_matching_name'
