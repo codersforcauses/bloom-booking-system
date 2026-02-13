@@ -307,7 +307,7 @@ class BookingViewTest(APITestCase):
             is_active=True
         )
 
-        other_room_booking = Booking.objects.create(
+        Booking.objects.create(
             room=other_room,
             visitor_name='Bob Wilson',
             visitor_email='bob@example.com',
