@@ -341,7 +341,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['GET'])
     def download(self, request, *args, **kwargs):
         """Download bookings as CSV file with the same filter parameters as GET endpoint."""
         # Get the filtered queryset using the same logic as list()
