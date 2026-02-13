@@ -79,7 +79,7 @@ export const getAvailabilityText = (
   ruleString: string,
 ) => {
   const PERTH_TZ = "Australia/Perth";
-  if (!isActive) return "Inactive";
+  if (!isActive) return "Unavailable";
   try {
     // Extract and format the times
     const startDtPerth = new TZDate(startDt, PERTH_TZ);
