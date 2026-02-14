@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, utils
 from django.utils import timezone
 from dateutil.rrule import rrulestr
 import zoneinfo
@@ -12,9 +12,17 @@ logger = logging.getLogger(__name__)
 class BookingManager(models.Manager):
     # ensure db update whenever retrieved through Django admin or api call
     def get_queryset(self):
-        # now = timezone.now()
-        # super().get_queryset().filter(status='CONFIRMED', actual_end_datetime__lte=now).update(status='COMPLETED')
-        return super().get_queryset()
+        qs = super().get_queryset()
+        try:
+            now = timezone.now()
+            self.model.objects.filter(
+                status='CONFIRMED',
+                actual_end_datetime__lte=now
+            ).update(status='COMPLETED')
+        except (utils.ProgrammingError, utils.OperationalError):
+            # triggered during migrations or if the DB isn't ready
+            pass
+        return qs
 
 
 class Booking(models.Model):
