@@ -144,6 +144,11 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "detail": "Visitor email is incorrect."
             })
 
+        if instance.status == "COMPLETED":
+            raise ValidationError({
+                "detail": "Cannot modify or cancel booking when it is already completed."
+            })
+
         # handle when visitor_email in request and instance are different in cases
         # note that filters for visitor_email is case insensitive and visitor_email is immutable
         # use data instead of request.data to update the db
@@ -156,10 +161,6 @@ class BookingViewSet(viewsets.ModelViewSet):
         if cancel_reason and cancel_reason.strip():
             # Handle cancellation with transaction and Google Calendar deletion
             try:
-                if instance.status == "COMPLETED":
-                    raise ValidationError({
-                        "detail": "Cannot cancel booking when it is already completed."
-                        })
                 with transaction.atomic():
                     # Delete from Google Calendar first, inside the transaction
                     if instance.google_event_id:
