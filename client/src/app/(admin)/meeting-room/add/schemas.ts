@@ -13,12 +13,20 @@ export const LocationFormSchema = z.object({
 export type LocationFormInput = z.infer<typeof LocationFormSchema>;
 
 export const CustomRepeatSchema = z.object({
-  interval: z.string().min(1, "Interval is required"),
+  interval: z
+    .string()
+    .regex(/^\d+$/, "Interval must be a positive integer")
+    .refine((val) => parseInt(val, 10) >= 1, "Interval must be at least 1"),
   frequency: z.enum(["day", "week", "month"]),
   days: z.array(z.string()).default([]),
   endType: z.enum(["on", "after", "never"]),
   endDate: z.date().optional(),
-  occurrences: z.string(),
+  occurrences: z
+    .string()
+    .optional()
+    .refine((val) => !val || (/^\d+$/.test(val) && parseInt(val, 10) >= 1), {
+      message: "Occurrences must be a positive integer",
+    }),
   startDate: z.date().optional(),
 });
 

@@ -40,6 +40,7 @@ export default function AddMeetingRoomForm() {
     handleSubmit,
     setValue,
     watch,
+    getValues,
     clearErrors,
     setError,
     reset,
@@ -48,7 +49,7 @@ export default function AddMeetingRoomForm() {
     resolver: zodResolver(AddMeetingRoomSchema),
     defaultValues: {
       title: "",
-      seats: 0,
+      seats: 1,
       location: "",
       amenities: [],
       image: "",
@@ -128,7 +129,7 @@ export default function AddMeetingRoomForm() {
   const handleCancel = () => {
     reset({
       title: "",
-      seats: 0,
+      seats: 1,
       location: "",
       amenities: [],
       image: "",
@@ -298,10 +299,12 @@ export default function AddMeetingRoomForm() {
                         amenity.id.toString(),
                       ),
                     );
-                    const currentAmenities = Array.isArray(formValues.amenities)
-                      ? formValues.amenities
+                    const currentAmenities = Array.isArray(
+                      getValues("amenities"),
+                    )
+                      ? getValues("amenities")
                       : [];
-                    const nextAmenities = currentAmenities
+                    const nextAmenities = (currentAmenities || [])
                       .map((amenityId) => amenityId.toString())
                       .filter((amenityId) => validAmenityIds.has(amenityId));
                     setValue("amenities", nextAmenities, { shouldDirty: true });
@@ -351,6 +354,11 @@ export default function AddMeetingRoomForm() {
                             type: "manual",
                             message: "Image must be under 5MB",
                           });
+                          // Clear the invalid file from state and input
+                          setImageFile(null);
+                          if (imageInputRef.current) {
+                            imageInputRef.current.value = "";
+                          }
                           return;
                         }
 
