@@ -607,7 +607,7 @@ export default function AddMeetingRoomForm() {
         description="Your request for meeting room creation was successful"
         onConfirm={() => {
           setShowSuccessDialog(false);
-          // router.push("/dashboard");
+          router.push("/meeting-room");
         }}
       />
     </>
