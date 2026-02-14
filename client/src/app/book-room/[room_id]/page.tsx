@@ -16,6 +16,7 @@ import { Matcher } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import NotFound from "@/app/not-found";
 import {
   AlertDialog,
   AlertDialogProps,
@@ -23,7 +24,7 @@ import {
 } from "@/components/alert-dialog";
 import InputField, { SelectOption } from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
-import { PLACEHOLDER_IMAGE,RoomCard } from "@/components/room-card";
+import { PLACEHOLDER_IMAGE, RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -34,17 +35,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
-import RoomAPI from "@/hooks/room";
-import api from "@/lib/api";
+import { useCreateBooking } from "@/hooks/booking";
+import RoomAPI, { DateTimeSlots,TimeSlot } from "@/hooks/room";
+import { normaliseRoom } from "@/lib/normalise-room";
 import { cn, resolveErrorMessage } from "@/lib/utils";
 import { Room } from "@/types/card";
 
 import {
-  DayNumber,
   formatDateTime,
   getAMPMTimeString,
-  getDaysFromRRule,
-  GoogleCalendarDayConversion,
+  getDateTimeSlots,
+  getUnavailableDates,
+  getUnavailableDaysOfWeek,
 } from "./room-utils";
 
 /**
@@ -54,22 +56,6 @@ interface RoomAvailability {
   recurrence_rule: string;
   start_datetime: Date;
   end_datetime: Date;
-}
-
-/**
- * A slot of time from a start time to an end time
- */
-interface TimeSlot {
-  start: Date;
-  end: Date;
-}
-
-/**
- * Information about a date and its available time slots
- */
-interface DateTimeSlots {
-  date: string;
-  slots: TimeSlot[];
 }
 
 /**
@@ -85,6 +71,11 @@ function BookRoomForm() {
 
   const params = useParams();
   const room_id = Number(params.room_id);
+
+  if (room_id === undefined || isNaN(room_id)) {
+    return <NotFound />;
+  }
+
   /**
    * The opening hours of the room
    */
@@ -101,14 +92,7 @@ function BookRoomForm() {
    * used to prevent duplicate requests and filling up availableTimeSlots with
    * duplicates
    */
-  const [previousAvailabilityRequests, setPreviousAvailabilityRequests] =
-    useState<string[]>([]);
-  /**
-   * The time availability of a room over a range of dates
-   */
-  const [availableTimeSlots, setAvailableTimeSlots] = useState<DateTimeSlots[]>(
-    [],
-  );
+  // Remove previousAvailabilityRequests and availableTimeSlots state
   /**
    * The dates to prevent users from selecting (e.g. past dates, closed days of
    * week,booked dates)
@@ -137,11 +121,7 @@ function BookRoomForm() {
    */
   const [verified, setVerified] = useState<boolean>(false);
   /**
-   * The state of the form submission
-   */
-  const [submitPending, setSubmitPending] = useState<boolean>(false);
-  /**
-   * Closes the alert dialog (used becuause props are controlled by state variable).
+   * Closes the alert dialog (used because props are controlled by state variable).
    */
   function close_dialog() {
     setAlertDialogProps({
@@ -162,6 +142,54 @@ function BookRoomForm() {
   };
   const [alertDialogProps, setAlertDialogProps] = useState<AlertDialogProps>(
     default_alert_dialog_props,
+  );
+
+  // Create booking mutation with success/error handlers
+  const createBooking = useCreateBooking(
+    () => {
+      // onSuccess callback
+      setAlertDialogProps({
+        title: "Awesome!",
+        description:
+          "Your booking has been submitted successfully.\nYou will receive an email confirmation shortly.",
+        variant: "success",
+        open: true,
+        onConfirm: () => router.push("/"),
+        onClose: () => router.push("/"),
+      });
+    },
+    (error) => {
+      // onError callback
+      let errorMessage = "Unknown error.";
+
+      if (axios.isAxiosError(error) && error.response?.data) {
+        const res = error.response.data as {
+          start_datetime?: string[];
+          end_datetime?: string[];
+          non_field_errors?: string[];
+          detail?: string;
+        };
+
+        if (res.start_datetime) {
+          errorMessage = cn(res.start_datetime);
+        } else if (res.end_datetime) {
+          errorMessage = cn(res.end_datetime);
+        } else if (res.non_field_errors) {
+          errorMessage = cn(res.non_field_errors);
+        } else if (res.detail) {
+          errorMessage = cn(res.detail);
+        }
+      }
+
+      setAlertDialogProps({
+        title: "Sorry!",
+        description: errorMessage,
+        variant: "error",
+        open: true,
+        onConfirm: close_dialog,
+        onClose: close_dialog,
+      });
+    },
   );
 
   const yesterday_date = new Date(new Date().setDate(new Date().getDate() - 1));
@@ -215,12 +243,10 @@ function BookRoomForm() {
   });
 
   /**
-   * Uses data from the from to send an POST request to /api/bookings/ endpoint
-   * and sets alertDialogProps according to server response.
+   * Uses data from the form to create a booking via the useCreateBooking hook.
    * @param data The data from the form.
    */
   function onSubmit(data: z.infer<typeof formSchema>) {
-    setSubmitPending(true);
     const payload = {
       room_id: room_id,
       visitor_name: data.name,
@@ -229,163 +255,22 @@ function BookRoomForm() {
       end_datetime: formatDateTime(data.date, data.end_time),
       recurrence_rule: "",
     };
-    const alert_dialog_props: AlertDialogProps = {
-      title: "",
-      description: "",
-      variant: "info" as AlertDialogVariant,
-      open: true,
-      onConfirm: close_dialog,
-      onClose: close_dialog,
-    };
-    api({ url: "bookings/", method: "post", data: payload })
-      .then((response) => {
-        const res = response.data;
-        const date = new Date(Date.parse(res.start_datetime));
-        // Substring (0,5) gives just the HH:MM part of the string
-        const start_time = new Date(Date.parse(res.start_datetime))
-          .toTimeString()
-          .substring(0, 5);
-        const end_time = new Date(Date.parse(res.end_datetime))
-          .toTimeString()
-          .substring(0, 5);
-        enum MonthString {
-          Jan,
-          Feb,
-          Mar,
-          Apr,
-          May,
-          Jun,
-          Jul,
-          Aug,
-          Sep,
-          Oct,
-          Nov,
-          Dec,
-        }
-        const description =
-          `Your ${res.room.name} Booking for ` +
-          `${date.getDate()} ${MonthString[date.getMonth()]} ${date.getFullYear()} ` +
-          `from ${start_time} to ${end_time} ` +
-          `has been submitted.\n` +
-          `You will receive an email confirmation shortly.`;
-        alert_dialog_props.title = "Awesome!";
-        alert_dialog_props.description = description;
-        alert_dialog_props.variant = "success" as AlertDialogVariant;
-        alert_dialog_props.onConfirm = () => router.push("/");
-        alert_dialog_props.onClose = () => router.push("/");
-      })
-      .catch((error) => {
-        alert_dialog_props.title = "Sorry!";
-        alert_dialog_props.variant = "error" as AlertDialogVariant;
-        alert_dialog_props.description = "Unknown error.";
 
-        if (!axios.isAxiosError(error) || error.response === undefined) {
-          console.error(error);
-          return;
-        }
-
-        if (error.response.data === undefined) {
-          console.error(error);
-          return;
-        }
-
-        const res = error.response.data;
-        if (res.start_datetime !== undefined) {
-          alert_dialog_props.description = cn(res.start_datetime);
-        } else if (res.end_datetime !== undefined) {
-          alert_dialog_props.description = cn(res.end_datetime);
-        } else if (res.non_field_errors !== undefined) {
-          alert_dialog_props.description = cn(res.non_field_errors);
-        } else if (res.detail !== undefined) {
-          alert_dialog_props.description = cn(res.detail);
-        } else {
-          console.error(error);
-        }
-      })
-      .finally(() => {
-        setAlertDialogProps(alert_dialog_props);
-        setSubmitPending(false);
-      });
-  }
-
-  /**
-   * Returns an array of numbers reprenseting days of the week (Sunday = )
-   * not included * in the BYDAY argument of a Google Calendar recurrence_rule
-   * @param rrule A valid Google Calendar recurrence rule
-   */
-  function getUnavailableDaysOfWeek(rrule: string): number[] {
-    // Assumes availability pattern is weekly
-    const available_days_of_week = getDaysFromRRule(rrule).map((day) =>
-      DayNumber.get(GoogleCalendarDayConversion.get(day)),
-    );
-    const unavailable_days_of_week = [0, 1, 2, 3, 4, 5, 6].filter(
-      (day) => !available_days_of_week.includes(day),
-    );
-    return unavailable_days_of_week;
-  }
-
-  /**
-   * Get the dates that are not included in availability api response.
-   *
-   * @param available_timeslots An array of DateTimeSlots representing the
-   * available timeslots of a room (from `api/rooms/{id}/availablity` response)
-   * @param ignore_days_of_week An array of numbers representing days (Sun=0) to
-   * ignore when looking for unavailable days
-   * @returns An array of Dates between now and the last date of
-   * available_timeslots that are not included in available_timeslots and are
-   * on days not included in ignore_days_of_week
-   */
-  function getUnavailableDates(
-    available_timeslots: DateTimeSlots[],
-    options: {
-      ignore_days_of_week?: number[];
-      start_date?: Date;
-      end_date?: Date;
-    } = {},
-  ): Date[] {
-    const ignore_days_of_week = options.ignore_days_of_week || [];
-
-    let unavailable_dates: Date[] = [];
-    const available_dates = available_timeslots.map(
-      (o: DateTimeSlots) => o.date,
-    ); // Array.includes does not work on Date objects thus use ISO strings
-    if (available_dates.length === 0) return unavailable_dates;
-
-    const start_date = options.start_date || new Date();
-    const last_date =
-      options.end_date ||
-      new Date(
-        available_dates.reduce((latest, current) => {
-          const latestDate = new Date(latest);
-          const currentDate = new Date(current);
-          return currentDate > latestDate ? current : latest;
-        }, available_dates[0]),
-      );
-
-    const d = new Date(format(start_date, "yyyy-MM-dd"));
-    while (d <= last_date) {
-      unavailable_dates.push(new Date(d));
-      d.setDate(d.getDate() + 1);
-    }
-    unavailable_dates = unavailable_dates
-      .filter((date) => !ignore_days_of_week.includes(date.getDay()))
-      // Array.includes does not work on Date objects thus use ISO strings
-      .filter((date) => !available_dates.includes(format(date, "yyyy-MM-dd")));
-    return unavailable_dates;
+    createBooking.mutate(payload);
   }
 
   /**
    * Set the disabledDates state variable with relevant information from calling
-   * getUnavailableDaysOfWeek and getUnavailableDates fucntions
+   * getUnavailableDaysOfWeek and getUnavailableDates functions
    */
   function disableUnavailableDates(
-    available_timeslots: DateTimeSlots[] = availableTimeSlots,
+    available_timeslots: DateTimeSlots[] = availableTimeSlots ?? [],
     room_availability: RoomAvailability = roomAvailability,
     options: { start_date?: Date; end_date?: Date } = {},
   ) {
     const days_of_week = getUnavailableDaysOfWeek(
       room_availability.recurrence_rule,
-    ).map((day) => (day + 1) % 7); // DayPicker uses Sun=0
+    ).map((day) => (day + 1) % 7); // DayPicker uses Mon=1, convert to Sun=0
     const dates = getUnavailableDates(available_timeslots, {
       ignore_days_of_week: days_of_week,
       start_date: options.start_date,
@@ -398,88 +283,38 @@ function BookRoomForm() {
     ]);
   }
 
-  const { data: room_availability } = RoomAPI.useFetchRoomAvailability(room_id);
+  const {
+    data: room_availability,
+    isLoading: isLoadingRoomAvailability,
+    isError: isErrorRoomAvailability,
+    error: roomAvailabilityError,
+  } = RoomAPI.useFetchRoomAvailability(room_id);
 
-  /**
-   * Fetches the available timeslots of the room in range
-   * {start_datetime, end_datetime} from the api.
-   * @param date_range An object {start_date, end_date} specifying the start and
-   * end dates to request the available time slots of, by default start_datetime
-   * is set to the current time and end_datetime is set to the first of the
-   * next month.
-   * @returns
-   */
-  async function fetchAvailableTimeSlots({
-    start_datetime = new Date(),
-    end_datetime = endOfWeek(endOfMonth(start_datetime)),
-  }: {
-    start_datetime?: Date;
-    end_datetime?: Date;
-  } = {}) {
-    const start_date = format(start_datetime, "yyyy-MM-dd");
-    const end_date = format(end_datetime, "yyyy-MM-dd");
-    const query_params = `start_date=${start_date}&end_date=${end_date}`;
-    const apiUrl = `rooms/${room_id}/availability/?${query_params}`;
-    let available_timeslots: DateTimeSlots[] = [...availableTimeSlots];
+  // Default to current month for timeslot fetching
+  const [timeslotRange, setTimeslotRange] = useState(() => {
+    const start = new Date();
+    const end = endOfWeek(endOfMonth(start));
+    return { start, end };
+  });
 
-    if (!previousAvailabilityRequests.includes(query_params)) {
-      await api({ url: apiUrl, method: "get" })
-        .then((response) => {
-          const new_available_timeslots = response.data.availability.map(
-            (o: { date: string; slots: { start: string; end: string }[] }) => {
-              return {
-                date: o.date,
-                slots: o.slots.map((slot: { start: string; end: string }) => {
-                  return {
-                    start: new Date(Date.parse(slot.start)),
-                    end: new Date(Date.parse(slot.end)),
-                  };
-                }),
-              };
-            },
-          );
-          setAvailableTimeSlots((prevAvailableTimeSlots) => {
-            const merged = [
-              ...new_available_timeslots,
-              ...prevAvailableTimeSlots,
-            ];
-            available_timeslots = merged;
-            return merged;
-          });
-          setPreviousAvailabilityRequests(
-            (prevPreviousAvailabilityRequests) => [
-              query_params,
-              ...prevPreviousAvailabilityRequests,
-            ],
-          );
-        })
-        .catch((error) => {
-          /*
-          If error occurs, available_timeslots is equal to the current
-          availableTimeslots state variable so nothing needs to be handled
-          */
-          console.error(error);
-        });
-    }
-    // Return available_timeslots for use before state variable updates
-    return available_timeslots;
-  }
+  const {
+    data: availableTimeSlots,
+    isLoading: isLoadingTimeSlots,
+    isError: isErrorTimeSlots,
+    error: timeSlotsError,
+    refetch: refetchTimeSlots,
+  } = RoomAPI.useFetchRoomTimeSlots(
+    room_id,
+    timeslotRange.start,
+    timeslotRange.end,
+  );
 
-  /**
-   * Fetches the room's availablity rules and available timeslots and sets the
-   * disabledDates state variable accoringly.
-   */
   async function fetchAvailability() {
-    const start_datetime = new Date();
-    const end_datetime = endOfWeek(endOfMonth(start_datetime));
-
-    const available_timeslots = fetchAvailableTimeSlots({
-      start_datetime: start_datetime,
-      end_datetime: end_datetime,
-    });
-    disableUnavailableDates(await available_timeslots, room_availability, {
-      start_date: start_datetime,
-      end_date: end_datetime,
+    // Refetch timeslots for the current range
+    await refetchTimeSlots();
+    disableUnavailableDates(availableTimeSlots, room_availability, {
+      start_date: timeslotRange.start,
+      end_date: timeslotRange.end,
     });
   }
 
@@ -493,33 +328,13 @@ function BookRoomForm() {
    *
    * @param month The datetime of the start of the month
    */
+
   async function handleMonthChange(month: Date) {
     const start_datetime = startOfWeek(startOfMonth(month));
     const end_datetime = endOfWeek(endOfMonth(month));
-    const available_timeslots = fetchAvailableTimeSlots({
-      start_datetime: start_datetime,
-      end_datetime: end_datetime,
-    });
-    disableUnavailableDates(await available_timeslots, roomAvailability, {
-      start_date: start_datetime,
-      end_date: end_datetime,
-    });
-  }
-
-  /**
-   * Get the time slots available on the date provided from availableTimeSlots
-   * state variable
-   * @param date The date to get the time slots for
-   * @returns An array of the available timeslots for the provided date
-   */
-  function getDateTimeSlots(date: Date | undefined): TimeSlot[] {
-    if (date === undefined) return [];
-    const date_string = format(date, "yyyy-MM-dd");
-    const date_availability = availableTimeSlots.find(
-      (o: DateTimeSlots) => o.date === date_string,
-    );
-    if (date_availability === undefined) return [];
-    return date_availability.slots;
+    setTimeslotRange({ start: start_datetime, end: end_datetime });
+    // Refetch will be triggered by hook dependency change
+    // Disabled dates will be updated by useEffect below
   }
 
   /**
@@ -651,7 +466,7 @@ function BookRoomForm() {
    * @param date The date the day picker was changed to.
    */
   function handleDateChange(date: Date | undefined) {
-    const timeslots = getDateTimeSlots(date);
+    const timeslots = getDateTimeSlots(date, availableTimeSlots ?? []);
     setSelectTimeSlots(timeslots);
     const start_options = getTimeSelectOptionsInSlots(timeslots);
     setStartTimeOptions(start_options);
@@ -737,8 +552,37 @@ function BookRoomForm() {
    * time and end of the current month on component mount.
    */
   useEffect(() => {
+    if (!room_availability) {
+      return;
+    }
+
     fetchAvailability();
-  }, []);
+  }, [room_availability]);
+
+  /**
+   * Update disabledDates whenever availableTimeSlots or roomAvailability changes.
+   */
+  useEffect(() => {
+    disableUnavailableDates(availableTimeSlots, roomAvailability, {
+      start_date: timeslotRange.start,
+      end_date: timeslotRange.end,
+    });
+  }, [
+    availableTimeSlots,
+    roomAvailability,
+    timeslotRange.start,
+    timeslotRange.end,
+  ]);
+
+  if (isErrorRoomAvailability || isErrorTimeSlots) {
+    return (
+      <div>
+        <h2 className="text-2xl font-bold">Error</h2>
+        <p>{resolveErrorMessage(roomAvailabilityError)}</p>
+        <p>{resolveErrorMessage(timeSlotsError)}</p>
+      </div>
+    );
+  }
 
   return (
     <Form
@@ -881,9 +725,9 @@ function BookRoomForm() {
       <Button
         type="submit"
         className="w-1/6 min-w-[8rem] font-bold"
-        disabled={!verified || submitPending}
+        disabled={!verified || createBooking.isPending}
       >
-        {!submitPending ? "Submit" : <Spinner className="w-6" />}
+        {!createBooking.isPending ? "Submit" : <Spinner className="w-6" />}
       </Button>
       <AlertDialog {...alertDialogProps} />
     </Form>
@@ -896,162 +740,40 @@ export default function BookRoomPage() {
   const params = useParams();
   const room_id = Number(params.room_id);
 
-  const loading_room: Room = {
-    id: -1,
-    title: "Loading...",
-    image: PLACEHOLDER_IMAGE,
-    location: "",
-    available: false,
-    availability: "",
-    seats: 0,
-    amenities: [],
-    removed: false,
-  };
-  /**
-   * The room information
-   */
-  const [room, setRoom] = useState<Room>(loading_room);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  /**
-   * Fetches the room information for the room with the specified id.
-   * @param {Number} room_id Id of the room to fetch infomation about.
-   */
-  async function fetchRoom(room_id: number) {
-    /**
-     *
-     * @param start_iso_datetime
-     * @param end_iso_datetime
-     * @param recurrence_rule
-     * @returns
-     */
-    function formAvailabilityString(
-      start_iso_datetime: string,
-      end_iso_datetime: string,
-      recurrence_rule: string,
-    ) {
-      /**
-       * Forms ranges of consecutive days from a list of days
-       * @param available_days an array of 3 strings representing days (e.g. "Mon")
-       * @returns An array of [start_day, end_day] pairs representing the groups
-       * of consecutive days e.g. ([["Mon","Wed"],["Fri","Fri"]) for input
-       * ["Mon","Tue","Wed","Fri"]
-       */
-      function groupConsecutiveDays(available_days: string[]) {
-        const day_numbers = available_days.map((day: string) =>
-          DayNumber.get(day),
-        );
-        const day_groups = [];
-        let temp_stack: number[] = [];
-        for (let i = 0; i < day_numbers.length; i++) {
-          const current = day_numbers[i];
-          const last = temp_stack.pop();
-          // Start of new streak
-          if (last === undefined) {
-            temp_stack = [current, current]; // Start and end of range
-            continue;
-          }
-          // Continue streak
-          if (current === last + 1) {
-            temp_stack.push(current);
-          }
-          // End streak
-          else {
-            temp_stack.push(last);
-            day_groups.push([...temp_stack]);
-            temp_stack = [current, current];
-          }
-        }
-        // Clean up remaining streak
-        if (temp_stack.length > 0) {
-          day_groups.push([...temp_stack]);
-        }
-        // Convert back to days
-        for (let i = 0; i < day_groups.length; i++) {
-          day_groups[i] = day_groups[i].map((day_number: number) =>
-            DayNumber.get(day_number),
-          );
-        }
-        return day_groups;
-      }
-
-      /**
-       * Creates a string representing the days that a room is available from
-       * a recurrence rule (e.g. "Mon-Wed, Fri")
-       * @param rrule A valid goolge calendar recurrence rule
-       * @returns A string representing the days a room is available
-       */
-      function getDaysAvailableString(rrule: string) {
-        const rrule_days = getDaysFromRRule(rrule);
-        const available_days = rrule_days.map((day: string) =>
-          GoogleCalendarDayConversion.get(day),
-        );
-        const day_groups = groupConsecutiveDays(available_days);
-        const string_parts: string[] = [];
-        for (let i = 0; i < day_groups.length; i++) {
-          const start_day = day_groups[i][0];
-          const end_day = day_groups[i][1];
-          if (start_day !== end_day) {
-            string_parts.push(`${start_day}-${end_day}`);
-          } else {
-            string_parts.push(`${start_day}`);
-          }
-        }
-        let return_string = string_parts[0];
-        for (let i = 1; i < string_parts.length; i++) {
-          return_string += ", " + string_parts[i];
-        }
-        return return_string;
-      }
-      const start_time = getAMPMTimeString(
-        new Date(Date.parse(start_iso_datetime)),
-      );
-      const end_time = getAMPMTimeString(
-        new Date(Date.parse(end_iso_datetime)),
-      );
-      const days_available = getDaysAvailableString(recurrence_rule);
-      const availability_string = `${start_time} - ${end_time}, ${days_available}`;
-      return availability_string;
-    }
-
-    const apiUrl = `rooms/${room_id}/`;
-    await api({ url: apiUrl, method: "get" })
-      .then((response) => {
-        const data = response.data;
-        const room: Room = {
-          id: data.id,
-          title: data.name,
-          image: data.img !== null ? data.img : PLACEHOLDER_IMAGE,
-          seats: data.capacity,
-          location: data.location.name,
-          available: data.is_active,
-          availability: formAvailabilityString(
-            data.start_datetime,
-            data.end_datetime,
-            data.recurrence_rule,
-          ),
-          amenities: data.amenities.map(
-            (amenity: { id: number; name: string }) => amenity.name,
-          ),
-        };
-        setRoom(room);
-      })
-      .catch((error) => {
-        console.error("Error fetching room:", error);
-        setError(error.message);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+  if (room_id === undefined || isNaN(room_id)) {
+    return <NotFound />;
   }
 
-  /**
-   * Fetch the room information on component mount.
-   */
-  useEffect(() => {
-    fetchRoom(room_id);
-  }, []);
+  // Use the useFetchRoom hook to get room data
+  const {
+    data: roomData,
+    isLoading,
+    isError,
+    error,
+  } = RoomAPI.useFetchRoom(room_id);
+
+  // Normalize the room data to the Room type expected by RoomCard
+  const room = normaliseRoom(roomData);
+
+  if (isError) {
+    return (
+      <AlertDialog
+        title="An error has occurred"
+        description={
+          resolveErrorMessage(error) ||
+          "Unable to load room information. Please try again later."
+        }
+        variant="error"
+        open={true}
+        onConfirm={() => {
+          router.push("/");
+        }}
+        onClose={() => {
+          router.push("/");
+        }}
+      />
+    );
+  }
 
   return (
     <div className="h-fit w-full">
@@ -1064,29 +786,10 @@ export default function BookRoomPage() {
           "items-center justify-center gap-4 p-4 md:px-12 lg:items-start xl:gap-12",
         )}
       >
-        {isLoading && <Spinner className="w-6" />}
-        {!isLoading && error && (
-          <AlertDialog
-            title="An error has occurred"
-            description="Unable to load room information. Please try again later."
-            variant="error"
-            open={true}
-            onConfirm={() => {
-              router.push("/");
-            }}
-            onClose={() => {
-              router.push("/");
-            }}
-          />
-        )}
-        {!isLoading && !error && (
-          <>
-            <div className="w-96">
-              <RoomCard room={room} />
-            </div>
-            <BookRoomForm />
-          </>
-        )}
+        <div className="w-96">
+          <RoomCard room={room} />
+        </div>
+        <BookRoomForm />
       </div>
     </div>
   );

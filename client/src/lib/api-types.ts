@@ -40,6 +40,7 @@ export type RoomShortResponse = {
   name: string;
 };
 
+// ---------- Booking ----------
 type RoomStatus = "CONFIRMED" | "CANCELLED" | "COMPLETED";
 
 export type UpdateBookingRequest = Partial<{
@@ -51,6 +52,8 @@ export type UpdateBookingRequest = Partial<{
   recurrence_rule: string;
   cancel_reason: string;
 }>;
+
+export type CreateBookingRequest = Omit<UpdateBookingRequest, "cancel_reason">;
 
 export type BookingResponse = {
   id: number;

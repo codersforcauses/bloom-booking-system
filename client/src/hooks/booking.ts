@@ -3,7 +3,11 @@ import { AxiosError } from "axios";
 
 import { PaginationSearchParams } from "@/components/pagination-bar";
 import api from "@/lib/api";
-import type { BookingResponse, UpdateBookingRequest } from "@/lib/api-types";
+import type {
+  BookingResponse,
+  CreateBookingRequest,
+  UpdateBookingRequest,
+} from "@/lib/api-types";
 import { PaginatedBookingResponse } from "@/lib/api-types";
 
 function useFetchBookings(params: PaginationSearchParams) {
@@ -111,8 +115,30 @@ function useUpdateBooking(id: number) {
   });
 }
 
+function useCreateBooking(
+  onSuccess: () => void,
+  onError: (error: AxiosError) => void,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<BookingResponse, AxiosError, CreateBookingRequest>({
+    mutationFn: async (payload) => {
+      const response = await api.post(`/bookings/`, payload);
+      return response.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      onSuccess();
+    },
+    onError: (error) => {
+      console.error("Create booking failed:", error);
+      onError(error);
+    },
+  });
+}
+
 export {
   useCancelBooking,
+  useCreateBooking,
   useFetchBooking,
   useFetchBookings,
   useUpdateBooking,

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import NotFound from "@/app/not-found";
 import {
   AlertDialog,
   AlertDialogProps,
@@ -260,6 +261,11 @@ export default function EditBookingPage({
   const searchParams = useSearchParams();
   const bookingId = Number(params.booking_id);
   const visitorEmail = searchParams.get("visitor_email");
+
+  if (visitorEmail === null) {
+    return <NotFound />;
+  }
+
   const {
     data: booking,
     isLoading: isLoadingBooking,
