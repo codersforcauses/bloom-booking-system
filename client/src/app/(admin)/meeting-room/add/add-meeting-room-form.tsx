@@ -48,10 +48,11 @@ export default function AddMeetingRoomForm() {
   });
 
   // Fetch locations dynamically
-  const { data: locations = [] } = RoomAPI.useFetchRoomLocations({
-    page: 1,
-    nrows: 10,
-  });
+  const { data: locations = [], refetch: refetchLocations } =
+    RoomAPI.useFetchRoomLocations({
+      page: 1,
+      nrows: 10,
+    });
 
   // Fetch amenities from API
   const { data: amenitiesFromAPI = [], refetch: refetchAmenities } =
@@ -219,6 +220,8 @@ export default function AddMeetingRoomForm() {
                   value={formData.location ?? ""}
                   onChange={(value) => {
                     if (value === ADD_LOCATION_VALUE) {
+                      // Reset to empty to keep placeholder visible
+                      setFormData((prev) => ({ ...prev, location: "" }));
                       setAddLocationOpen(true);
                       return;
                     }
@@ -233,7 +236,9 @@ export default function AddMeetingRoomForm() {
                   open={addLocationOpen}
                   onClose={() => setAddLocationOpen(false)}
                   onSelect={(location) => {
-                    handleInputChange("location", location);
+                    // Refetch to update the locations list with the new location
+                    refetchLocations();
+                    // Don't auto-select - keep placeholder visible
                     setAddLocationOpen(false);
                   }}
                 />
@@ -333,14 +338,17 @@ export default function AddMeetingRoomForm() {
                   }}
                 />
                 {/* Upload Image */}
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <label htmlFor="image" className="body-sm-bold block">
                     Upload Image
                   </label>
 
-                  <div className="flex items-stretch">
-                    <div className="flex min-h-10 flex-1 items-center rounded-l-md border border-b-4 border-b-gray-300 bg-background px-3">
-                      <span className="text-bloom-gray opacity-100">
+                  <div className="flex items-stretch overflow-hidden rounded-md border bg-background shadow-bloom-input">
+                    <div className="body flex flex-1 items-center overflow-hidden px-3 py-2">
+                      <span
+                        className="truncate text-bloom-gray"
+                        title={imageFile ? imageFile.name : "No file selected"}
+                      >
                         {imageFile ? imageFile.name : "No file selected"}
                       </span>
                     </div>
@@ -348,7 +356,7 @@ export default function AddMeetingRoomForm() {
                     <Button
                       type="button"
                       onClick={() => document.getElementById("image")?.click()}
-                      className="rounded-l-none rounded-r-md border-b-4 border-b-gray-300 text-white"
+                      className="rounded-l-none rounded-r-md text-white"
                     >
                       Choose File
                     </Button>
@@ -391,9 +399,7 @@ export default function AddMeetingRoomForm() {
                   </div>
 
                   {errors.image && (
-                    <p className="caption text-[var(--bloom-red)]">
-                      {errors.image}
-                    </p>
+                    <p className="caption text-bloom-red">{errors.image}</p>
                   )}
                 </div>
               </div>
