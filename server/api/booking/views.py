@@ -11,6 +11,7 @@ from .google_calendar.events import create_event, update_event, delete_event
 from googleapiclient.errors import HttpError
 from django.db import transaction
 import logging
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,9 @@ class BookingViewSet(viewsets.ModelViewSet):
         return [permissions.AllowAny()]
 
     def get_queryset(self):
+        # Ensure booking status updated whenever a booking is retrieved
+        now = timezone.now()
+        Booking.objects.filter(status='CONFIRMED', actual_end_datetime__lte=now).update(status='COMPLETED')
         queryset = Booking.objects.select_related("room")
 
         # GET /bookings/{id}/:
