@@ -156,6 +156,10 @@ class BookingViewSet(viewsets.ModelViewSet):
         if cancel_reason and cancel_reason.strip():
             # Handle cancellation with transaction and Google Calendar deletion
             try:
+                if instance.status == "COMPLETED":
+                    raise ValidationError({
+                        "detail": "Cannot cancel booking when it is already completed."
+                        })
                 with transaction.atomic():
                     # Delete from Google Calendar first, inside the transaction
                     if instance.google_event_id:
