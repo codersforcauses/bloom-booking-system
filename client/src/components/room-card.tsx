@@ -239,6 +239,7 @@ function AdminRoomCard({
       label: "Amenities",
       value: <Amenities amenities={room.amenities} hideIcon={hideIcon} />,
     },
+    { label: "Availability", value: room.availability },
   ];
 
   return (

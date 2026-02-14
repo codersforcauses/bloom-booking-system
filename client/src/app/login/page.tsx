@@ -31,7 +31,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="min-h-layout-header flex items-center justify-center px-4">
       <Suspense fallback={<div>Loading...</div>}>
         <LoginForm />
       </Suspense>
@@ -42,6 +42,8 @@ export default function LoginPage() {
 function LoginForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  // isRedirecting prevent multiple redirects if user clicks login multiple times
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
@@ -59,6 +61,7 @@ function LoginForm() {
     const checkAuthStatus = async () => {
       const isValid = await checkAuth();
       if (isValid) {
+        setIsRedirecting(true);
         router.push(redirectTo);
       } else {
         setIsLoading(false);
@@ -79,6 +82,8 @@ function LoginForm() {
     mode: "onSubmit",
   });
 
+  const isLocked = isSubmitting || isRedirecting;
+
   const onSubmit = async (values: LoginFormValues) => {
     try {
       const res = await api.post("/users/login/", {
@@ -98,22 +103,26 @@ function LoginForm() {
           message:
             "Login succeeded but tokens were not returned (expected access + refresh).",
         });
+        setIsRedirecting(false);
+        setLoginSuccess(false);
         return;
       }
 
       clearErrors();
       setLoginSuccess(true);
+      setIsRedirecting(true);
       login(access, refresh);
 
       await delay(800);
       router.push(redirectTo);
-      router.refresh();
     } catch (err: any) {
       const message =
         err?.response?.data?.detail ||
         err?.response?.data?.message ||
         "Invalid username or password.";
       setError("root", { type: "server", message });
+      setIsRedirecting(false);
+      setLoginSuccess(false);
     }
   };
 
@@ -144,6 +153,7 @@ function LoginForm() {
             type="text"
             placeholder="Enter Username / Email"
             autoComplete="username"
+            disabled={isLocked}
             {...register("username")}
           />
           {errors.username && (
@@ -163,17 +173,20 @@ function LoginForm() {
           <div className="body flex w-full items-center justify-between rounded-md border bg-background shadow-bloom-input outline-none">
             <input
               id="password"
-              className="h-full w-full px-3 py-2 outline-none placeholder:text-bloom-gray"
+              className="h-full w-full px-3 py-2 outline-none placeholder:text-bloom-gray disabled:cursor-not-allowed disabled:opacity-50"
               type={showPassword ? "text" : "password"}
               placeholder="Enter Password"
               autoComplete="current-password"
+              disabled={isLocked}
               {...register("password")}
             />
 
             <button
               type="button"
-              className="pr-2"
+              data-testid="password-toggle"
+              className="pr-2 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={isLocked}
               aria-label={showPassword ? "Hide password" : "Show password"}
               aria-pressed={showPassword}
             >
@@ -210,7 +223,7 @@ function LoginForm() {
 
         {/* Submit */}
         <div className="flex justify-center pt-4">
-          <Button type="submit" variant="confirm" disabled={isSubmitting}>
+          <Button type="submit" variant="confirm" disabled={isLocked}>
             {isSubmitting ? "Logging in..." : "Login"}
           </Button>
         </div>
