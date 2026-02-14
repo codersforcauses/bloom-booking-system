@@ -21,6 +21,7 @@ export default function FindMyBookingForm({
   onVerified,
 }: FindMyBookingFormProps) {
   const [verified, setVerified] = useState(false);
+  const [reCAPTCHAToken, setReCAPTCHAToken] = useState<string | null>(null);
 
   const {
     control,
@@ -60,7 +61,10 @@ export default function FindMyBookingForm({
             />
           )}
         />
-        <ReCAPTCHA_v2 setVerified={setVerified}></ReCAPTCHA_v2>
+        <ReCAPTCHA_v2
+          setVerified={setVerified}
+          setReCAPTCHAToken={setReCAPTCHAToken}
+        ></ReCAPTCHA_v2>
         <Button disabled={!verified || !!errors.email || isSubmitting}>
           Search
         </Button>
