@@ -15,8 +15,6 @@ import {
 import api from "@/lib/api";
 import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 
-// badge options string[] (name)
-
 const RoomSearchSchemaBase = z.object({
   name: z.string().optional(),
   location: z.string().optional(),
@@ -25,8 +23,16 @@ const RoomSearchSchemaBase = z.object({
   toDate: z.date().optional(),
   toTime: z.string().optional(),
   amenities: z.array(z.string()).optional(),
-  minSeats: z.number().int().min(1).optional(),
-  maxSeats: z.number().int().min(1).optional(),
+  minSeats: z
+    .number()
+    .int()
+    .min(1, { message: "Must be a positive integer" })
+    .optional(),
+  maxSeats: z
+    .number()
+    .int()
+    .min(1, { message: "Must be a positive integer" })
+    .optional(),
 });
 
 const RoomSearchSchema = RoomSearchSchemaBase.refine(
@@ -55,6 +61,70 @@ const RoomSearchSchema = RoomSearchSchemaBase.refine(
     },
   )
   .superRefine((data, ctx) => {
+    const now = new Date();
+    const nowPerth = new Date(
+      now.toLocaleString("en-US", { timeZone: "Australia/Perth" }),
+    );
+    const todayPerth = new Date(nowPerth);
+    todayPerth.setHours(0, 0, 0, 0);
+
+    if (data.fromDate) {
+      const fromDate = new Date(
+        `${data.fromDate.toLocaleDateString("en-CA")}T00:00:00+08:00`,
+      );
+
+      if (fromDate < todayPerth) {
+        ctx.addIssue({
+          code: "custom",
+          message: "From date cannot be in the past",
+          path: ["fromDate"],
+        });
+      }
+    }
+
+    if (data.fromDate && data.fromTime) {
+      const fromFull = new Date(
+        `${data.fromDate.toLocaleDateString("en-CA")}T${data.fromTime}:00+08:00`,
+      );
+
+      if (fromFull < nowPerth) {
+        ctx.addIssue({
+          code: "custom",
+          message: "From time must be in the future",
+          path: ["fromTime"],
+        });
+      }
+    }
+
+    if (data.toDate) {
+      const toDate = new Date(
+        `${data.toDate.toLocaleDateString("en-CA")}T00:00:00+08:00`,
+      );
+
+      if (toDate < todayPerth) {
+        ctx.addIssue({
+          code: "custom",
+          message: "To date cannot be in the past",
+          path: ["toDate"],
+        });
+      }
+    }
+
+    if (data.toDate && data.toTime) {
+      const toFull = new Date(
+        `${data.toDate.toLocaleDateString("en-CA")}T${data.toTime}:00+08:00`,
+      );
+
+      if (toFull < nowPerth) {
+        ctx.addIssue({
+          code: "custom",
+          message: "To time must be in the future",
+          path: ["toTime"],
+        });
+      }
+    }
+  })
+  .superRefine((data, ctx) => {
     if (data.fromDate && data.toDate && data.fromTime && data.toTime) {
       const isSameDay =
         data.fromDate.getFullYear() === data.toDate.getFullYear() &&
@@ -63,7 +133,7 @@ const RoomSearchSchema = RoomSearchSchemaBase.refine(
 
       if (isSameDay && data.toTime <= data.fromTime) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "End time must be after start time on the same day",
           path: ["toTime"],
         });
@@ -77,17 +147,26 @@ interface SearchRoomFormProps {
   form: UseFormReturn<RoomSearchSchemaValue>;
   onSubmit: (data: RoomSearchSchemaValue) => void;
   onReset: () => void;
+  isSubmitting: boolean;
+  lastSearchParams: RoomSearchSchemaValue | null;
 }
 
 export default function SearchRoomForm({
   form,
   onSubmit,
   onReset,
+  isSubmitting,
+  lastSearchParams,
 }: SearchRoomFormProps) {
   const [locations, setLocations] = useState<
     { label: string; value: string }[]
   >([]);
   const [amenityNames, setAmenityNames] = useState<string[]>([]);
+
+  const currentValues = form.watch();
+
+  const hasChangesSinceLastSearch =
+    JSON.stringify(currentValues) !== JSON.stringify(lastSearchParams);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -174,7 +253,7 @@ export default function SearchRoomForm({
                   value={field.value}
                   onChange={(v) => {
                     field.onChange(v);
-                    form.trigger(["toTime", "toDate"]);
+                    form.trigger(["fromDate", "fromTime", "toDate", "toTime"]);
                   }}
                   placeholder="Select date"
                   required={false}
@@ -340,9 +419,14 @@ export default function SearchRoomForm({
         <Button
           type="submit"
           variant="confirm"
-          disabled={!form.formState.isValid}
+          disabled={
+            !form.formState.isValid ||
+            isSubmitting ||
+            !form.formState.isDirty ||
+            !hasChangesSinceLastSearch
+          }
         >
-          Search
+          {isSubmitting ? "Searching..." : "Search"}
         </Button>
       </div>
     </Form>
