@@ -76,7 +76,7 @@ export default function StatusDialog({
         </DialogDescription>
         <DialogDescription className="px-4">
           {errorMessage && (
-            <p className="text-sm text-bloom-red">{errorMessage}</p>
+            <span className="text-sm text-bloom-red">{errorMessage}</span>
           )}
         </DialogDescription>
         <div className="flex items-center justify-center gap-2">
