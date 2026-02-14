@@ -20,9 +20,13 @@ import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 const RoomSearchSchemaBase = z.object({
   name: z.string().optional(),
   location: z.string().optional(),
-  fromDate: z.date().optional(),
+  fromDate: z
+    .date({ message: "Invalid date format or invalid / unavailable date" })
+    .optional(),
   fromTime: z.string().optional(),
-  toDate: z.date().optional(),
+  toDate: z
+    .date({ message: "Invalid date format or invalid / unavailable date" })
+    .optional(),
   toTime: z.string().optional(),
   amenities: z.array(z.string()).optional(),
   minSeats: z.number().int().min(1).optional(),
@@ -176,7 +180,6 @@ export default function SearchRoomForm({
                     field.onChange(v);
                     form.trigger(["toTime", "toDate"]);
                   }}
-                  placeholder="Select date"
                   required={false}
                 />
               </FormControl>
@@ -226,7 +229,6 @@ export default function SearchRoomForm({
                     field.onChange(v);
                     form.trigger(["toTime", "toDate"]);
                   }}
-                  placeholder="Select date"
                   required={false}
                 />
               </FormControl>

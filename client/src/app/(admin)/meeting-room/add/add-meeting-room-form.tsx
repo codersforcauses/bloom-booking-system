@@ -387,7 +387,7 @@ export default function AddMeetingRoomForm() {
                       : undefined
                   }
                   onChange={(value) => {
-                    if (!value) return;
+                    if (!value || typeof value == "string") return;
                     // Combine with existing time or use 09:00
                     const dateStr = value.toISOString().split("T")[0];
                     const time = formData.start_datetime
