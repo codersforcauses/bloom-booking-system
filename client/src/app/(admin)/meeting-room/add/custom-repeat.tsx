@@ -30,6 +30,7 @@ export default function CustomRepeatModal({
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [occurrences, setOccurrences] = useState<string>("1");
   const [startDate] = useState<Date | undefined>(new Date());
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   if (!open) return null;
 
@@ -45,9 +46,13 @@ export default function CustomRepeatModal({
         occurrences,
         startDate,
       });
+      setValidationError(null);
       onDone(validatedData);
     } catch (error) {
-      // In a real app, you'd show error feedback here
+      // Surface validation issues to the user instead of only logging them.
+      setValidationError(
+        "The custom repeat settings are invalid. Please review and try again.",
+      );
       console.error("Validation error:", error);
     }
   };
@@ -213,6 +218,12 @@ export default function CustomRepeatModal({
             </div>
           </RadioGroup>
         </div>
+
+        {validationError && (
+          <p className="body-sm mb-2 rounded-md bg-red-50 p-2 text-red-700">
+            {validationError}
+          </p>
+        )}
 
         {/* Action buttons */}
         <div className="flex flex-col justify-end gap-2 pt-2 sm:flex-row">

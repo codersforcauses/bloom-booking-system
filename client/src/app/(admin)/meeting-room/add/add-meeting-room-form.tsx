@@ -1,8 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { ZodError } from "zod";
+import { type FieldPath, type FieldPathValue, useForm } from "react-hook-form";
 
 import { AlertDialog } from "@/components/alert-dialog";
 import InputField from "@/components/input";
@@ -10,17 +11,19 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import RoomAPI from "@/hooks/room";
 import api from "@/lib/api";
-import { Room } from "@/types/card";
+import type { AmenityResponse } from "@/lib/api-types";
 
 import AmenityModal from "./add-amenities";
 import LocationModal from "./add-location";
 import CustomRepeatModal from "./custom-repeat";
-import { AddMeetingRoomSchema, type CustomRepeatValue } from "./schemas";
+import {
+  type AddMeetingRoomFormInput,
+  AddMeetingRoomSchema,
+  type CustomRepeatValue,
+} from "./schemas";
 
 export default function AddMeetingRoomForm() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -33,25 +36,36 @@ export default function AddMeetingRoomForm() {
 
   const [addAmenityOpen, setAddAmenityOpen] = useState(false);
 
-  const [formData, setFormData] = useState<Partial<Room>>({
-    title: "",
-    seats: 0,
-    location: "",
-    amenities: [],
-    image: "",
-    available: true,
-    availability: "",
-    bookings: 0,
-    start_datetime: "",
-    end_datetime: "",
-    recurrence_rule: "",
+  const {
+    handleSubmit,
+    setValue,
+    watch,
+    clearErrors,
+    setError,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<AddMeetingRoomFormInput>({
+    resolver: zodResolver(AddMeetingRoomSchema),
+    defaultValues: {
+      title: "",
+      seats: 0,
+      location: "",
+      amenities: [],
+      image: "",
+      start_datetime: "",
+      end_datetime: "",
+      recurrence_rule: "",
+    },
+    mode: "onSubmit",
   });
+
+  const formValues = watch();
 
   // Fetch locations dynamically
   const { data: locations = [], refetch: refetchLocations } =
     RoomAPI.useFetchRoomLocations({
       page: 1,
-      nrows: 10,
+      nrows: 100,
     });
 
   // Fetch amenities from API
@@ -61,95 +75,45 @@ export default function AddMeetingRoomForm() {
       nrows: 100,
     });
 
-  const handleInputChange = (field: keyof Room, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+  const handleInputChange = <TField extends FieldPath<AddMeetingRoomFormInput>>(
+    field: TField,
+    value: FieldPathValue<AddMeetingRoomFormInput, TField>,
+  ) => {
+    setValue(field, value, { shouldDirty: true });
+    clearErrors(field);
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
+  const onSubmit = handleSubmit(async (values) => {
     try {
-      const validatedData = AddMeetingRoomSchema.parse({
-        title: formData.title,
-        location: formData.location,
-        seats: formData.seats,
-        start_datetime: formData.start_datetime,
-        end_datetime: formData.end_datetime,
-        amenities: formData.amenities,
-        image: formData.image,
-        recurrence_rule: formData.recurrence_rule,
-      });
-
-      setErrors({});
-
       const locationValue =
-        typeof validatedData.location === "string"
-          ? validatedData.location
-          : String(validatedData.location);
+        typeof values.location === "string"
+          ? values.location
+          : String(values.location);
       const locationId = parseInt(locationValue, 10);
       const capacityId =
-        typeof validatedData.seats === "string"
-          ? parseInt(validatedData.seats, 10)
-          : validatedData.seats;
+        typeof values.seats === "string"
+          ? parseInt(values.seats, 10)
+          : values.seats;
 
-      return {
-        name: validatedData.title,
-        img: "",
-        location_id: locationId,
-        capacity: capacityId,
-        start_datetime: validatedData.start_datetime,
-        end_datetime: validatedData.end_datetime,
-        recurrence_rule: validatedData.recurrence_rule || "",
-      };
-    } catch (error) {
-      if (error instanceof ZodError) {
-        error.issues.forEach((err) => {
-          if (err.path.length > 0) {
-            const fieldName = err.path[0] as string;
-            newErrors[fieldName] = err.message;
-          }
-        });
-      }
-      setErrors(newErrors);
-      return null;
-    }
-  };
-
-  const handleSubmit = async () => {
-    const validatedData = validateForm();
-    if (!validatedData) return;
-
-    setIsSubmitting(true);
-
-    try {
       // Use FormData for multipart file upload
       const formDataMultipart = new FormData();
-      formDataMultipart.append("name", validatedData.name);
+      formDataMultipart.append("name", values.title);
       formDataMultipart.append("is_active", "true"); // TODO: need to check with team
-      formDataMultipart.append(
-        "location_id",
-        validatedData.location_id.toString(),
-      );
-      formDataMultipart.append("capacity", validatedData.capacity.toString());
-      formDataMultipart.append("start_datetime", validatedData.start_datetime);
-      formDataMultipart.append("end_datetime", validatedData.end_datetime);
-      if (validatedData.recurrence_rule) {
-        formDataMultipart.append(
-          "recurrence_rule",
-          validatedData.recurrence_rule,
-        );
+      formDataMultipart.append("location_id", locationId.toString());
+      formDataMultipart.append("capacity", capacityId.toString());
+      formDataMultipart.append("start_datetime", values.start_datetime);
+      formDataMultipart.append("end_datetime", values.end_datetime);
+      if (values.recurrence_rule) {
+        formDataMultipart.append("recurrence_rule", values.recurrence_rule);
       }
       if (imageFile) {
         formDataMultipart.append("img", imageFile);
       }
 
-      if (Array.isArray(formData.amenities) && formData.amenities.length > 0) {
+      if (Array.isArray(values.amenities) && values.amenities.length > 0) {
         formDataMultipart.append(
           "amenities_ids",
-          JSON.stringify(formData.amenities.map(Number)),
+          JSON.stringify(values.amenities.map(Number)),
         );
       }
 
@@ -158,21 +122,16 @@ export default function AddMeetingRoomForm() {
     } catch (error) {
       console.error("Failed to add room:", error);
       alert("Failed to add room. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  });
 
   const handleCancel = () => {
-    setFormData({
+    reset({
       title: "",
       seats: 0,
       location: "",
       amenities: [],
       image: "",
-      available: true,
-      availability: "",
-      bookings: 0,
       start_datetime: "",
       end_datetime: "",
       recurrence_rule: "",
@@ -182,7 +141,6 @@ export default function AddMeetingRoomForm() {
       imageInputRef.current.value = "";
     }
     setRepeat("");
-    setErrors({});
   };
 
   // Build dynamic location options
@@ -206,10 +164,10 @@ export default function AddMeetingRoomForm() {
                   name="name"
                   label="Name"
                   placeholder="Name"
-                  value={formData.title || ""}
+                  value={formValues.title || ""}
                   onChange={(value) => handleInputChange("title", value)}
                   required
-                  error={errors.title}
+                  error={errors.title?.message}
                 />
 
                 <InputField
@@ -217,11 +175,16 @@ export default function AddMeetingRoomForm() {
                   name="location"
                   label="Location"
                   placeholder="Select location"
-                  value={formData.location ?? ""}
+                  value={
+                    typeof formValues.location === "number"
+                      ? formValues.location.toString()
+                      : (formValues.location ?? "")
+                  }
                   onChange={(value) => {
                     if (value === ADD_LOCATION_VALUE) {
                       // Reset to empty to keep placeholder visible
-                      setFormData((prev) => ({ ...prev, location: "" }));
+                      setValue("location", "", { shouldDirty: true });
+                      clearErrors("location");
                       setAddLocationOpen(true);
                       return;
                     }
@@ -229,7 +192,7 @@ export default function AddMeetingRoomForm() {
                   }}
                   options={locationOptions}
                   required
-                  error={errors.location}
+                  error={errors.location?.message}
                 />
 
                 <LocationModal
@@ -238,7 +201,13 @@ export default function AddMeetingRoomForm() {
                   onSelect={(location) => {
                     // Refetch to update the locations list with the new location
                     refetchLocations();
-                    // Don't auto-select - keep placeholder visible
+                    // Auto-select the newly created location for convenience.
+                    const locationValue =
+                      typeof location === "number"
+                        ? location.toString()
+                        : location;
+                    setValue("location", locationValue, { shouldDirty: true });
+                    clearErrors("location");
                     setAddLocationOpen(false);
                   }}
                 />
@@ -248,13 +217,13 @@ export default function AddMeetingRoomForm() {
                   name="seats"
                   label="Seat Capacity"
                   placeholder="Capacity"
-                  value={formData.seats?.toString() || ""}
+                  value={formValues.seats?.toString() || ""}
                   onChange={(value) =>
                     handleInputChange("seats", parseInt(value) || 0)
                   }
                   min={1}
                   required
-                  error={errors.seats}
+                  error={errors.seats?.message}
                 />
               </div>
 
@@ -268,8 +237,8 @@ export default function AddMeetingRoomForm() {
                     label="Amenities"
                     options={amenitiesFromAPI.map((a) => a.name)}
                     value={
-                      Array.isArray(formData.amenities)
-                        ? formData.amenities.map((amenityId) => {
+                      Array.isArray(formValues.amenities)
+                        ? formValues.amenities.map((amenityId) => {
                             const numericId =
                               typeof amenityId === "string"
                                 ? parseInt(amenityId, 10)
@@ -290,10 +259,7 @@ export default function AddMeetingRoomForm() {
                           return amenity ? amenity.id.toString() : null;
                         })
                         .filter((id): id is string => id !== null);
-                      setFormData((prev) => ({
-                        ...prev,
-                        amenities: selectedIds,
-                      }));
+                      setValue("amenities", selectedIds, { shouldDirty: true });
                     }}
                     actionElement={
                       <Button
@@ -315,26 +281,30 @@ export default function AddMeetingRoomForm() {
                       typeof amenityId === "number"
                         ? amenityId.toString()
                         : amenityId;
-                    setFormData((prev) => {
-                      const currentAmenities = Array.isArray(prev.amenities)
-                        ? prev.amenities
-                        : [];
-                      return {
-                        ...prev,
-                        amenities: [...currentAmenities, newAmenityId],
-                      };
+                    const currentAmenities = Array.isArray(formValues.amenities)
+                      ? formValues.amenities
+                      : [];
+                    setValue("amenities", [...currentAmenities, newAmenityId], {
+                      shouldDirty: true,
                     });
                     setAddAmenityOpen(false);
                   }}
                   onAmenitiesChanged={async () => {
-                    await refetchAmenities();
-
-                    setFormData((prev) => {
-                      return {
-                        ...prev,
-                        amenities: [],
-                      };
-                    });
+                    const refreshed = await refetchAmenities();
+                    const refreshedAmenities =
+                      refreshed.data?.results ?? amenitiesFromAPI;
+                    const validAmenityIds = new Set(
+                      refreshedAmenities.map((amenity: AmenityResponse) =>
+                        amenity.id.toString(),
+                      ),
+                    );
+                    const currentAmenities = Array.isArray(formValues.amenities)
+                      ? formValues.amenities
+                      : [];
+                    const nextAmenities = currentAmenities
+                      .map((amenityId) => amenityId.toString())
+                      .filter((amenityId) => validAmenityIds.has(amenityId));
+                    setValue("amenities", nextAmenities, { shouldDirty: true });
                   }}
                 />
                 {/* Upload Image */}
@@ -377,29 +347,25 @@ export default function AddMeetingRoomForm() {
                         // Validate file size (5MB limit)
                         const maxSize = 5 * 1024 * 1024; // 5MB
                         if (file.size > maxSize) {
-                          setErrors((prev) => ({
-                            ...prev,
-                            image: "Image must be under 5MB",
-                          }));
+                          setError("image", {
+                            type: "manual",
+                            message: "Image must be under 5MB",
+                          });
                           return;
                         }
 
                         // Clear error if file is valid
-                        if (errors.image) {
-                          setErrors((prev) => {
-                            const newErrors = { ...prev };
-                            delete newErrors.image;
-                            return newErrors;
-                          });
-                        }
+                        clearErrors("image");
 
                         setImageFile(file);
                       }}
                     />
                   </div>
 
-                  {errors.image && (
-                    <p className="caption text-bloom-red">{errors.image}</p>
+                  {errors.image?.message && (
+                    <p className="caption text-bloom-red">
+                      {errors.image.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -412,16 +378,16 @@ export default function AddMeetingRoomForm() {
                   label="Date"
                   placeholder="DD/MM/YYYY"
                   value={
-                    formData.start_datetime
-                      ? new Date(formData.start_datetime as string)
+                    formValues.start_datetime
+                      ? new Date(formValues.start_datetime as string)
                       : undefined
                   }
                   onChange={(value) => {
                     if (!value) return;
                     // Combine with existing time or use 09:00
                     const dateStr = value.toISOString().split("T")[0];
-                    const time = formData.start_datetime
-                      ? (formData.start_datetime as string).split("T")[1] ||
+                    const time = formValues.start_datetime
+                      ? (formValues.start_datetime as string).split("T")[1] ||
                         "09:00"
                       : "09:00";
                     const datetime = `${dateStr}T${time}`;
@@ -435,16 +401,16 @@ export default function AddMeetingRoomForm() {
                   label="Time Slot Start"
                   placeholder="Select"
                   value={
-                    formData.start_datetime
-                      ? (formData.start_datetime as string)
+                    formValues.start_datetime
+                      ? (formValues.start_datetime as string)
                           .split("T")[1]
                           ?.slice(0, 5) || ""
                       : ""
                   }
                   onChange={(value) => {
                     // Combine with existing date
-                    const date = formData.start_datetime
-                      ? (formData.start_datetime as string).split("T")[0]
+                    const date = formValues.start_datetime
+                      ? (formValues.start_datetime as string).split("T")[0]
                       : new Date().toISOString().split("T")[0];
                     const datetime = `${date}T${value}`;
                     handleInputChange("start_datetime", datetime);
@@ -457,16 +423,16 @@ export default function AddMeetingRoomForm() {
                   label="Time Slot End"
                   placeholder="Select"
                   value={
-                    formData.end_datetime
-                      ? (formData.end_datetime as string)
+                    formValues.end_datetime
+                      ? (formValues.end_datetime as string)
                           .split("T")[1]
                           ?.slice(0, 5) || ""
                       : ""
                   }
                   onChange={(value) => {
                     // Use same date as start time
-                    const date = formData.start_datetime
-                      ? (formData.start_datetime as string).split("T")[0]
+                    const date = formValues.start_datetime
+                      ? (formValues.start_datetime as string).split("T")[0]
                       : new Date().toISOString().split("T")[0];
                     const datetime = `${date}T${value}`;
                     handleInputChange("end_datetime", datetime);
@@ -504,7 +470,7 @@ export default function AddMeetingRoomForm() {
                       setShowCustomRepeat(true);
                     }
                   }}
-                  error={errors.recurrence_rule}
+                  error={errors.recurrence_rule?.message}
                 />
 
                 {showCustomRepeat && (
@@ -589,7 +555,7 @@ export default function AddMeetingRoomForm() {
                   Clear
                 </Button>
                 <Button
-                  onClick={handleSubmit}
+                  onClick={onSubmit}
                   disabled={isSubmitting}
                   className="text-white"
                 >
@@ -606,6 +572,8 @@ export default function AddMeetingRoomForm() {
         title="Awesome!"
         description="Your request for meeting room creation was successful"
         onConfirm={() => {
+          // Clear form state before navigating away so the form is clean on next use.
+          handleCancel();
           setShowSuccessDialog(false);
           router.push("/meeting-room");
         }}

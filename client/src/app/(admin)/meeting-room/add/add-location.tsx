@@ -1,7 +1,6 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import {
@@ -41,9 +40,11 @@ export default function LocationModal({
     variant?: "success" | "error";
   }>({ open: false });
 
-  const queryClient = useQueryClient();
-
-  const { data: locations = [], isLoading } = RoomAPI.useFetchRoomLocations({
+  const {
+    data: locations = [],
+    isLoading,
+    refetch: refetchLocations,
+  } = RoomAPI.useFetchRoomLocations({
     page: 1,
     nrows: 100,
   });
@@ -66,7 +67,7 @@ export default function LocationModal({
         });
       }
 
-      queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+      await refetchLocations();
 
       // If creating a new location, pass the location ID back to parent
       if (createdLocation && !editingItem) {
@@ -88,7 +89,7 @@ export default function LocationModal({
   const handleDelete = async (item: LocationResponse) => {
     try {
       await deleteLocation.mutateAsync(item.id);
-      queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+      await refetchLocations();
       setConfirmDelete(null);
     } catch (err) {
       setAlert({

@@ -72,6 +72,10 @@ export default function AmenityModal({
       // Refetch to update the list
       await refetch();
 
+      if (!editingItem && createdAmenity) {
+        onSelect(createdAmenity.id);
+      }
+
       // Notify parent that amenities have changed and wait for refetch
       if (onAmenitiesChanged) {
         await Promise.resolve(onAmenitiesChanged());

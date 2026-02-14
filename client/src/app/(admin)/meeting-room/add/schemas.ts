@@ -32,7 +32,7 @@ export const AddMeetingRoomSchema = z
       .or(z.number())
       .refine((val) => {
         const locationId = typeof val === "string" ? parseInt(val, 10) : val;
-        return locationId && !isNaN(locationId) && locationId > 0;
+        return !isNaN(locationId) && locationId > 0;
       }, "Location is required"),
     seats: z
       .number()
@@ -40,7 +40,7 @@ export const AddMeetingRoomSchema = z
       .refine((val) => {
         const numVal = typeof val === "string" ? parseInt(val, 10) : val;
         return !isNaN(numVal) && numVal > 0;
-      }, "Capacity is required"),
+      }, "Capacity must be greater than 0"),
     start_datetime: z
       .string()
       .min(1, "Start date/time is required")
@@ -66,3 +66,4 @@ export const AddMeetingRoomSchema = z
   );
 
 export type AddMeetingRoomInput = z.infer<typeof AddMeetingRoomSchema>;
+export type AddMeetingRoomFormInput = z.input<typeof AddMeetingRoomSchema>;
