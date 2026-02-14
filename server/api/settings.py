@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "api.user",
     "api.room",
     "api.booking",
+    "api.dashboard",
     'django_filters',
 ]
 
