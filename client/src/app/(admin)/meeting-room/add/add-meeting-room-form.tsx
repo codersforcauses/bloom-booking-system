@@ -54,10 +54,11 @@ export default function AddMeetingRoomForm() {
   });
 
   // Fetch amenities from API
-  const { data: amenitiesFromAPI = [] } = RoomAPI.useFetchRoomAmenities({
-    page: 1,
-    nrows: 10,
-  });
+  const { data: amenitiesFromAPI = [], refetch: refetchAmenities } =
+    RoomAPI.useFetchRoomAmenities({
+      page: 1,
+      nrows: 100,
+    });
 
   const handleInputChange = (field: keyof Room, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -319,6 +320,16 @@ export default function AddMeetingRoomForm() {
                       };
                     });
                     setAddAmenityOpen(false);
+                  }}
+                  onAmenitiesChanged={async () => {
+                    await refetchAmenities();
+
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        amenities: [],
+                      };
+                    });
                   }}
                 />
                 {/* Upload Image */}
