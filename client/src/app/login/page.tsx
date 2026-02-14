@@ -183,6 +183,7 @@ function LoginForm() {
 
             <button
               type="button"
+              data-testid="password-toggle"
               className="pr-2 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => setShowPassword(!showPassword)}
               disabled={isLocked}
