@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AdminRoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
@@ -11,47 +12,62 @@ import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 import { Room } from "@/types/card";
 
 import FilterPopOver from "./filter-button";
+import type { RoomFilterSchemaValue } from "./filter-dropdown";
 import { normalizeRoom } from "./normalize-room";
 import RoomContext from "./room-context";
+import StatusDialog from "./status-dialog";
 
 export default function RoomsPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [pendingSearch, setPendingSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Partial<Room>>({});
+  const [filters, setFilters] = useState<RoomFilterSchemaValue>({});
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [statusDialogOpen, setStatusDialogOpen] = useState<boolean>(false);
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
 
   // Build customParams object for API
   function buildCustomParams() {
     const customParams: Record<string, string> = {};
-    if (filters.location) customParams.location = filters.location;
-    // if (filters.seats) customParams.min_capacity = filters.seats;
+    if (filters.locations && filters.locations.length)
+      customParams.locations = filters.locations.join(",");
     if (filters.amenities && filters.amenities.length)
       customParams.amenities = filters.amenities.join(",");
-    // if (filters.available !== undefined && filters.available !== "")
-    //   customParams.available = filters.available;
+    if (filters.minSeats)
+      customParams.min_capacity = filters.minSeats.toString();
+    if (filters.maxSeats)
+      customParams.max_capacity = filters.maxSeats.toString();
+    if (filters.isActive !== undefined)
+      customParams.is_active = filters.isActive.toString();
     return customParams;
   }
 
   // Custom fetch hook with dynamic params
   const {
     data: rooms,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading,
     isError,
     error,
   } = useFetchRooms({
-    page: 1,
-    nrows: 100,
     search: searchTerm,
     ...buildCustomParams(),
   });
 
-  const { data: locations } = RoomAPI.useFetchRoomLocations({
-    page: 1,
-    nrows: 100,
-  });
-  const { data: amenities } = RoomAPI.useFetchRoomAmenities({
-    page: 1,
-    nrows: 100,
-  });
+  // Suppose the number of locations and amenities are small enough to fetch all at once
+  const { data: locations, isLoading: isLocationsLoading } =
+    RoomAPI.useFetchRoomLocations({
+      page: 1,
+      nrows: 100,
+    });
+  const { data: amenities, isLoading: isAmenitiesLoading } =
+    RoomAPI.useFetchRoomAmenities({
+      page: 1,
+      nrows: 100,
+    });
 
   // Always normalize rooms for rendering
   const normalizedRooms = useMemo(
@@ -69,7 +85,7 @@ export default function RoomsPage() {
     }
   }
 
-  function handleFilterChange(newFilters: Partial<Room>) {
+  function handleFilterChange(newFilters: RoomFilterSchemaValue) {
     setFilters(newFilters);
   }
 
@@ -78,47 +94,66 @@ export default function RoomsPage() {
     [normalizedRooms],
   );
 
+  // Infinite scroll effect
+  useEffect(() => {
+    if (!loadMoreRef.current || isFetchingNextPage) return;
+    const observer = new IntersectionObserver((observedItems) => {
+      const marker = observedItems[0];
+      if (marker.isIntersecting && hasNextPage) {
+        console.log("Fetching next page of rooms");
+        fetchNextPage();
+      }
+    });
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   return (
     <RoomContext.Provider
       value={{
         roomNames,
         locations: (locations as LocationResponse[]) || [],
+        isLocationsLoading,
         amenities: (amenities as AmenityResponse[]) || [],
+        isAmenitiesLoading,
         onFilterChange: handleFilterChange,
         filterValues: filters,
       }}
     >
       <div className="mx-auto my-auto min-h-screen px-10 py-5">
-        <div className="subtitle mx-auto mb-2 h-full py-2">Meeting Room</div>
-        <div className="ml-auto flex items-center justify-center gap-2 whitespace-nowrap sm:justify-end">
-          <Input
-            className="min-w-24 max-w-64"
-            type="text"
-            name="search"
-            value={pendingSearch}
-            onChange={handleSearchInputChange}
-            onKeyDown={handleSearchKeyDown}
-            placeholder="Search here"
-          />
+        <div className="mb-3 flex w-full flex-col items-center justify-between md:flex-row">
+          <div className="subtitle mb-2 h-full py-2">Meeting Room</div>
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <Input
+              className="min-w-24 max-w-64"
+              type="text"
+              name="search"
+              value={pendingSearch}
+              onChange={handleSearchInputChange}
+              onKeyDown={handleSearchKeyDown}
+              placeholder="Search room name"
+            />
 
-          <FilterPopOver />
+            <FilterPopOver />
 
-          <Link href="/meeting-room/add" passHref>
-            <Button variant="confirm">Add Room</Button>
-          </Link>
+            <Link href="/meeting-room/add" passHref>
+              <Button variant="confirm">Add Room</Button>
+            </Link>
+          </div>
         </div>
 
         {isError && (
-          <div className="mb-4 rounded bg-red-100 px-4 py-2 text-red-700">
+          <div className="mb-4 text-bloom-red">
             {error instanceof Error
               ? error.message
               : "Failed to load rooms. Please try again."}
           </div>
         )}
-        {isLoading && (
-          <div className="mb-4 rounded bg-yellow-100 px-4 py-2 text-yellow-700">
-            Loading rooms…
-          </div>
+
+        {/* To do: Show loading state */}
+
+        {normalizedRooms.length === 0 && !isLoading && !isError && (
+          <div className="mb-4">No rooms found. Please try again.</div>
         )}
 
         <div className="grid min-w-80 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -126,13 +161,30 @@ export default function RoomsPage() {
             <AdminRoomCard
               key={room.id}
               room={room}
-              onView={() => alert("View")}
-              onEdit={() => alert("Edit")}
-              onRemove={() => alert("Remove")}
+              onView={() => {
+                router.push(`/calendar/${room.id}`);
+              }}
+              onEdit={() => {
+                router.push(`/meeting-room/edit/${room.id}`);
+              }}
+              onStatusChange={() => {
+                setSelectedRoom(room);
+                setStatusDialogOpen(true);
+              }}
             />
           ))}
+          {/* an invisible marker that trigger fetch when scrolling into view */}
+          <div ref={loadMoreRef} style={{ height: 1 }} />
         </div>
       </div>
+      {selectedRoom && (
+        <StatusDialog
+          room={{ id: selectedRoom.id, name: selectedRoom.title }}
+          action={selectedRoom.available ? "setInactive" : "setActive"}
+          isOpen={statusDialogOpen}
+          onOpenChange={setStatusDialogOpen}
+        />
+      )}
     </RoomContext.Provider>
   );
 }

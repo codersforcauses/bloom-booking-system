@@ -6,10 +6,10 @@ import {
   endOfMonth,
   endOfWeek,
   format,
+  startOfDay,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { responseCookiesToRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Matcher } from "react-day-picker";
@@ -665,15 +665,16 @@ function BookRoomForm() {
 
     const room_start = roomAvailability.start_datetime.getTime();
     const room_end = roomAvailability.end_datetime.getTime();
-
-    const d = new Date(room_start);
+    const d = new Date(startOfDay(roomAvailability.start_datetime));
     while (d.getTime() <= room_end) {
-      const time = d.toTimeString().substring(0, 5);
-      time_options.push({
-        value: time,
-        label: time,
-        disabled: !timeInTimeSlots(d.toTimeString().substring(0, 5), slots),
-      });
+      if (d.getTime() >= room_start) {
+        const time = d.toTimeString().substring(0, 5);
+        time_options.push({
+          value: time,
+          label: time,
+          disabled: !timeInTimeSlots(time, slots),
+        });
+      }
       d.setTime(d.getTime() + slot_length);
     }
 
@@ -1007,7 +1008,7 @@ export default function BookRoomPage() {
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFgwJ/lYpukQAAAABJRU5ErkJggg==",
     location: "",
     available: false,
-    availablility: "",
+    availability: "",
     seats: 0,
     amenities: [],
     removed: false,
@@ -1133,7 +1134,7 @@ export default function BookRoomPage() {
           seats: data.capacity,
           location: data.location.name,
           available: data.is_active,
-          availablility: formAvailabilityString(
+          availability: formAvailabilityString(
             data.start_datetime,
             data.end_datetime,
             data.recurrence_rule,

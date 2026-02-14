@@ -1,5 +1,4 @@
 "use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeClosed } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +9,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import api, { setAccessToken } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
+import api, { checkAuth } from "@/lib/api";
 import { delay } from "@/lib/utils";
 
 /**
@@ -31,7 +31,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="min-h-layout-header flex items-center justify-center px-4">
       <Suspense fallback={<div>Loading...</div>}>
         <LoginForm />
       </Suspense>
@@ -42,8 +42,11 @@ export default function LoginPage() {
 function LoginForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  // isRedirecting prevent multiple redirects if user clicks login multiple times
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
   const searchParams = useSearchParams();
   const [redirectTo] = useState(() => {
     const next = searchParams.get("next");
@@ -55,34 +58,16 @@ function LoginForm() {
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Call the internal API to verify the JWT token
-        const res = await fetch("/api/check-auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ accessToken }),
-        });
-        if (res.ok) {
-          router.push(redirectTo);
-        } else {
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.error("Error while validating authentication token:", err);
+    const checkAuthStatus = async () => {
+      const isValid = await checkAuth();
+      if (isValid) {
+        setIsRedirecting(true);
+        router.push(redirectTo);
+      } else {
         setIsLoading(false);
       }
     };
-    checkAuth();
+    checkAuthStatus();
   }, [router, redirectTo]);
 
   const {
@@ -96,6 +81,8 @@ function LoginForm() {
     defaultValues: { username: "", password: "" },
     mode: "onSubmit",
   });
+
+  const isLocked = isSubmitting || isRedirecting;
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
@@ -116,27 +103,26 @@ function LoginForm() {
           message:
             "Login succeeded but tokens were not returned (expected access + refresh).",
         });
+        setIsRedirecting(false);
+        setLoginSuccess(false);
         return;
       }
 
       clearErrors();
       setLoginSuccess(true);
-      setAccessToken(access);
-
-      // refresh token is used by api.ts refresh flow, so we must store it too
-      if (typeof window !== "undefined") {
-        localStorage.setItem("refreshToken", refresh);
-      }
+      setIsRedirecting(true);
+      login(access, refresh);
 
       await delay(800);
       router.push(redirectTo);
-      // router.refresh();
     } catch (err: any) {
       const message =
         err?.response?.data?.detail ||
         err?.response?.data?.message ||
         "Invalid username or password.";
       setError("root", { type: "server", message });
+      setIsRedirecting(false);
+      setLoginSuccess(false);
     }
   };
 
@@ -167,6 +153,7 @@ function LoginForm() {
             type="text"
             placeholder="Enter Username / Email"
             autoComplete="username"
+            disabled={isLocked}
             {...register("username")}
           />
           {errors.username && (
@@ -186,17 +173,19 @@ function LoginForm() {
           <div className="body flex w-full items-center justify-between rounded-md border bg-background shadow-bloom-input outline-none">
             <input
               id="password"
-              className="h-full w-full px-3 py-2 outline-none placeholder:text-bloom-gray"
+              className="h-full w-full px-3 py-2 outline-none placeholder:text-bloom-gray disabled:cursor-not-allowed disabled:opacity-50"
               type={showPassword ? "text" : "password"}
               placeholder="Enter Password"
               autoComplete="current-password"
+              disabled={isLocked}
               {...register("password")}
             />
 
             <button
               type="button"
-              className="pr-2"
+              className="pr-2 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={isLocked}
               aria-label={showPassword ? "Hide password" : "Show password"}
               aria-pressed={showPassword}
             >
@@ -233,7 +222,7 @@ function LoginForm() {
 
         {/* Submit */}
         <div className="flex justify-center pt-4">
-          <Button type="submit" variant="confirm" disabled={isSubmitting}>
+          <Button type="submit" variant="confirm" disabled={isLocked}>
             {isSubmitting ? "Logging in..." : "Login"}
           </Button>
         </div>

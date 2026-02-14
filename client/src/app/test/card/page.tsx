@@ -35,7 +35,7 @@ export default function RoomsList() {
             room={room}
             onView={() => alert("View")}
             onEdit={() => alert("Edit")}
-            onRemove={() => alert("Remove")}
+            onStatusChange={() => alert("Status Change")}
           />
         ))}
       </div>
