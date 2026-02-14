@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 import { useCreateBooking } from "@/hooks/booking";
-import RoomAPI, { DateTimeSlots,TimeSlot } from "@/hooks/room";
+import RoomAPI, { DateTimeSlots, TimeSlot } from "@/hooks/room";
 import { normaliseRoom } from "@/lib/normalise-room";
 import { cn, resolveErrorMessage } from "@/lib/utils";
 import { Room } from "@/types/card";
