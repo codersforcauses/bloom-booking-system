@@ -120,7 +120,7 @@ function BookingPage() {
           />
 
           <DownloadCsvButton
-            path="/bookings/"
+            path="/api/bookings/download/"
             fileName="bookings-export.csv"
             onSuccess={() =>
               showAlert("success", "Success", "CSV exported successfully!")
