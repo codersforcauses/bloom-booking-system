@@ -145,10 +145,16 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "detail": "Visitor email is required."
             })
 
-        if visitor_email != instance.visitor_email:
+        if visitor_email.lower() != instance.visitor_email.lower():
             raise ValidationError({
                 "detail": "Visitor email is incorrect."
             })
+
+        # handle when visitor_email in request and instance are different in cases
+        # note that filters for visitor_email is case insensitive and visitor_email is immutable
+        # use data instead of request.data to update the db
+        data = request.data.copy()
+        data["visitor_email"] = instance.visitor_email
 
         cancel_reason = request.data.get('cancel_reason')
 
@@ -178,7 +184,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
                     # Update database (serializer will auto-set status to CANCELLED)
                     serializer = self.get_serializer(
-                        instance, data=request.data, partial=True)
+                        instance, data=data, partial=True)
                     serializer.is_valid(raise_exception=True)
                     booking = serializer.save()
 
@@ -202,7 +208,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             with transaction.atomic():
                 # Step 1: Prepare updated booking data but do not save yet
                 serializer = self.get_serializer(
-                    instance, data=request.data, partial=True)
+                    instance, data=data, partial=True)
                 serializer.is_valid(raise_exception=True)
 
                 # Step 2: Sync to Google Calendar with updated data before saving
