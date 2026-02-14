@@ -104,9 +104,19 @@ function useUpdateRoomStatus(
     },
     onError: (error) => {
       console.error("Cancel booking failed:", error);
-      setErrorMessage(
-        resolveErrorMessage(error, "Cancellation failed. Please try again."),
-      );
+      const responseData = error.response?.data as { is_active?: string[] };
+      if (
+        error.response &&
+        error.response.status === 400 &&
+        responseData &&
+        responseData.is_active
+      ) {
+        setErrorMessage(responseData.is_active[0]);
+      } else {
+        setErrorMessage(
+          resolveErrorMessage(error, "Cancellation failed. Please try again."),
+        );
+      }
     },
   });
 }

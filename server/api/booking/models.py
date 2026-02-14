@@ -10,9 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 class BookingManager(models.Manager):
+    # ensure db update whenever retrieved through Django admin or api call
     def get_queryset(self):
         now = timezone.now()
-        super().get_queryset().filter(status='Confirmed', actual_end_datetime__lte=now).update(status='Completed')
+        super().get_queryset().filter(status='CONFIRMED', actual_end_datetime__lte=now).update(status='COMPLETED')
         return super().get_queryset()
 
 
