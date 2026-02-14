@@ -13,6 +13,8 @@ import RoomAPI from "@/hooks/room";
 import type { AmenityResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
+import { AmenityFormSchema } from "./schemas";
+
 type View = "list" | "form";
 
 type AmenityModalProps = {
@@ -52,11 +54,16 @@ export default function AmenityModal({
 
   const handleSubmit = async (value: string) => {
     try {
+      // Validate input with Zod
+      const validatedData = AmenityFormSchema.parse({ name: value });
+
       let createdAmenity;
       if (editingItem) {
-        await updateAmenity.mutateAsync({ name: value });
+        await updateAmenity.mutateAsync({ name: validatedData.name });
       } else {
-        createdAmenity = await createAmenity.mutateAsync({ name: value });
+        createdAmenity = await createAmenity.mutateAsync({
+          name: validatedData.name,
+        });
       }
 
       queryClient.invalidateQueries({ queryKey: ["room-amenities"] });

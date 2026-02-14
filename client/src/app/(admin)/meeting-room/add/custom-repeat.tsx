@@ -9,15 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-export type CustomRepeatValue = {
-  interval: string;
-  frequency: "day" | "week" | "month";
-  days: string[];
-  endType: "on" | "after" | "never";
-  endDate?: Date;
-  occurrences: string;
-  startDate?: Date;
-};
+import { CustomRepeatSchema, type CustomRepeatValue } from "./schemas";
 
 type CustomRepeatModalProps = {
   open: boolean;
@@ -42,15 +34,22 @@ export default function CustomRepeatModal({
   if (!open) return null;
 
   const handleDone = () => {
-    onDone({
-      interval,
-      frequency,
-      days,
-      endType,
-      endDate,
-      occurrences,
-      startDate,
-    });
+    try {
+      // Validate with Zod schema
+      const validatedData = CustomRepeatSchema.parse({
+        interval,
+        frequency,
+        days,
+        endType,
+        endDate,
+        occurrences,
+        startDate,
+      });
+      onDone(validatedData);
+    } catch (error) {
+      // In a real app, you'd show error feedback here
+      console.error("Validation error:", error);
+    }
   };
 
   const dayOptions = [

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { ZodError } from "zod";
 
 import { AlertDialog } from "@/components/alert-dialog";
 import InputField from "@/components/input";
@@ -13,13 +14,15 @@ import { Room } from "@/types/card";
 
 import AmenityModal from "./add-amenities";
 import LocationModal from "./add-location";
-import CustomRepeatModal, { type CustomRepeatValue } from "./custom-repeat";
+import CustomRepeatModal from "./custom-repeat";
+import { AddMeetingRoomSchema, type CustomRepeatValue } from "./schemas";
 
 export default function AddMeetingRoomForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const [repeat, setRepeat] = useState<string>("");
@@ -66,45 +69,51 @@ export default function AddMeetingRoomForm() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    const name = (formData.title || "").trim();
-    const locationValue =
-      typeof formData.location === "string"
-        ? formData.location
-        : formData.location != null
-          ? String(formData.location)
-          : "";
-    const locationId = locationValue.trim()
-      ? parseInt(locationValue, 10) || 0
-      : 0;
-    const capacityId = Number(formData.seats) || 0;
-    const start = formData.start_datetime?.toString() || "";
-    const end = formData.end_datetime?.toString() || "";
+    try {
+      const validatedData = AddMeetingRoomSchema.parse({
+        title: formData.title,
+        location: formData.location,
+        seats: formData.seats,
+        start_datetime: formData.start_datetime,
+        end_datetime: formData.end_datetime,
+        amenities: formData.amenities,
+        image: formData.image,
+        recurrence_rule: formData.recurrence_rule,
+      });
 
-    if (!name) newErrors.name = "Room name is required";
-    if (!locationId) newErrors.location = "Location is required";
-    if (!capacityId) newErrors.seats = "Capacity is required";
-    if (!start) newErrors.start_datetime = "Start date/time is required";
-    if (!end) newErrors.end_datetime = "End date/time is required";
+      setErrors({});
 
-    if (start && end) {
-      const startTime = new Date(start).getTime();
-      const endTime = new Date(end).getTime();
-      if (endTime <= startTime)
-        newErrors.end_datetime = "End time must be after start time";
+      const locationValue =
+        typeof validatedData.location === "string"
+          ? validatedData.location
+          : String(validatedData.location);
+      const locationId = parseInt(locationValue, 10);
+      const capacityId =
+        typeof validatedData.seats === "string"
+          ? parseInt(validatedData.seats, 10)
+          : validatedData.seats;
+
+      return {
+        name: validatedData.title,
+        img: "",
+        location_id: locationId,
+        capacity: capacityId,
+        start_datetime: validatedData.start_datetime,
+        end_datetime: validatedData.end_datetime,
+        recurrence_rule: validatedData.recurrence_rule || "",
+      };
+    } catch (error) {
+      if (error instanceof ZodError) {
+        error.issues.forEach((err) => {
+          if (err.path.length > 0) {
+            const fieldName = err.path[0] as string;
+            newErrors[fieldName] = err.message;
+          }
+        });
+      }
+      setErrors(newErrors);
+      return null;
     }
-
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return null;
-
-    return {
-      name,
-      img: "",
-      location_id: locationId,
-      capacity: capacityId,
-      start_datetime: start,
-      end_datetime: end,
-      recurrence_rule: formData.recurrence_rule || "",
-    };
   };
 
   const handleSubmit = async () => {
@@ -167,6 +176,9 @@ export default function AddMeetingRoomForm() {
       recurrence_rule: "",
     });
     setImageFile(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
     setRepeat("");
     setErrors({});
   };
@@ -335,6 +347,7 @@ export default function AddMeetingRoomForm() {
                       type="file"
                       accept="image/*"
                       className="hidden"
+                      ref={imageInputRef}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (!file) {

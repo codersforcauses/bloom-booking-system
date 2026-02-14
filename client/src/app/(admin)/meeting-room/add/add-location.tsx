@@ -13,6 +13,8 @@ import RoomAPI from "@/hooks/room";
 import type { LocationResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
+import { LocationFormSchema } from "./schemas";
+
 type View = "list" | "form";
 
 type LocationModalProps = {
@@ -52,11 +54,16 @@ export default function LocationModal({
 
   const handleSubmit = async (value: string) => {
     try {
+      // Validate input with Zod
+      const validatedData = LocationFormSchema.parse({ name: value });
+
       let createdLocation;
       if (editingItem) {
-        await updateLocation.mutateAsync({ name: value });
+        await updateLocation.mutateAsync({ name: validatedData.name });
       } else {
-        createdLocation = await createLocation.mutateAsync({ name: value });
+        createdLocation = await createLocation.mutateAsync({
+          name: validatedData.name,
+        });
       }
 
       queryClient.invalidateQueries({ queryKey: ["room-locations"] });
