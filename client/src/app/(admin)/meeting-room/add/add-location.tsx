@@ -1,7 +1,6 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import {
@@ -12,6 +11,8 @@ import { AlertDialog } from "@/components/alert-dialog";
 import RoomAPI from "@/hooks/room";
 import type { LocationResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
+
+import { LocationFormSchema } from "./schemas";
 
 type View = "list" | "form";
 
@@ -39,9 +40,11 @@ export default function LocationModal({
     variant?: "success" | "error";
   }>({ open: false });
 
-  const queryClient = useQueryClient();
-
-  const { data: locations = [], isLoading } = RoomAPI.useFetchRoomLocations({
+  const {
+    data: locations = [],
+    isLoading,
+    refetch: refetchLocations,
+  } = RoomAPI.useFetchRoomLocations({
     page: 1,
     nrows: 100,
   });
@@ -52,14 +55,19 @@ export default function LocationModal({
 
   const handleSubmit = async (value: string) => {
     try {
+      // Validate input with Zod
+      const validatedData = LocationFormSchema.parse({ name: value });
+
       let createdLocation;
       if (editingItem) {
-        await updateLocation.mutateAsync({ name: value });
+        await updateLocation.mutateAsync({ name: validatedData.name });
       } else {
-        createdLocation = await createLocation.mutateAsync({ name: value });
+        createdLocation = await createLocation.mutateAsync({
+          name: validatedData.name,
+        });
       }
 
-      queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+      await refetchLocations();
 
       // If creating a new location, pass the location ID back to parent
       if (createdLocation && !editingItem) {
@@ -81,7 +89,7 @@ export default function LocationModal({
   const handleDelete = async (item: LocationResponse) => {
     try {
       await deleteLocation.mutateAsync(item.id);
-      queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+      await refetchLocations();
       setConfirmDelete(null);
     } catch (err) {
       setAlert({
