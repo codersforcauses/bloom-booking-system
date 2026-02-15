@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Room, Amenity, Location
+from api.booking.models import Booking
 import re
 
 
@@ -68,3 +69,16 @@ class RoomSerializer(serializers.ModelSerializer):
                 })
 
         return data
+
+    # Block PATCH requests from making an active room inactive if it has bookings
+    def validate_is_active(self, value):
+        if self.instance and value is False and self.instance.is_active is True:
+            uncompleted_bookings_exist = Booking.objects.filter(
+                room_id=self.instance.id,
+                status="CONFIRMED"
+                ).exists()
+            if uncompleted_bookings_exist:
+                raise serializers.ValidationError(
+                    "Cannot change room status to inactive while there are uncompleted bookings."
+                )
+        return value

@@ -38,7 +38,7 @@ class BookingSerializer(DynamicFieldsModelSerializer):
         model = Booking
         fields = '__all__'
         # google_event_id and status cannot be set from clients
-        read_only_fields = ['google_event_id', 'status']
+        read_only_fields = ['google_event_id', 'status', 'actual_end_datetime']
 
     # visitor email is not editable in a serializer level
     def validate_visitor_email(self, value):

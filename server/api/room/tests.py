@@ -139,6 +139,42 @@ class RoomAPITest(APITestCase):
         response = self.client.get(f"/api/rooms/{room.id}/")
         self.assertEqual(response.data["name"], "Updated Room")
 
+    def test_update_room_is_active_fails_with_uncompleted_bookings(self):
+        client = APIClient()
+        client.force_authenticate(user=self.abc)
+
+        room = Room.objects.first()
+        room.is_active = True
+        room.save()
+
+        Booking.objects.create(
+            room=room,
+            visitor_name='John Doe',
+            visitor_email='john@example.com',
+            start_datetime=timezone.make_aware(
+                timezone.datetime.combine(next_monday, time(13, 0))),
+            end_datetime=timezone.make_aware(
+                timezone.datetime.combine(next_monday, time(14, 0))),
+            recurrence_rule="",
+            status='CONFIRMED'
+        )
+
+        response = client.patch(
+            f"/api/rooms/{room.id}/",
+            {"is_active": False},
+            format="json"
+        )
+        print("\nUpdate Room is_active Response:")
+        print(response.content.decode())
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertIn("is_active", response.data)
+        self.assertEqual(
+            response.data["is_active"][0],
+            "Cannot change room status to inactive while there are uncompleted bookings."
+        )
+
     # -------- DELETE TEST (should not be allowed) --------
     def test_delete_room_not_allowed(self):
         client = APIClient()

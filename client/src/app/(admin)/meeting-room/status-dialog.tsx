@@ -71,12 +71,12 @@ export default function StatusDialog({
         </DialogTitle>
         <DialogDescription className="px-4 pt-2">
           Are you sure you want to set the room{" "}
-          <span className="font-bold">{room.name}</span> {action}? Click confirm
-          to proceed.
+          <span className="font-bold">{room.name}</span> {Status[action]}? Click
+          confirm to proceed.
         </DialogDescription>
         <DialogDescription className="px-4">
           {errorMessage && (
-            <p className="text-sm text-bloom-red">{errorMessage}</p>
+            <span className="text-sm text-bloom-red">{errorMessage}</span>
           )}
         </DialogDescription>
         <div className="flex items-center justify-center gap-2">
