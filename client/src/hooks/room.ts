@@ -19,6 +19,33 @@ import {
 } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
+export interface RoomAvailability {
+  recurrence_rule: string;
+  start_datetime: Date;
+  end_datetime: Date;
+}
+
+/**
+ * Calls the `api/room/{room_id}` api endpoint to get the room availability
+ * information (start time, end time, recurrence_rule).
+ * @returns The room's availability rules (NOT its available timeslots).
+ */
+function useFetchRoomAvailability(room_id: number) {
+  return useQuery<RoomAvailability, AxiosError>({
+    queryKey: ["room-availability", room_id],
+    enabled: room_id > 0,
+    queryFn: async () => {
+      const response = await api.get(`/rooms/${room_id}/`);
+      const data = response.data;
+      return {
+        recurrence_rule: data.recurrence_rule,
+        start_datetime: new Date(data.start_datetime),
+        end_datetime: new Date(data.end_datetime),
+      };
+    },
+  });
+}
+
 // switch to use useInfiniteQuery to handle infinite scrolling
 function useFetchRooms(params: PaginationSearchParams) {
   const { nrows = 10, search, ...customParams } = params;
@@ -83,6 +110,50 @@ function useSearchRooms(search?: string, limit = 20) {
       return response.data.results;
     },
     enabled: !!search,
+  });
+}
+
+/**
+ * A slot of time from a start time to an end time
+ */
+export interface TimeSlot {
+  start: Date;
+  end: Date;
+}
+
+/**
+ * Information about a date and its available time slots
+ */
+export interface DateTimeSlots {
+  date: string;
+  slots: TimeSlot[];
+}
+
+// Fetch available timeslots for a room in a date range
+function useFetchRoomTimeSlots(roomId: number, startDate: Date, endDate: Date) {
+  return useQuery<DateTimeSlots[], AxiosError>({
+    queryKey: [
+      "room-timeslots",
+      roomId,
+      startDate.toISOString(),
+      endDate.toISOString(),
+    ],
+    enabled: roomId > 0,
+    queryFn: async () => {
+      const start_date = startDate.toISOString().slice(0, 10);
+      const end_date = endDate.toISOString().slice(0, 10);
+      const apiUrl = `/rooms/${roomId}/availability/?start_date=${start_date}&end_date=${end_date}`;
+      const response = await api.get(apiUrl);
+      return response.data.availability.map(
+        (o: { date: string; slots: { start: string; end: string }[] }) => ({
+          date: o.date,
+          slots: o.slots.map((slot: { start: string; end: string }) => ({
+            start: new Date(Date.parse(slot.start)),
+            end: new Date(Date.parse(slot.end)),
+          })),
+        }),
+      );
+    },
   });
 }
 
@@ -277,6 +348,8 @@ const RoomAPI = {
   useUpdateRoomAmenity,
   useDeleteRoomAmenity,
   useFetchRoom,
+  useFetchRoomTimeSlots,
+  useFetchRoomAvailability,
 };
 
 export { useFetchRooms, useSearchRooms, useUpdateRoomStatus };

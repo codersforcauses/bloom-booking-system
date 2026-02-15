@@ -137,7 +137,7 @@ function BookingPage({
   };
 
   return (
-    <div className="w-full rounded-xl bg-gray-100 p-6">
+    <div className="w-full rounded-xl p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold">List of Bookings</h2>
         <div className="flex gap-2">
@@ -157,12 +157,6 @@ function BookingPage({
             title="Back"
             aria-label="Back"
             disabled={isLoading}
-            className={cn(
-              "gap-2 border-2 bg-white p-2 hover:bg-muted",
-              !isLoading
-                ? "border-bloom-blue text-bloom-blue"
-                : "border-gray-300 text-gray-300",
-            )}
           >
             Back
           </Button>
@@ -178,7 +172,6 @@ function BookingPage({
                 _selectedRooms: rooms,
               });
             }}
-            className="border-bloom-blue text-bloom-blue"
           />
         </div>
       </div>

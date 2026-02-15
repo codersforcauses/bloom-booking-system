@@ -83,13 +83,7 @@ export function FilterPopover({
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            "gap-2 border-2 bg-white p-2 hover:bg-muted",
-            className,
-          )}
-        >
+        <Button variant="outline" className={cn("gap-2", className)}>
           <FaFilter size={16} />
           Filter
         </Button>
