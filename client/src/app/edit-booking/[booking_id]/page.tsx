@@ -16,7 +16,6 @@ import InputField, { SelectOption } from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
 import { PLACEHOLDER_IMAGE, RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -249,13 +248,7 @@ function EditBookingForm({ booking }: { booking: any }) {
   );
 }
 
-type DetailPageProps = {
-  isAdminPage?: boolean;
-};
-
-export default function EditBookingPage({
-  isAdminPage = false,
-}: DetailPageProps) {
+export default function EditBookingPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -270,11 +263,7 @@ export default function EditBookingPage({
     data: booking,
     isLoading: isLoadingBooking,
     isError: isErrorBooking,
-  } = useFetchBooking(
-    bookingId,
-    isAdminPage ?? false,
-    visitorEmail ?? undefined,
-  );
+  } = useFetchBooking(bookingId, false, visitorEmail ?? undefined);
 
   const {
     data: room,
