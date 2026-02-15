@@ -15,12 +15,37 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+# Custom permission class
+class IsAdminOrReadWithEmail(permissions.BasePermission):
+    """
+    For LIST action: Admin only for listing all bookings, but anyone can query by visitor_email
+    For RETRIEVE action: Admin or anyone with correct visitor_email
+    """
+
+    def has_permission(self, request, view):
+        # For LIST (GET /api/bookings/): Allow if visitor_email is provided, otherwise admin only
+        if view.action == "list":
+            visitor_email = request.query_params.get("visitor_email")
+            if visitor_email:
+                return True  # Anyone can query by their email
+            return bool(request.user and request.user.is_staff)  # Admin only for listing all
+
+        # For RETRIEVE (GET /api/bookings/{id}/): Admin or anyone with visitor_email
+        if view.action == "retrieve":
+            visitor_email = request.query_params.get("visitor_email")
+            if visitor_email:
+                return True
+            return bool(request.user and request.user.is_staff)
+
+        return True
+
+
 # For admin to filter booking in /api/bookings
 
 
 class ListBookingFilter(django_filters.FilterSet):
-    room = django_filters.CharFilter(
-        field_name='room__name', lookup_expr='icontains')
+    room_id = django_filters.NumberFilter(
+        field_name='room__id', lookup_expr='exact')
     visitor_name = django_filters.CharFilter(
         lookup_expr='icontains')       # contain + case insensitive
     visitor_email = django_filters.CharFilter(
@@ -28,7 +53,7 @@ class ListBookingFilter(django_filters.FilterSet):
 
     # New filter to support multiple room IDs
     room_ids = django_filters.BaseInFilter(
-        field_name='room_id', lookup_expr='in'
+        field_name='room_ids', lookup_expr='in'
     )
 
     class Meta:
@@ -59,12 +84,10 @@ class BookingViewSet(viewsets.ModelViewSet):
         return BookingSerializer
 
     def get_permissions(self):
-        # GET /api/bookings/ and GET /bookings/{id}/ (when no visitor_email provided, admin only)
+        # GET /api/bookings/: Admin only
+        # GET /api/bookings/{id}/: Admin or anyone with correct visitor_email
         if self.action == "retrieve" or self.action == "list":
-            visitor_email = self.request.query_params.get("visitor_email")
-            if not visitor_email:
-                return [permissions.IsAuthenticated()]
-            return [permissions.AllowAny()]
+            return [IsAdminOrReadWithEmail()]
 
         # POST/PATCH (everyone)
         return [permissions.AllowAny()]
@@ -72,12 +95,15 @@ class BookingViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Booking.objects.select_related("room")
 
-        # GET /bookings/{id}/:
-        # when visitor_email provided, send the booking detail only if visitor_email and id match
-        if self.action == "retrieve":
-            visitor_email = self.request.query_params.get('visitor_email')
-            if visitor_email:
-                queryset = queryset.filter(visitor_email__iexact=visitor_email)
+        visitor_email = self.request.query_params.get('visitor_email')
+
+        # GET /bookings/ with visitor_email: filter by email
+        if self.action == "list" and visitor_email:
+            queryset = queryset.filter(visitor_email__iexact=visitor_email)
+
+        # GET /bookings/{id}/ with visitor_email: filter by email
+        elif self.action == "retrieve" and visitor_email:
+            queryset = queryset.filter(visitor_email__iexact=visitor_email)
 
         return queryset
 
