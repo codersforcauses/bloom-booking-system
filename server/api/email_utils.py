@@ -1,10 +1,10 @@
+import os
 from typing import Iterable
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.templatetags.static import static
 
 from smtplib import SMTPAuthenticationError, SMTPResponseException
 
@@ -67,13 +67,14 @@ def get_bloom_logo_url() -> str:
         return logo_url
 
     # Fallback – relative static path; fine for local / console email previews
-    return static("images/bloom_logo.png")
+    return os.environ.get("FRONTEND_URL", "") + "images/bloom_logo.png"
 
 
 def requires_email_exists(func):
     def wrapper(*args, **kwargs):
         if not settings.EMAIL_HOST_USER:
-            logger.warning("EMAIL_HOST_USER is not set. Emails will not be sent.")
+            logger.warning(
+                "EMAIL_HOST_USER is not set. Emails will not be sent.")
             return 0
         return func(*args, **kwargs)
     return wrapper
