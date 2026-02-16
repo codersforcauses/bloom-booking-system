@@ -123,21 +123,25 @@ class BookingViewSet(viewsets.ModelViewSet):
 
             # Send booking confirmation email after successful creation
             # A non-critical feature - booking creation should not fail if email sending fails
-            try:
-                send_booking_confirmed_email(
-                    recipients=[booking.visitor_email],
-                    context={
-                        "room_name": booking.room.name,
-                        "start_datetime": booking.start_datetime,
-                        "end_datetime": booking.end_datetime,
-                        "visitor_name": booking.visitor_name,
-                        "location_name": booking.room.location.name,
-                        "manage_url": frontend_url + "/find-my-booking"
-                    }
-                )
-            except Exception as email_error:
-                logger.error(
-                    f"Booking {booking.id} created, but failed to send confirmation email: {email_error}")
+            # Use on_commit to ensure email is sent only after transaction commits
+            def send_confirmation_email():
+                try:
+                    send_booking_confirmed_email(
+                        recipients=[booking.visitor_email],
+                        context={
+                            "room_name": booking.room.name,
+                            "start_datetime": booking.start_datetime,
+                            "end_datetime": booking.end_datetime,
+                            "visitor_name": booking.visitor_name,
+                            "location_name": booking.room.location.name,
+                            "manage_url": frontend_url + "/find-my-booking"
+                        }
+                    )
+                except Exception as email_error:
+                    logger.error(
+                        f"Booking {booking.id} created, but failed to send confirmation email: {email_error}")
+
+            transaction.on_commit(send_confirmation_email)
 
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -213,19 +217,23 @@ class BookingViewSet(viewsets.ModelViewSet):
 
                     # Send cancellation email
                     # A non-critical feature - booking cancellation should not fail if email sending fails
-                    try:
-                        send_booking_cancelled_email(
-                            recipients=[visitor_email],
-                            context={
-                                "room_name": booking.room,
-                                "start_datetime": booking.start_datetime,
-                                "end_datetime": booking.end_datetime,
-                                "book_room_url": frontend_url + "/book-room"
-                            }
-                        )
-                    except Exception as email_error:
-                        logger.error(
-                            f"Booking {booking.id} cancelled, but failed to send cancellation email: {email_error}")
+                    # Use on_commit to ensure email is sent only after transaction commits
+                    def send_cancellation_email():
+                        try:
+                            send_booking_cancelled_email(
+                                recipients=[visitor_email],
+                                context={
+                                    "room_name": booking.room.name,
+                                    "start_datetime": booking.start_datetime,
+                                    "end_datetime": booking.end_datetime,
+                                    "book_room_url": frontend_url + "/book-room"
+                                }
+                            )
+                        except Exception as email_error:
+                            logger.error(
+                                f"Booking {booking.id} cancelled, but failed to send cancellation email: {email_error}")
+
+                    transaction.on_commit(send_cancellation_email)
 
                     return Response(response_serializer.data)
 
@@ -278,21 +286,25 @@ class BookingViewSet(viewsets.ModelViewSet):
 
                 # Send updated booking confirmation email
                 # A non-critical feature - booking update should not fail if email sending fails
-                try:
-                    send_booking_confirmed_email(
-                        recipients=[updated_booking.visitor_email],
-                        context={
-                            "room_name": updated_booking.room,
-                            "start_datetime": updated_booking.start_datetime,
-                            "end_datetime": updated_booking.end_datetime,
-                            "visitor_name": updated_booking.visitor_name,
-                            "location_name": updated_booking.location.name,
-                            "manage_url": frontend_url + "/find-my-booking"
-                        }
-                    )
-                except Exception as email_error:
-                    logger.error(
-                        f"Booking {updated_booking.id} updated, but failed to send confirmation email: {email_error}")
+                # Use on_commit to ensure email is sent only after transaction commits
+                def send_update_confirmation_email():
+                    try:
+                        send_booking_confirmed_email(
+                            recipients=[updated_booking.visitor_email],
+                            context={
+                                "room_name": updated_booking.room.name,
+                                "start_datetime": updated_booking.start_datetime,
+                                "end_datetime": updated_booking.end_datetime,
+                                "visitor_name": updated_booking.visitor_name,
+                                "location_name": updated_booking.room.location.name,
+                                "manage_url": frontend_url + "/find-my-booking"
+                            }
+                        )
+                    except Exception as email_error:
+                        logger.error(
+                            f"Booking {updated_booking.id} updated, but failed to send confirmation email: {email_error}")
+
+                transaction.on_commit(send_update_confirmation_email)
 
                 return Response(response_serializer.data)
 
