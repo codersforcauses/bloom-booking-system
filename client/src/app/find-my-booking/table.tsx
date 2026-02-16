@@ -12,9 +12,11 @@ export default function BookingTable({
   data,
   isLoading,
   showAlert,
+  isAdminPage = false,
 }: {
   data: BookingResponse[];
   isLoading?: boolean;
+  isAdminPage?: boolean;
   showAlert?: (
     variant: AlertDialogVariant,
     title: string,
@@ -112,7 +114,7 @@ export default function BookingTable({
     const isActive = row.status === "CONFIRMED";
 
     return (
-      <span className="flex space-x-2">
+      <span className="flex justify-center">
         <span className="absolute left-0 top-0 h-full border-l-2" />
         {/* View / Edit */}
         <Button
@@ -129,7 +131,11 @@ export default function BookingTable({
         >
           {isActive ? (
             <Link
-              href={`/find-my-booking/${row.id}?email=${encodeURIComponent(row.visitor_email)}`}
+              href={
+                isAdminPage
+                  ? `/bookings/${row.id}`
+                  : `/find-my-booking/${row.id}?email=${encodeURIComponent(row.visitor_email)}`
+              }
             >
               <BiCalendarEdit size={20} />
             </Link>
@@ -138,7 +144,7 @@ export default function BookingTable({
           )}
         </Button>
 
-        <Button
+        {/* <Button
           size="icon"
           title="Cancel"
           aria-label="Cancel"
@@ -158,11 +164,12 @@ export default function BookingTable({
           }
         >
           <BiWindowClose size={20} />
-        </Button>
+        </Button> */}
         <span />
       </span>
     );
   };
+
   return (
     <div className="bg-inherit">
       <DataTable<BookingResponse>

@@ -166,9 +166,7 @@ export default function DetailPage({
                     variant="confirm"
                     onClick={() => {
                       // to do: fix the routing
-                      const url = isAdminPage
-                        ? `/bookings/edit/${booking.id}`
-                        : `/book-room/edit/${booking.id}`;
+                      const url = `/edit-booking/${booking.id}?email=${encodeURIComponent(booking.visitor_email)}`;
                       router.push(url);
                     }}
                   >

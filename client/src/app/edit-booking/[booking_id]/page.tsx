@@ -253,7 +253,7 @@ export default function EditBookingPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const bookingId = Number(params.booking_id);
-  const visitorEmail = searchParams.get("visitor_email");
+  const visitorEmail = searchParams.get("email");
 
   if (visitorEmail === null) {
     return <NotFound />;
