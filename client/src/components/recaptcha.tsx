@@ -25,37 +25,20 @@ const ReCAPTCHAV2: React.FC<ReCAPTCHAV2Props> = ({
     }
   }, [siteKey]);
 
-  const handleCaptchaSubmission = async (token: string | null) => {
-    try {
-      if (setReCAPTCHAToken) {
-        setReCAPTCHAToken(token);
-      }
-
-      if (!token) {
-        setVerified(false);
-        return;
-      }
-
-      const res = await fetch("/api/verify-recaptcha", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(`${data.message}! Status: ${res.status}`);
-      }
-
-      setVerified(true);
-    } catch (e) {
-      console.error("Captcha verification failed:", e);
-      alert("Unable to verify Captcha. Please try again.");
-      setVerified(false);
+  {
+    /* Asks if Captcha has been completed, not verified */
+  }
+  const handleCaptchaSubmission = (token: string | null) => {
+    if (setReCAPTCHAToken) {
+      setReCAPTCHAToken(token);
     }
+
+    if (!token) {
+      setVerified(false);
+      return;
+    }
+
+    setVerified(true);
   };
 
   return (

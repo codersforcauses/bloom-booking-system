@@ -3,6 +3,8 @@ from django.utils import timezone
 from .models import Booking
 from api.room.models import Room
 import re
+import requests
+from django.conf import settings
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
@@ -34,6 +36,8 @@ class BookingSerializer(DynamicFieldsModelSerializer):
         write_only=True
     )
 
+    g_recaptcha_response = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = Booking
         fields = '__all__'
@@ -45,6 +49,23 @@ class BookingSerializer(DynamicFieldsModelSerializer):
         if self.instance and value != self.instance.visitor_email:
             raise serializers.ValidationError(
                 "The visitor email cannot be changed.")
+        return value
+
+    def validate_g_recaptcha_response(self, value):
+        response = requests.post(
+            'https://www.google.com/recaptcha/api/siteverify',
+            data={
+                'secret': settings.RECAPTCHA_SECRET_KEY,
+                'response': value
+            },
+            timeout=5,
+        )
+        result = response.json()
+        print(result)
+        if not result.get('success'):
+            raise serializers.ValidationError({
+                'g_recaptcha_response': 'Invalid reCAPTCHA. Please try again.'
+            })
         return value
 
     def validate(self, data):
@@ -118,6 +139,16 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                 })
 
         return data
+
+    def create(self, validated_data):
+        # Remove g_recaptcha_response from validated_data before creating the booking
+        validated_data.pop('g_recaptcha_response', None)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        # Remove g_recaptcha_response from validated_data before updating the booking
+        validated_data.pop('g_recaptcha_response', None)
+        return super().update(instance, validated_data)
 
     def save(self, **kwargs):
         """Override save to handle status logic after validation."""
