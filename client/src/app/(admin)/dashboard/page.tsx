@@ -152,7 +152,12 @@ function BookingPage() {
         </div>
       </div>
 
-      <BookingTable data={data} isLoading={isLoading} showAlert={showAlert} />
+      <BookingTable
+        data={data}
+        isLoading={isLoading}
+        showAlert={showAlert}
+        isAdminPage={true}
+      />
 
       <PaginationBar
         page={searchParams.page ?? page}
