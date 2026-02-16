@@ -184,9 +184,7 @@ export default function DetailPage({
               ) : (
                 <Button
                   variant="confirm"
-                  onClick={() =>
-                    router.push(`/booking-room/${booking.room.id}`)
-                  }
+                  onClick={() => router.push(`/book-room/${booking.room.id}`)}
                 >
                   Book again
                 </Button>
