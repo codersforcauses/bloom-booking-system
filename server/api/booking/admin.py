@@ -1,11 +1,12 @@
 from django.contrib import admin
 from .models import Booking
+from django.utils import timezone
 
 
 # not be used in production
 class BookingAdmin(admin.ModelAdmin):
     list_display = ('id', 'room_id', 'visitor_name', 'visitor_email',
-                    'start_datetime', 'end_datetime', 'recurrence_rule',
+                    'start_datetime', 'end_datetime', 'recurrence_rule', 'actual_end_datetime',
                     'status', 'google_event_id', 'cancel_reason',
                     'created_at', 'updated_at')
     search_fields = ('room_id', 'visitor_name', 'visitor_email', 'google_event_id')
@@ -14,6 +15,11 @@ class BookingAdmin(admin.ModelAdmin):
                 'start_datetime', 'end_datetime', 'recurrence_rule',
                 'status', 'google_event_id', 'cancel_reason',
                 'created_at', 'updated_at')
+
+    def changelist_view(self, request, extra_context=None):
+        now = timezone.now()
+        Booking.objects.filter(status='CONFIRMED', actual_end_datetime__lte=now).update(status='COMPLETED')
+        return super().changelist_view(request, extra_context)
 
 
 admin.site.register(Booking, BookingAdmin)
