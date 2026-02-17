@@ -2,9 +2,10 @@ import os
 from typing import Iterable
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+import datetime
 
 from smtplib import SMTPAuthenticationError, SMTPResponseException
 
@@ -140,6 +141,56 @@ def send_simple_email(
         raise
 
 
+@requires_email_exists
+def send_email_with_attachments(
+    subject: str,
+    message: str | None,
+    recipients: Iterable[str],
+    *,
+    attachments: list[tuple[str, str, str]],
+    html_template: str | None = None,
+    context: dict | None = None,
+    from_email: str | None = None,
+    fail_silently: bool = False,
+) -> int:
+    if from_email is None:
+        from_email = settings.EMAIL_HOST_USER
+
+    html_message = None
+
+    if html_template is not None:
+        context = context or {}
+        html_message = render_to_string(html_template, context)
+        # Derive plain text from HTML if not explicitly provided
+        if message is None:
+            message = strip_tags(html_message)
+
+    # Django requires a non-empty string for `message`
+    if message is None:
+        message = ""
+
+    # Using EmailMultiAlternatives instead of send_mail
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=message,
+        from_email=from_email,
+        to=list(recipients),
+    )
+
+    if html_message:
+        email.attach_alternative(html_message, "text/html")
+
+    # Loop through and attach files
+    for filename, content, mimetype in attachments:
+        email.attach(filename, content, mimetype)
+
+    try:
+        return email.send(fail_silently=fail_silently)
+    except (SMTPAuthenticationError, SMTPResponseException) as e:
+        logger.error("Failed to send email with attachment: %s", e)
+        return 0
+
+
 def send_booking_confirmed_email(
     recipients: Iterable[str],
     *,
@@ -155,14 +206,53 @@ def send_booking_confirmed_email(
     ctx = dict(context or {})
     ctx.setdefault("bloom_logo_url", get_bloom_logo_url())
 
-    return send_simple_email(
-        subject=subject,
-        message=None,
-        recipients=recipients,
-        html_template=BOOKING_CONFIRMED_TEMPLATE,
-        context=ctx,
-        fail_silently=fail_silently,
-    )
+    start_utc = context['start_datetime'].astimezone(datetime.timezone.utc)
+    end_utc = context['end_datetime'].astimezone(datetime.timezone.utc)
+
+    print(start_utc, end_utc)
+
+    start_str = start_utc.strftime('%Y%m%dT%H%M%SZ')
+    end_str = end_utc.strftime('%Y%m%dT%H%M%SZ')
+    rrule_str = context['recurrence_rule']
+
+    print(start_str, end_str)
+
+    print(context['start_datetime'], context['end_datetime'])
+
+    ics_lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Bloom//EN",
+        "BEGIN:VEVENT",
+        f"SUMMARY: Booking for {context['room_name']}",
+        f"DTSTART:{start_str}",
+        f"DTEND:{end_str}",
+    ]
+
+    # Only add the RRULE line if it has content
+    if rrule_str:
+        # Ensure it starts with RRULE: if it doesn't already
+        if not rrule_str.startswith("RRULE:"):
+            rrule_str = f"RRULE:{rrule_str}"
+        ics_lines.append(rrule_str)
+
+    ics_lines.extend([
+        f"DESCRIPTION:Booking confirmation for {context['room_name']}",
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ])
+
+    ics_content = "\n".join(ics_lines)
+
+    return send_email_with_attachments(
+            subject=subject,
+            message=None,
+            recipients=recipients,
+            html_template=BOOKING_CONFIRMED_TEMPLATE,
+            context=ctx,
+            fail_silently=fail_silently,
+            attachments=[("booking.ics", ics_content, "text/calendar")],
+        )
 
 
 def send_booking_cancelled_email(

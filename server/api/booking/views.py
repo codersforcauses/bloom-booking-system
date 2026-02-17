@@ -127,11 +127,13 @@ class BookingViewSet(viewsets.ModelViewSet):
             def send_confirmation_email():
                 try:
                     send_booking_confirmed_email(
+                        subject=f"Booking for {booking.room.name} Confirmed!",
                         recipients=[booking.visitor_email],
                         context={
                             "room_name": booking.room.name,
                             "start_datetime": booking.start_datetime,
                             "end_datetime": booking.end_datetime,
+                            "recurrence_rule": booking.recurrence_rule,
                             "visitor_name": booking.visitor_name,
                             "location_name": booking.room.location.name,
                             "manage_url": frontend_url + "/find-my-booking"
@@ -226,6 +228,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                                     "room_name": booking.room.name,
                                     "start_datetime": booking.start_datetime,
                                     "end_datetime": booking.end_datetime,
+                                    "recurrence_rule": booking.recurrence_rule,
                                     "book_room_url": frontend_url + "/book-room"
                                 }
                             )
@@ -290,11 +293,13 @@ class BookingViewSet(viewsets.ModelViewSet):
                 def send_update_confirmation_email():
                     try:
                         send_booking_confirmed_email(
+                            subject=f"Booking for {updated_booking.room.name} Confirmed!",
                             recipients=[updated_booking.visitor_email],
                             context={
                                 "room_name": updated_booking.room.name,
                                 "start_datetime": updated_booking.start_datetime,
                                 "end_datetime": updated_booking.end_datetime,
+                                "recurrence_rule": updated_booking.recurrence_rule,
                                 "visitor_name": updated_booking.visitor_name,
                                 "location_name": updated_booking.room.location.name,
                                 "manage_url": frontend_url + "/find-my-booking"
