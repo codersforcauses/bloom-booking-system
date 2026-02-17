@@ -32,13 +32,13 @@ import { useMediaQuery } from "react-responsive";
 import { Calendar as MiniCalendar } from "@/components/calendar";
 import { RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
-import RoomAPI from "@/hooks/room";
 import {
   CalendarEvent,
   GoogleCalendarEvent,
   NewCalendarEvent,
   useRoomEvents,
-} from "@/hooks/room-events";
+} from "@/hooks/calendar";
+import RoomAPI from "@/hooks/room";
 import { getAvailableSlots, normalizeRoom } from "@/lib/room-utils";
 import { cn } from "@/lib/utils";
 
@@ -190,7 +190,7 @@ export default function ViewCalendarPage() {
   const onSubmit = () => {
     if (!room || !room.is_active) return;
     if (!selectedSlot || !selectedSlot.start || !selectedSlot.end) {
-      router.push(`/admin/book-room/${id}/`);
+      router.push(`/book-room/${id}/`);
       return;
     }
 
@@ -207,7 +207,7 @@ export default function ViewCalendarPage() {
       end_time: endTime,
     }).toString();
 
-    router.push(`/admin/book-room/${id}?${queryParams}`);
+    router.push(`/book-room/${id}?${queryParams}`);
   };
 
   useEffect(() => {
@@ -326,8 +326,8 @@ export default function ViewCalendarPage() {
           onView={(newView: View) => setView(newView)}
           step={30} // 30 minute intervals
           timeslots={1} // 1 slot per line
-          min={new Date(0, 0, 0, 8, 0, 0)} // Start 8 AM
-          max={new Date(0, 0, 0, 18, 0, 0)} // End 6 PM
+          min={new Date(0, 0, 0, 0, 0, 0)} // Start 12 AM
+          max={new Date(0, 0, 0, 23, 59, 59)} // End 6 PM
           // Selection logic
           selectable
           onSelectSlot={handleSelectSlot}

@@ -2,6 +2,8 @@ import { TZDate } from "@date-fns/tz";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
+import api from "@/lib/api";
+
 const PERTH_TZ = "Australia/Perth";
 
 export type DateRange = {
@@ -41,14 +43,9 @@ const fetchEvents = async ({ queryKey, signal }: any) => {
 
     if (!roomId) return [];
 
-    const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
-      throw new Error("Missing access token");
-    }
-
-    const { data } = await axios.get(`/api/calendar/`, {
+    const { data } = await api.get(`/calendar/`, {
       params: { roomId, timeMin: start, timeMax: end },
-      headers: { Authorization: `Bearer ${accessToken}` },
+
       signal,
     });
 
