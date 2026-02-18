@@ -2,7 +2,7 @@ from django.core import mail
 from django.utils import timezone
 from datetime import timedelta, timezone as dt_timezone
 from api.email_utils import send_booking_confirmed_email
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 
 class TestBookingConfirmedEmail(TestCase):
@@ -20,6 +20,7 @@ class TestBookingConfirmedEmail(TestCase):
             'recurrence_rule': 'FREQ=WEEKLY;COUNT=2'
         }
 
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', EMAIL_HOST_USER='test@example.com')
     def test_send_email_success_with_ics(self):
         """Verifies email is sent with correctly formatted ICS attachment."""
         recipients = ["test@example.com"]
