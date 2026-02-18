@@ -15,7 +15,7 @@ const baseRoom: Room = {
   image: "",
   location: "Level 2 — Block B",
   available: true,
-  availablility: "Available",
+  availability: "Available",
   seats: 10,
   amenities: ["Audio", "HDMI", "White Board"],
   bookings: 3,
@@ -54,7 +54,7 @@ const makeRoom = (args: RoomControls): Room => {
     location: args.location,
     seats: args.seats,
     available: args.available,
-    availablility: args.availabilityText,
+    availability: args.availabilityText,
     amenities,
     bookings: args.bookings,
     removed: args.removed,
@@ -67,7 +67,7 @@ const normalArgs: RoomControls = {
   location: baseRoom.location,
   seats: baseRoom.seats,
   available: baseRoom.available,
-  availabilityText: baseRoom.availablility ?? "",
+  availabilityText: baseRoom.availability ?? "",
   amenitiesCSV: baseRoom.amenities.join(", "),
   bookings: baseRoom.bookings ?? 0,
   removed: baseRoom.removed ?? false,
@@ -177,7 +177,6 @@ export const AdminRoomCard_Interactive: StoryObj<RoomControls> = {
         hideIcon={false}
         onView={() => {}}
         onEdit={() => {}}
-        onRemove={() => {}}
       />
     </SingleCard>
   ),
@@ -192,7 +191,6 @@ export const AdminRoomCard_Long: StoryObj = {
         hideIcon={false}
         onView={() => {}}
         onEdit={() => {}}
-        onRemove={() => {}}
       />
     </SingleCard>
   ),
