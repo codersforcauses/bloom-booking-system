@@ -2,7 +2,7 @@
 
 import type { Meta, StoryObj } from "@storybook/nextjs";
 import React from "react";
-import { FaCalendarAlt, FaDoorOpen,FaUsers } from "react-icons/fa";
+import { FaCalendarAlt, FaDoorOpen, FaUsers } from "react-icons/fa";
 
 import { DashboardCard } from "@/components/dashboard-card";
 

@@ -3,7 +3,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
 import React from "react";
 
-import { type Column,DataTable } from "@/components/data-table";
+import { type Column, DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 
 type PersonRow = {
