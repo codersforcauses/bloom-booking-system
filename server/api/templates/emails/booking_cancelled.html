@@ -24,7 +24,7 @@
   <p class="subtitle">
     Your {{ room_name }} booking for
     {{ start_datetime|date:"d M Y" }} from {{ start_datetime|time:"g:i A" }}
-    to {{ end_datetime|time:"g:i A" }} has been cancelled.
+    to {{ end_datetime|time:"g:i A" }} {{ recurrence_rule_human }} has been cancelled.
   </p>
 
   {% if book_room_url %}

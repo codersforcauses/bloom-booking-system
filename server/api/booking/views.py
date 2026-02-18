@@ -127,7 +127,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             def send_confirmation_email():
                 try:
                     send_booking_confirmed_email(
-                        subject=f"Booking for {booking.room.name} Confirmed!",
+                        subject=f"Booking confirmation #{booking.id}",
                         recipients=[booking.visitor_email],
                         context={
                             "booking_id": booking.id,
@@ -224,6 +224,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                     def send_cancellation_email():
                         try:
                             send_booking_cancelled_email(
+                                subject=f"Booking cancellation #{booking.id}",
                                 recipients=[visitor_email],
                                 context={
                                     "booking_id": booking.id,
@@ -295,7 +296,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                 def send_update_confirmation_email():
                     try:
                         send_booking_confirmed_email(
-                            subject=f"Booking for {updated_booking.room.name} Confirmed!",
+                            subject=f"Booking confirmation #{booking.id} - Booking updated",
                             recipients=[updated_booking.visitor_email],
                             context={
                                 "booking_id": updated_booking.id,

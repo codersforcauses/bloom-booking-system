@@ -1387,6 +1387,20 @@ files = [
 ]
 
 [[package]]
+name = "rrule-humanize"
+version = "0.1.0"
+description = "A Python library to convert RRULE strings to human-readable text"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "rrule_humanize-0.1.0-py3-none-any.whl", hash = "sha256:228556c45994868dfeb2dc1d2f7e626a6656bd07c15c4d07595d79d968da6166"},
+    {file = "rrule_humanize-0.1.0.tar.gz", hash = "sha256:e67388f783edc31032ba72c2623bedb84abe9fc78fdd8ba5cad6b6d501ec1500"},
+]
+
+[package.dependencies]
+python-dateutil = ">=2.8.0"
+
+[[package]]
 name = "rsa"
 version = "4.9.1"
 description = "Pure-Python RSA implementation"
@@ -1586,4 +1600,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "1e9c23c5784ece6e9091c970947617b8a7ff723e742f05addc28e150c1c8fa79"
+content-hash = "cf5efaa6bbada6c491f7f9b5c25336860da452e91c6dcf1f968922504f8e0b1a"

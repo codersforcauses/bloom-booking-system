@@ -115,7 +115,7 @@
         <div class="detail-content-label">Date and time</div>
         <div class="detail-content-value">
           {{ start_datetime|date:"d/m/Y" }},
-          {{ start_datetime|time:"g:i A" }} – {{ end_datetime|time:"g:i A" }}
+          {{ start_datetime|time:"g:i A" }} – {{ end_datetime|time:"g:i A" }} {{ recurrence_rule_human }}
         </div>
       </div>
     </div>

@@ -25,6 +25,7 @@ google-api-python-client = "^2.187.0"
 djangorestframework-simplejwt = "^5.5"
 django-filter = "^25.2"
 drf-nested-routers = "^0.95.0"
+rrule-humanize = "^0.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
