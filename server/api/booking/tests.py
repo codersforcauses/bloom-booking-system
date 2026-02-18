@@ -364,7 +364,7 @@ class BookingViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("recurrence_rule", response.json())
 
-    # ==================== PAGINATION TESTS ====================
+    # ==================== PAGINATION TESTS ===================
     @patch('api.booking.views.create_event')
     def test_booking_listing_pagination(self, mock_create_event):
         """Test that booking listing supports pagination."""
