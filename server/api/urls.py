@@ -29,6 +29,7 @@ from rest_framework_nested.routers import DefaultRouter
 from rest_framework.routers import APIRootView
 from api.booking.urls import router as bookings_router
 from api.room.urls import router as room_router
+from api.booking.google_calendar.calendar_views import get_room_calendar_events
 
 router = DefaultRouter()
 router.APIRootView = APIRootView
@@ -44,6 +45,7 @@ urlpatterns = [
     path("redoc/", SpectacularRedocView.as_view(url_name="schema"),
          name="redoc"),
     path("api/users/", include(("api.user.urls"))),
+    path("api/calendar/", get_room_calendar_events, name="room-calendar-events"),
     path("api/", include(router.urls)),
 ]
 

@@ -1,10 +1,16 @@
+import os
 from typing import Iterable
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.templatetags.static import static
+
+from smtplib import SMTPAuthenticationError, SMTPResponseException
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Template paths under api/templates/emails
@@ -61,9 +67,20 @@ def get_bloom_logo_url() -> str:
         return logo_url
 
     # Fallback – relative static path; fine for local / console email previews
-    return static("images/bloom_logo.png")
+    return os.environ.get("FRONTEND_URL", "") + "images/bloom_logo.png"
 
 
+def requires_email_exists(func):
+    def wrapper(*args, **kwargs):
+        if not settings.EMAIL_HOST_USER:
+            logger.warning(
+                "EMAIL_HOST_USER is not set. Emails will not be sent.")
+            return 0
+        return func(*args, **kwargs)
+    return wrapper
+
+
+@requires_email_exists
 def send_simple_email(
     subject: str,
     message: str | None,
@@ -100,14 +117,27 @@ def send_simple_email(
     if message is None:
         message = ""
 
-    return send_mail(
-        subject=subject,
-        message=message,
-        from_email=from_email,
-        recipient_list=list(recipients),
-        fail_silently=fail_silently,
-        html_message=html_message,
-    )
+    # Attempts to send email. If authentication fails with bad credentials, log an error but keep the app running.
+    try:
+        return send_mail(
+            subject=subject,
+            message=message,
+            from_email=from_email,
+            recipient_list=list(recipients),
+            fail_silently=fail_silently,
+            html_message=html_message,
+        )
+    except SMTPAuthenticationError:
+        logger.error(
+            "Failed to send email: SMTP authentication error. from_email=%r",
+            from_email,
+        )
+        return 0
+    except SMTPResponseException as e:
+        if e.smtp_code == 530:
+            logger.error("Failed to send email: SMTP authentication required.")
+            return 0
+        raise
 
 
 def send_booking_confirmed_email(

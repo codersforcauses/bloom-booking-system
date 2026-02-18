@@ -38,7 +38,7 @@ const Checkbox = React.forwardRef<
         className={cn(
           "h-6 w-6 rounded-sm",
           "border-2 border-gray-300",
-          "data-[state=checked]:border-none data-[state=checked]:bg-bloom-orbit data-[state=checked]:text-primary-foreground",
+          "data-[state=checked]:border-none data-[state=checked]:bg-bloom-blue data-[state=checked]:text-primary-foreground",
           "disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}

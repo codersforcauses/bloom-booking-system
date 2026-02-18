@@ -6,6 +6,8 @@ from rest_framework.test import APITestCase
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from unittest.mock import patch
+from types import SimpleNamespace
+from api.booking.views import BookingViewSet
 
 User = get_user_model()
 future_date = timezone.now() + timedelta(days=7)
@@ -364,7 +366,7 @@ class BookingViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("recurrence_rule", response.json())
 
-    # ==================== PAGINATION TESTS ====================
+       # ==================== PAGINATION TESTS ====================
     @patch('api.booking.views.create_event')
     def test_booking_listing_pagination(self, mock_create_event):
         """Test that booking listing supports pagination."""
@@ -397,8 +399,20 @@ class BookingViewTest(APITestCase):
         self.assertIn("count", data)
         self.assertIn("results", data)
 
-        # Should limit results (default pagination is typically 10-20)
-        self.assertLessEqual(len(data["results"]), 20)
+        # Verify default limit is enforced (adjust if your pagination default differs)
+        self.assertLessEqual(len(data["results"]), 10)
+
+        # Test with explicit limit parameter (e.g., limit=5)
+        response_limit_5 = self.client.get('/api/bookings/?limit=5')
+        self.assertEqual(response_limit_5.status_code, status.HTTP_200_OK)
+        data_limit_5 = response_limit_5.json()
+        self.assertEqual(len(data_limit_5["results"]), 5)
+
+        # Test with limit exceeding max_limit (adjust 100 if your max_limit differs)
+        response_large_limit = self.client.get('/api/bookings/?limit=9999')
+        self.assertEqual(response_large_limit.status_code, status.HTTP_200_OK)
+        data_large_limit = response_large_limit.json()
+        self.assertLessEqual(len(data_large_limit["results"]), 100)
 
     # ==================== RECURRING COLLISION TESTS ====================
 
@@ -493,3 +507,31 @@ class BookingViewTest(APITestCase):
 
         response = self.client.post('/api/bookings/', payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ==================== Google Calendar Build Events Data Test ====================
+    def test_build_event_data_for_google_calendar(self):
+        """Test building event data for Google Calendar integration."""
+
+        mock_room = SimpleNamespace(id=self.room.id, name=self.room.name)
+
+        mock_booking = SimpleNamespace(
+            room=mock_room,
+            visitor_name="Alice Johnson",
+            visitor_email="alice@example.com",
+            start_datetime=future_date.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=1),
+            end_datetime=future_date.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=1),
+            recurrence_rule="FREQ=DAILY;COUNT=5"
+        )
+
+        booking_viewset = BookingViewSet()
+        event_data = booking_viewset._build_event_data(mock_booking)
+
+        self.assertEqual(
+            event_data["summary"],
+            f"Booking of {self.room.name} - Alice Johnson"
+        )
+        self.assertIn("description", event_data)
+        self.assertEqual(
+            event_data["extendedProperties"]["shared"].get("roomId"),
+            str(self.room.id)
+        )

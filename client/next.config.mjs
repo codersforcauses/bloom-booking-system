@@ -26,6 +26,12 @@ const nextConfig = {
         hostname: "bloom-images-dev.s3.amazonaws.com",
         pathname: "/**",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+        pathname: "/**",
+      },
     ],
   },
 };

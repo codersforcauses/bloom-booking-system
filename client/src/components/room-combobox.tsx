@@ -20,6 +20,7 @@ type RoomComboboxProps = {
   value: RoomShortResponse[];
   onChange: (rooms: RoomShortResponse[]) => void;
 };
+
 export function RoomCombobox({ value, onChange }: RoomComboboxProps) {
   const anchor = useComboboxAnchor();
   const [search, setSearch] = React.useState("");
