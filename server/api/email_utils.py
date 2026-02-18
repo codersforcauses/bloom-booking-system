@@ -5,9 +5,9 @@ from django.conf import settings
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-import datetime
+from datetime import datetime, timezone
 
-from smtplib import SMTPAuthenticationError, SMTPResponseException
+from smtplib import SMTPAuthenticationError, SMTPResponseException, SMTPException
 
 import logging
 
@@ -30,9 +30,11 @@ Expected context structure:
 
 Booking confirmed email (`send_booking_confirmed_email`):
 context = {
+    "booking_id": int,         # required
     "room_name": str,          # required
     "start_datetime": datetime,         # required
     "end_datetime": datetime,           # required
+    "recurrence_rule": string,          # optional
     "visitor_name": str,       # required
     "location_name": str,      # required
     "manage_url": str | None,  # optional
@@ -40,9 +42,11 @@ context = {
 
 Booking cancelled email (`send_booking_cancelled_email`):
 context = {
+    "booking_id": int,         # required
     "room_name": str,          # required
     "start_datetime": datetime,         # required
     "end_datetime": datetime,           # required
+    "recurrence_rule": string,          # optional
     "book_room_url": str | None,  # optional
 }
 
@@ -186,9 +190,27 @@ def send_email_with_attachments(
 
     try:
         return email.send(fail_silently=fail_silently)
-    except (SMTPAuthenticationError, SMTPResponseException) as e:
+    except SMTPAuthenticationError:
+        logger.error(
+            "Failed to send email: SMTP authentication error. from_email=%r",
+            from_email,
+        )
+        if fail_silently:
+            return 0
+        raise
+    except SMTPResponseException as e:
+        if e.smtp_code == 530:
+            logger.error("Failed to send email: SMTP authentication required.")
+        else:
+            logger.error("SMTP Response Error: %s - %s", e.smtp_code, e.smtp_msg)
+        if fail_silently:
+            return 0
+        raise
+    except (SMTPException, OSError) as e:
         logger.error("Failed to send email with attachment: %s", e)
-        return 0
+        if fail_silently:
+            return 0
+        raise
 
 
 def send_booking_confirmed_email(
@@ -206,25 +228,33 @@ def send_booking_confirmed_email(
     ctx = dict(context or {})
     ctx.setdefault("bloom_logo_url", get_bloom_logo_url())
 
-    start_utc = context['start_datetime'].astimezone(datetime.timezone.utc)
-    end_utc = context['end_datetime'].astimezone(datetime.timezone.utc)
+    start_dt = context.get('start_datetime')
+    end_dt = context.get('end_datetime')
+    booking_id = context.get('booking_id', 'unknown')
+    room_name = context.get('room_name', 'Bloom Meeting Room')
+    rrule_str = context.get('recurrence_rule')
 
-    print(start_utc, end_utc)
+    if not start_dt or not end_dt:
+        logger.error("Missing required datetime objects in context.")
+        return 0
+
+    start_utc = start_dt.astimezone(timezone.utc)
+    end_utc = end_dt.astimezone(timezone.utc)
 
     start_str = start_utc.strftime('%Y%m%dT%H%M%SZ')
     end_str = end_utc.strftime('%Y%m%dT%H%M%SZ')
-    rrule_str = context['recurrence_rule']
 
-    print(start_str, end_str)
-
-    print(context['start_datetime'], context['end_datetime'])
+    dtstamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    uid = f"booking-{booking_id}@Bloom"
 
     ics_lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//Bloom//EN",
         "BEGIN:VEVENT",
-        f"SUMMARY: Booking for {context['room_name']}",
+        f"UID:{uid}",
+        f"DTSTAMP:{dtstamp}",
+        f"SUMMARY:Booking for {room_name}",
         f"DTSTART:{start_str}",
         f"DTEND:{end_str}",
     ]
@@ -242,7 +272,7 @@ def send_booking_confirmed_email(
         "END:VCALENDAR"
     ])
 
-    ics_content = "\n".join(ics_lines)
+    ics_content = "\r\n".join(ics_lines)
 
     return send_email_with_attachments(
             subject=subject,

@@ -130,6 +130,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                         subject=f"Booking for {booking.room.name} Confirmed!",
                         recipients=[booking.visitor_email],
                         context={
+                            "booking_id": booking.id,
                             "room_name": booking.room.name,
                             "start_datetime": booking.start_datetime,
                             "end_datetime": booking.end_datetime,
@@ -225,6 +226,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                             send_booking_cancelled_email(
                                 recipients=[visitor_email],
                                 context={
+                                    "booking_id": booking.id,
                                     "room_name": booking.room.name,
                                     "start_datetime": booking.start_datetime,
                                     "end_datetime": booking.end_datetime,
@@ -296,6 +298,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                             subject=f"Booking for {updated_booking.room.name} Confirmed!",
                             recipients=[updated_booking.visitor_email],
                             context={
+                                "booking_id": updated_booking.id,
                                 "room_name": updated_booking.room.name,
                                 "start_datetime": updated_booking.start_datetime,
                                 "end_datetime": updated_booking.end_datetime,
