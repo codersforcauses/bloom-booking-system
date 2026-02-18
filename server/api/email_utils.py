@@ -259,7 +259,7 @@ def send_booking_confirmed_email(
     if rrule_str:
         ctx["recurrence_rule_human"] = humanize(rrule_str)
     else:
-        ctx["recurrence_rule_human"] = None
+        ctx["recurrence_rule_human"] = ""
 
     return send_email_with_attachments(
         subject=subject,
@@ -290,7 +290,7 @@ def send_booking_cancelled_email(
     if rrule_str:
         ctx["recurrence_rule_human"] = humanize(rrule_str)
     else:
-        ctx["recurrence_rule_human"] = None
+        ctx["recurrence_rule_human"] = ""
 
     return send_simple_email(
         subject=subject,
