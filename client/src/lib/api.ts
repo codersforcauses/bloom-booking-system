@@ -24,6 +24,11 @@ const setAccessToken = (accessToken: string) =>
 const getRefreshToken = () =>
   typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
 
+const setRefreshToken = (refreshToken: string) =>
+  typeof window !== "undefined"
+    ? localStorage.setItem("refreshToken", refreshToken)
+    : undefined;
+
 const clearTokens = () => {
   if (typeof window === "undefined") return;
   localStorage.removeItem("accessToken");
@@ -178,8 +183,24 @@ const logout = () => {
   }
 };
 
+const checkAuth = async (): Promise<boolean> => {
+  const accessToken = getAccessToken();
+  if (!accessToken) return false;
+
+  try {
+    const res = await fetch("/api/check-auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessToken }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+};
+
 export default api;
-export { logout, setAccessToken };
+export { checkAuth, clearTokens, logout, setAccessToken, setRefreshToken };
 
 // Helper functions for typed API calls
 export async function apiGet<T>(url: string, config?: object): Promise<T> {
@@ -193,5 +214,15 @@ export async function apiPost<T, B = unknown>(
   config?: object,
 ): Promise<T> {
   const res = await api.post<T>(url, body, config);
+  return res.data;
+}
+
+// Helper function for PATCH requests
+export async function apiPatch<T, B = unknown>(
+  url: string,
+  body?: B,
+  config?: object,
+): Promise<T> {
+  const res = await api.patch<T>(url, body, config);
   return res.data;
 }

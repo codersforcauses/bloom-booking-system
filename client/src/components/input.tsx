@@ -11,6 +11,7 @@
 import { format } from "date-fns";
 import { SearchIcon } from "lucide-react";
 import React, { useState } from "react";
+import { Matcher, MonthChangeEventHandler } from "react-day-picker";
 
 import Badge from "@/components/badge";
 import { Calendar } from "@/components/calendar";
@@ -63,7 +64,7 @@ type NumberFieldProps = BaseFieldProps & {
   step?: number;
 };
 
-type SelectOption = { label: string; value: string };
+export type SelectOption = { label: string; value: string; disabled?: boolean };
 type SelectFieldProps = BaseFieldProps & {
   kind: "select";
   options: SelectOption[];
@@ -76,12 +77,16 @@ type BadgeFieldProps = BaseFieldProps & {
   options: string[];
   value: string[];
   onChange: (value: string[]) => void;
+  actionElement?: React.ReactNode;
 };
 
 type DateFieldProps = BaseFieldProps & {
   kind: "date";
   value: Date | undefined;
   onChange: (value: Date | undefined) => void;
+  defaultMonth?: Date;
+  disabledDates?: Matcher | Matcher[];
+  onMonthChange?: MonthChangeEventHandler;
 };
 
 type TimeFieldProps = BaseFieldProps & {
@@ -211,6 +216,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
               </button>
             );
           })}
+          {badgeProps.actionElement}
         </div>
       )}
 
@@ -260,7 +266,7 @@ function renderSelectFieldControl(props: SelectFieldProps) {
       </SelectTrigger>
       <SelectContent>
         {props.options.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
+          <SelectItem key={opt.value} value={opt.value} disabled={opt.disabled}>
             {opt.label}
           </SelectItem>
         ))}
@@ -291,6 +297,9 @@ function renderDateFieldControl(props: DateFieldProps) {
           mode="single"
           selected={props.value}
           onSelect={props.onChange}
+          defaultMonth={props.defaultMonth}
+          disabled={props.disabledDates}
+          onMonthChange={props.onMonthChange}
           initialFocus
         />
       </PopoverContent>
@@ -402,13 +411,13 @@ function renderSearchFieldControl(props: SearchFieldProps, name: string) {
       <div
         className={["relative", props.fieldClassName].filter(Boolean).join(" ")}
       >
-        <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
         <input
           id={name}
           name={name}
           type="text"
-          className="body w-full bg-transparent px-3 py-1 pl-10 outline-none placeholder:text-[var(--bloom-gray)]"
+          className="body w-full rounded-md border bg-white px-3 py-1 pl-8 outline-none placeholder:text-[var(--bloom-gray)]"
           placeholder={props.placeholder ?? "Search..."}
           value={tempValue}
           onChange={(e) => setTempValue(e.target.value)}

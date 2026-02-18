@@ -29,6 +29,7 @@ type FilterPopoverProps = {
     filters: CustomFetchBookingParams,
     rooms: RoomShortResponse[],
   ) => void;
+  EnableEmail?: boolean;
   className?: string;
 };
 
@@ -36,6 +37,7 @@ export function FilterPopover({
   initialFilters,
   selectedRooms = [],
   onApply,
+  EnableEmail = false,
   className,
 }: FilterPopoverProps) {
   const [open, setOpen] = useState(false);
@@ -43,7 +45,9 @@ export function FilterPopover({
   // Temporary state inside the popover
   const [tempRooms, setTempRooms] = useState<RoomShortResponse[]>([]);
   const [tempVisitorName, setTempVisitorName] = useState("");
-  const [tempVisitorEmail, setTempVisitorEmail] = useState("");
+  const [tempVisitorEmail, setTempVisitorEmail] = useState(
+    initialFilters?.visitor_email,
+  );
 
   // Sync temp state when popover opens
   const handleOpenChange = (isOpen: boolean) => {
@@ -79,13 +83,7 @@ export function FilterPopover({
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            "gap-2 border-2 bg-white p-2 hover:bg-muted",
-            className,
-          )}
-        >
+        <Button variant="outline" className={cn("gap-2", className)}>
           <FaFilter size={16} />
           Filter
         </Button>
@@ -122,6 +120,7 @@ export function FilterPopover({
               <AccordionContent>
                 <Input
                   type="text"
+                  name="text"
                   value={tempVisitorName}
                   onChange={(e) => setTempVisitorName(e.target.value)}
                   placeholder="Visitor Name"
@@ -136,13 +135,25 @@ export function FilterPopover({
                 Visitor Email
               </AccordionTrigger>
               <AccordionContent>
-                <Input
-                  type="text"
-                  value={tempVisitorEmail}
-                  onChange={(e) => setTempVisitorEmail(e.target.value)}
-                  placeholder="Visitor Email"
-                  className="w-full rounded border px-2 py-1 text-sm"
-                />
+                {!EnableEmail ? (
+                  <Input
+                    type="text"
+                    name="visitor_email"
+                    value={tempVisitorEmail}
+                    readOnly
+                    disabled
+                    className="w-full rounded border px-2 py-1 text-sm"
+                  />
+                ) : (
+                  <Input
+                    type="text"
+                    name="visitor_email"
+                    value={tempVisitorEmail}
+                    onChange={(e) => setTempVisitorEmail(e.target.value)}
+                    placeholder="Visitor Email"
+                    className="w-full rounded border px-2 py-1 text-sm"
+                  />
+                )}
               </AccordionContent>
             </AccordionItem>
           </Accordion>

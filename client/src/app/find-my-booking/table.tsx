@@ -8,14 +8,20 @@ import { BookingResponse } from "@/lib/api-types";
 import { parseRecurrenceRule } from "@/lib/recurrence";
 import { cn } from "@/lib/utils";
 
-export default function DemoTable({
+export default function BookingTable({
   data,
   isLoading,
   showAlert,
+  isAdminPage = false,
 }: {
   data: BookingResponse[];
   isLoading?: boolean;
-  showAlert: (variant: AlertDialogVariant, title: string, desc: string) => void;
+  isAdminPage?: boolean;
+  showAlert?: (
+    variant: AlertDialogVariant,
+    title: string,
+    desc: string,
+  ) => void;
 }) {
   /**
    * Table column configuration for Booking data.
@@ -29,20 +35,27 @@ export default function DemoTable({
    * - `render` receives a Booking row
    */
   const columns: Column<BookingResponse>[] = [
-    { key: "id", header: "ID", className: "h-12" },
     // Nested keys are allowed. This reads booking.room.name
-    { key: "room.name", header: "Room Name" },
+    { key: "room.name", header: "Room Name", className: "h-12" },
     { key: "visitor_name", header: "Visitor Name" },
     { key: "visitor_email", header: "Visitor Email" },
     {
       key: "start_datetime",
       header: "Start Date & Time",
-      render: (row) => new Date(row.start_datetime).toLocaleString(),
+      render: (row) => (
+        <span className="whitespace-nowrap">
+          {new Date(row.start_datetime).toLocaleString()}
+        </span>
+      ),
     },
     {
       key: "end_datetime",
       header: "End Date & Time",
-      render: (row) => new Date(row.end_datetime).toLocaleString(),
+      render: (row) => (
+        <span className="whitespace-nowrap">
+          {new Date(row.end_datetime).toLocaleString()}
+        </span>
+      ),
     },
     {
       key: "status",
@@ -80,7 +93,7 @@ export default function DemoTable({
             type="button"
             className="text-sm text-bloom-blue underline hover:text-bloom-blue-light"
             onClick={() =>
-              showAlert(
+              showAlert?.(
                 recurrence.label && recurrence.detail ? "info" : "error",
                 recurrence.text
                   ? `${recurrence.label} (${recurrence.text})`
@@ -98,10 +111,10 @@ export default function DemoTable({
   ];
 
   const renderActions = (row: BookingResponse) => {
-    const isActive = row.status === "COMPLETED";
+    const isActive = row.status === "CONFIRMED";
 
     return (
-      <span className="flex space-x-2">
+      <span className="flex justify-center">
         <span className="absolute left-0 top-0 h-full border-l-2" />
         {/* View / Edit */}
         <Button
@@ -117,7 +130,13 @@ export default function DemoTable({
           )}
         >
           {isActive ? (
-            <Link href="#">
+            <Link
+              href={
+                isAdminPage
+                  ? `/bookings/${row.id}`
+                  : `/find-my-booking/${row.id}?email=${encodeURIComponent(row.visitor_email)}`
+              }
+            >
               <BiCalendarEdit size={20} />
             </Link>
           ) : (
@@ -125,7 +144,7 @@ export default function DemoTable({
           )}
         </Button>
 
-        <Button
+        {/* <Button
           size="icon"
           title="Cancel"
           aria-label="Cancel"
@@ -137,7 +156,7 @@ export default function DemoTable({
               : "cursor-not-allowed border-gray-300 text-gray-300",
           )}
           onClick={() =>
-            showAlert(
+            showAlert?.(
               "confirm",
               "Cancel booking?",
               "This action cannot be undone.",
@@ -145,11 +164,12 @@ export default function DemoTable({
           }
         >
           <BiWindowClose size={20} />
-        </Button>
+        </Button> */}
         <span />
       </span>
     );
   };
+
   return (
     <div className="bg-inherit">
       <DataTable<BookingResponse>

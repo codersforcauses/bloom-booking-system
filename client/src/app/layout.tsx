@@ -17,10 +17,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body
-        className={montserrat.variable}
-        data-new-gr-c-s-check-loaded="14.1265.0"
-        data-gr-ext-installed=""
-        data-gr-ext-disabled="forever"
+        className={`${montserrat.variable} min-h-screen bg-background text-foreground`}
       >
         <Providers>
           <Navbar />
