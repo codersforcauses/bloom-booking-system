@@ -85,7 +85,12 @@ export const Interactive: StoryObj<InteractiveArgs> = {
 ---------------------------- */
 
 export const LongValues: Story = {
+  args: {
+    variant: "error",
+  },
+
   name: "Long values",
+
   render: () => (
     <AlertDialog
       open={true}
