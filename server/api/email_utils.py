@@ -236,7 +236,7 @@ def send_booking_confirmed_email(
         "BEGIN:VEVENT",
         f"UID:{uid}",
         f"DTSTAMP:{dtstamp}",
-        f"SUMMARY:Booking for {room_name}",
+        f"SUMMARY:Bloom room booking - {room_name}",
         f"DTSTART:{start_str}",
         f"DTEND:{end_str}",
     ]
@@ -249,7 +249,7 @@ def send_booking_confirmed_email(
         ics_lines.append(rrule_str)
 
     ics_lines.extend([
-        f"DESCRIPTION:Booking confirmation for {context['room_name']}",
+        f"DESCRIPTION:Room: {context['room_name']}, Location: {context['location_name']}, Visitor: {context['visitor_name']}",
         "END:VEVENT",
         "END:VCALENDAR"
     ])
