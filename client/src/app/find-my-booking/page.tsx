@@ -21,19 +21,29 @@ import BookingTable from "./table";
 
 export default function FindMyBookingPage() {
   const [verifiedEmail, setVerifiedEmail] = useState<string>("");
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   // Handler to reset email
   const handleBack = () => setVerifiedEmail("");
 
   if (!verifiedEmail) {
     return (
-      <FindMyBookingForm onVerified={(email) => setVerifiedEmail(email)} />
+      <FindMyBookingForm
+        onVerified={(email, token) => {
+          setVerifiedEmail(email);
+          setRecaptchaToken(token);
+        }}
+      />
     );
   }
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <BookingPage email={verifiedEmail} handleBack={handleBack} />
+      <BookingPage
+        email={verifiedEmail}
+        recaptchaToken={recaptchaToken}
+        handleBack={handleBack}
+      />
     </Suspense>
   );
 }
@@ -51,14 +61,17 @@ export type CustomFetchBookingParams = PaginationSearchParams & {
   room_ids?: string;
   visitor_email?: string;
   visitor_name?: string;
+  g_recaptcha_response?: string | null;
   _selectedRooms?: RoomShortResponse[];
 };
 
 function BookingPage({
   email = "",
+  recaptchaToken,
   handleBack,
 }: {
   email: string;
+  recaptchaToken: string | null;
   handleBack: () => void;
 }) {
   const router = useRouter();
@@ -95,6 +108,7 @@ function BookingPage({
       room_ids: "",
       visitor_email: email,
       visitor_name: "",
+      g_recaptcha_response: recaptchaToken,
       _selectedRooms: [],
       ...urlVisibleParams,
     }),

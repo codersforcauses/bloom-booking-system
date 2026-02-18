@@ -14,13 +14,14 @@ const bookingSchema = z.object({
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
 interface FindMyBookingFormProps {
-  onVerified: (email: string) => void;
+  onVerified: (email: string, recaptchaToken: string | null) => void;
 }
 
 export default function FindMyBookingForm({
   onVerified,
 }: FindMyBookingFormProps) {
   const [verified, setVerified] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const {
     control,
@@ -34,7 +35,7 @@ export default function FindMyBookingForm({
   });
 
   const onSubmit = (data: BookingFormValues) => {
-    onVerified(data.email);
+    onVerified(data.email, recaptchaToken);
   };
 
   return (
@@ -60,7 +61,10 @@ export default function FindMyBookingForm({
             />
           )}
         />
-        <ReCAPTCHA_v2 setVerified={setVerified}></ReCAPTCHA_v2>
+        <ReCAPTCHA_v2
+          setVerified={setVerified}
+          setReCAPTCHAToken={setRecaptchaToken}
+        ></ReCAPTCHA_v2>
         <Button disabled={!verified || !!errors.email || isSubmitting}>
           Search
         </Button>

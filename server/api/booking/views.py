@@ -13,7 +13,7 @@ from django.db import transaction
 import logging
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
-#from api.recaptcha_verification_utils import verify_recaptcha
+from api.recaptcha_verification_utils import verify_recaptcha
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +56,22 @@ class BookingViewSet(viewsets.ModelViewSet):
     search_fields = ['visitor_name', 'room__name']
 
     http_method_names = ["get", "post", "patch"]
+
+    # checks for the presence of g_recaptcha_response token for unauthenticated users in GET /api/bookings/ and GET /api/bookings/{id}/ endpoints
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        if self.action in ["list", "retrieve"]:
+            visitor_email = request.query_params.get("visitor_email")
+            if visitor_email and not request.user.is_authenticated:
+                token = request.query_params.get('g_recaptcha_response')
+                if not token:
+                    raise ValidationError({
+                        'g_recaptcha_response': 'reCAPTCHA token is required for unauthenticated users.'
+                    })
+                if not verify_recaptcha(token):
+                    raise ValidationError({
+                        'g_recaptcha_response': 'Invalid reCAPTCHA. Please try again.'
+                    })
 
     # for post, put and delete methods, use BookingSerializer for customization
     def get_serializer_class(self):
