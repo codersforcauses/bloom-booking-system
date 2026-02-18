@@ -40,6 +40,7 @@ export type RoomShortResponse = {
   name: string;
 };
 
+// ---------- Booking ----------
 type RoomStatus = "CONFIRMED" | "CANCELLED" | "COMPLETED";
 
 export type UpdateBookingRequest = Partial<{
@@ -51,6 +52,8 @@ export type UpdateBookingRequest = Partial<{
   recurrence_rule: string;
   cancel_reason: string;
 }>;
+
+export type CreateBookingRequest = Omit<UpdateBookingRequest, "cancel_reason">;
 
 export type BookingResponse = {
   id: number;
@@ -87,3 +90,19 @@ export type RoomAvailabilityResponse = {
 // for /rooms/availability/ endpoint
 export type PaginatedRoomAvailabilityResponse =
   PaginatedResponse<RoomAvailabilityResponse>;
+
+export type TimeSlot = {
+  start: string;
+  end: string;
+};
+
+export type DayAvailability = {
+  date: string;
+  slots: TimeSlot[];
+};
+
+// for /rooms/{id}/availability/ endpoint
+export type RoomAvailabilityDetailResponse = {
+  room_id: number;
+  availability: DayAvailability[];
+};

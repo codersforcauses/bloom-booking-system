@@ -5,12 +5,66 @@ import Link from "next/link";
 import { useState } from "react";
 import { HiOutlineUser } from "react-icons/hi";
 
+import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 
 import { Button } from "./button";
 
+const NavbarLinks = ({
+  loggedIn = false,
+  setOpen,
+}: {
+  loggedIn: boolean;
+  setOpen: (bool: boolean) => void;
+}) => {
+  if (loggedIn) {
+    return (
+      <>
+        <Link href="/dashboard">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Dashboard
+          </Button>
+        </Link>
+        <Link href="/meeting-room">
+          <Button variant="text" onClick={() => setOpen(false)}>
+            Meeting Rooms
+          </Button>
+        </Link>
+        <Link href="/settings">
+          <Button variant="login" onClick={() => setOpen(false)}>
+            <HiOutlineUser className="h-5 w-5" />
+            Settings
+          </Button>
+        </Link>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Link href="/">
+        <Button variant="outline" onClick={() => setOpen(false)}>
+          Book room
+        </Button>
+      </Link>
+      <Link href="/find-my-booking">
+        <Button variant="text" onClick={() => setOpen(false)}>
+          Find my booking
+        </Button>
+      </Link>
+      <Link href="/login">
+        <Button variant="login" onClick={() => setOpen(false)}>
+          <HiOutlineUser className="h-5 w-5" />
+          Admin login
+        </Button>
+      </Link>
+    </>
+  );
+};
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const { isLoggedIn } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-white">
@@ -47,18 +101,7 @@ export default function Navbar() {
 
         {/* desktop */}
         <div className="hidden items-center gap-6 md:flex">
-          <Link href="/">
-            <Button variant="outline">Book room</Button>
-          </Link>
-          <Link href="/find-my-booking">
-            <Button variant="text">Find my booking</Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="login">
-              <HiOutlineUser className="h-5 w-5" />
-              Admin login
-            </Button>
-          </Link>
+          <NavbarLinks loggedIn={isLoggedIn} setOpen={setOpen} />
         </div>
       </div>
 
@@ -66,23 +109,7 @@ export default function Navbar() {
       {open && (
         <div className="absolute left-0 top-full min-h-screen w-full overflow-y-auto bg-white md:hidden">
           <div className="flex min-h-screen flex-col items-center gap-6 px-8 py-6">
-            <Link href="/">
-              <Button variant="outline">Book room</Button>
-            </Link>
-            <Link
-              href="/find-my-booking"
-              className="-mx-4 mt-4 hover:text-primary"
-            >
-              <Button variant="text">Find my booking</Button>
-            </Link>
-            <div className="-mx-2 mt-20">
-              <Link href="/login">
-                <Button variant="login">
-                  <HiOutlineUser className="h-5 w-5" />
-                  Admin login
-                </Button>
-              </Link>
-            </div>
+            <NavbarLinks loggedIn={isLoggedIn} setOpen={setOpen} />
           </div>
         </div>
       )}

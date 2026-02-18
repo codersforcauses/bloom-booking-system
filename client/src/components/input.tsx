@@ -77,6 +77,7 @@ type BadgeFieldProps = BaseFieldProps & {
   options: string[];
   value: string[];
   onChange: (value: string[]) => void;
+  actionElement?: React.ReactNode;
 };
 
 type DateFieldProps = BaseFieldProps & {
@@ -215,6 +216,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
               </button>
             );
           })}
+          {badgeProps.actionElement}
         </div>
       )}
 
@@ -409,13 +411,13 @@ function renderSearchFieldControl(props: SearchFieldProps, name: string) {
       <div
         className={["relative", props.fieldClassName].filter(Boolean).join(" ")}
       >
-        <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
         <input
           id={name}
           name={name}
           type="text"
-          className="body w-full bg-transparent px-3 py-1 pl-10 outline-none placeholder:text-[var(--bloom-gray)]"
+          className="body w-full rounded-md border bg-white px-3 py-1 pl-8 outline-none placeholder:text-[var(--bloom-gray)]"
           placeholder={props.placeholder ?? "Search..."}
           value={tempValue}
           onChange={(e) => setTempValue(e.target.value)}
