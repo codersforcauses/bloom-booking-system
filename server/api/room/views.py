@@ -290,7 +290,8 @@ class RoomViewSet(viewsets.ModelViewSet):
                 ).between(
                     make_aware(datetime.combine(
                         start_datetime.date(), time.min)),
-                    make_aware(datetime.combine(end_datetime.date(), time.max))
+                    make_aware(datetime.combine(end_datetime.date(), time.max)),
+                    inc=True
                 )
                 for occurrence_start in booking_occurrences:
                     booked_slots.append(
@@ -321,7 +322,8 @@ class RoomViewSet(viewsets.ModelViewSet):
                 room_recurrence_rule
             ).between(
                 make_aware(datetime.combine(start_datetime.date(), time.min)),
-                make_aware(datetime.combine(end_datetime.date(), time.max))
+                make_aware(datetime.combine(end_datetime.date(), time.max)),
+                inc=True
             )
             for occurrence_start in room_occurrences:
                 occurrence_end = occurrence_start + duration
