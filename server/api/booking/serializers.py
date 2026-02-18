@@ -3,8 +3,7 @@ from django.utils import timezone
 from .models import Booking
 from api.room.models import Room
 import re
-import requests
-from django.conf import settings
+from api.recaptcha_verification_utils import verify_recaptcha
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
@@ -52,17 +51,7 @@ class BookingSerializer(DynamicFieldsModelSerializer):
         return value
 
     def validate_g_recaptcha_response(self, value):
-        response = requests.post(
-            'https://www.google.com/recaptcha/api/siteverify',
-            data={
-                'secret': settings.RECAPTCHA_SECRET_KEY,
-                'response': value
-            },
-            timeout=5,
-        )
-        result = response.json()
-        print(result)
-        if not result.get('success'):
+        if not verify_recaptcha(value):
             raise serializers.ValidationError({
                 'g_recaptcha_response': 'Invalid reCAPTCHA. Please try again.'
             })

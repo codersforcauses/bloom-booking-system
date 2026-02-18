@@ -13,6 +13,7 @@ from django.db import transaction
 import logging
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
+#from api.recaptcha_verification_utils import verify_recaptcha
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     http_method_names = ["get", "post", "patch"]
 
-    # for put and delete methods, use BookingSerializer for customization
+    # for post, put and delete methods, use BookingSerializer for customization
     def get_serializer_class(self):
         if self.request.method in ["GET"]:
             return BookingListSerializer
