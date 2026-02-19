@@ -39,7 +39,7 @@ import {
   useRoomEvents,
 } from "@/hooks/calendar";
 import RoomAPI from "@/hooks/room";
-import { getAvailableSlots, normalizeRoom } from "@/lib/room-utils";
+import { getAvailableSlots247, normalizeRoom } from "@/lib/room-utils";
 import { cn } from "@/lib/utils";
 
 const PERTH_TZ = "Australia/Perth";
@@ -99,11 +99,10 @@ export default function ViewCalendarPage() {
   // display both real google events and user's selectedSlot
   const displayEvents = selectedSlot ? [...events, selectedSlot] : events;
 
-  // calculate available slots based on room data and dateRange
+  // calculate available slots — all slots in range are available since rooms are 24/7
   const availableSlots = useMemo(() => {
-    // if room is not active, just skip the calculation
     if (!room || !room.is_active) return new Set<number>();
-    return getAvailableSlots(room, dateRange.start, dateRange.end);
+    return getAvailableSlots247(dateRange.start, dateRange.end);
   }, [room, dateRange]);
 
   // prepare booked slots for selection checking from google events (instead of calling backend API)
