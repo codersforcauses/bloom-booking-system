@@ -276,6 +276,20 @@ class AvailabilityAPITest(APITestCase):
         self.assertEqual(len(availability[1]["slots"]), 1)
         self.assertEqual(len(availability[2]["slots"]), 1)
 
+    def test_start_date_is_inclusive(self):
+        """
+        Specifically asserts that the start_date boundary is included.
+        Fails if inc=False, passes if inc=True.
+        """
+        response = self.client.get(
+            f"/api/rooms/{self.room1.id}/availability/",
+            {"start_date": next_tuesday.isoformat(), "end_date": next_wednesday.isoformat()}
+        )
+
+        # If it was exclusive (inc=False), this length would be 1.
+        availability = response.data.get("availability", [])
+        self.assertEqual(len(availability), 2, "The search range must include the start_date.")
+
     # Test availability when booking have no recurrence rules
     def test_availability_no_recurrence_rules(self):
         # Check availability for next Monday to next Sunday
