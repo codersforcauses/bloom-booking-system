@@ -27,11 +27,18 @@ import {
   View,
   Views,
 } from "react-big-calendar";
+import { LuToggleRight } from "react-icons/lu";
 import { useMediaQuery } from "react-responsive";
 
 import { Calendar as MiniCalendar } from "@/components/calendar";
 import { RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   CalendarEvent,
   GoogleCalendarEvent,
@@ -41,6 +48,8 @@ import {
 import RoomAPI from "@/hooks/room";
 import { getAvailableSlots247, normalizeRoom } from "@/lib/room-utils";
 import { cn } from "@/lib/utils";
+
+import BookRoomForm from "./booking-form";
 
 const PERTH_TZ = "Australia/Perth";
 const now = new TZDate(new Date(), PERTH_TZ);
@@ -67,6 +76,7 @@ export default function ViewCalendarPage() {
   const [selectedSlot, setSelectedSlot] = useState<NewCalendarEvent | null>(
     null,
   );
+  const [dialogOpen, setDialogOpen] = useState(false);
   // to set a 13-day window (mobile) / 3-week window (desktop) to pre-fetch data and prevent ui flickering
   const [dateRange, setDateRange] = useState(() => {
     if (isMobile) {
@@ -331,13 +341,29 @@ export default function ViewCalendarPage() {
           selectable
           onSelectSlot={handleSelectSlot}
           onSelectEvent={(event) => {
-            setSelectedSlot(null);
+            if (event.isDraft) setDialogOpen(true);
           }}
           // Custom Rendering
           slotPropGetter={slotPropGetter}
           eventPropGetter={eventPropGetter}
         />
       </div>
+      {/* Booking Dialog */}
+      {selectedSlot && selectedSlot.start && selectedSlot.end && (
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-2xl bg-white">
+            <DialogHeader>
+              <DialogTitle>Book a slot</DialogTitle>
+            </DialogHeader>
+            <BookRoomForm
+              room_id={Number(id)}
+              date={format(selectedSlot.start as Date, "yyyy-MM-dd")}
+              start_time={format(selectedSlot.start as Date, "HH:mm")}
+              end_time={format(selectedSlot.end as Date, "HH:mm")}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
