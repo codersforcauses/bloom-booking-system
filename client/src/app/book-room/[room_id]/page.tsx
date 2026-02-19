@@ -2,10 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
-import { useParams, useRouter , useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Matcher } from "react-day-picker";
+import { format } from "date-fns";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -15,7 +14,6 @@ import {
   AlertDialogProps,
   AlertDialogVariant,
 } from "@/components/alert-dialog";
-import InputField, { SelectOption } from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
 import { RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
@@ -24,19 +22,37 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { useCreateBooking } from "@/hooks/booking";
-import RoomAPI, { DateTimeSlots, TimeSlot } from "@/hooks/room";
+import RoomAPI from "@/hooks/room";
 import { normaliseRoom } from "@/lib/normalise-room";
 import { cn, resolveErrorMessage } from "@/lib/utils";
 
-import {
-  formatDateTime,
-  getDateTimeSlots,
-  getUnavailableDates,
-} from "./room-utils";
+import { formatDateTime } from "./room-utils";
+
+// 00:00 → 23:30 in 30-minute steps
+const TIME_OPTIONS: string[] = (() => {
+  const times: string[] = [];
+  for (let hour = 0; hour <= 23; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const hh = hour.toString().padStart(2, "0");
+      const mm = minute.toString().padStart(2, "0");
+      times.push(`${hh}:${mm}`);
+    }
+  }
+  return times;
+})();
 
 type BookRoomFormProps = {
   room_id: number;
@@ -49,9 +65,6 @@ type BookRoomFormProps = {
  * React hook form component using zod validation for booking a room.
  * Includes name, email, date, start time and end time fields, reCAPTCHA
  * verification, and an alert dialog on submission.
- *
- * Date picker disables past dates and fully-booked dates based on the
- * available timeslots returned by the API.
  */
 function BookRoomForm({
   room_id,
@@ -65,23 +78,6 @@ function BookRoomForm({
     return <NotFound />;
   }
 
-  /**
-   * The dates to prevent users from selecting (e.g. past dates, fully-booked dates)
-   */
-  const [disabledDates, setDisabledDates] = useState<Matcher[]>([]);
-  /**
-   * The time slots of the current date chosen by the date field used to
-   * restrict the time selection fields
-   */
-  const [selectTimeSlots, setSelectTimeSlots] = useState<TimeSlot[]>([]);
-  /**
-   * The options to render within the time selection fields
-   */
-  const [startTimeOptions, setStartTimeOptions] = useState<SelectOption[]>([]);
-  const [endTimeOptions, setEndTimeOptions] = useState<SelectOption[]>([]);
-  /**
-   * The state of the reCAPTCHA verification
-   */
   const [verified, setVerified] = useState<boolean>(false);
 
   function close_dialog() {
@@ -215,161 +211,6 @@ function BookRoomForm({
     createBooking.mutate(payload);
   }
 
-  // Default to current month for timeslot fetching
-  const [timeslotRange, setTimeslotRange] = useState(() => {
-    const start = new Date();
-    const end = endOfWeek(endOfMonth(start));
-    return { start, end };
-  });
-
-  const {
-    data: availableTimeSlots,
-    isLoading: isLoadingTimeSlots,
-    isError: isErrorTimeSlots,
-    error: timeSlotsError,
-  } = RoomAPI.useFetchRoomTimeSlots(
-    room_id,
-    timeslotRange.start,
-    timeslotRange.end,
-  );
-
-  /**
-   * Fetches available timeslots for the month navigated to in the date picker.
-   */
-  async function handleMonthChange(month: Date) {
-    const start_datetime = startOfWeek(startOfMonth(month));
-    const end_datetime = endOfWeek(endOfMonth(month));
-    setTimeslotRange({ start: start_datetime, end: end_datetime });
-  }
-
-  /**
-   * Returns true if the time provided is within one of the time slots provided.
-   */
-  function timeInTimeSlots(time: string, slots: TimeSlot[]): boolean {
-    for (const slot of slots) {
-      const datetime = new Date(formatDateTime(new Date(slot.start), time));
-      if (datetime >= slot.start && datetime <= slot.end) return true;
-    }
-    return false;
-  }
-
-  /**
-   * Get 30-minute time options directly from the available slot boundaries.
-   * Since rooms are 24/7, there are no fixed opening/closing hours to bound by.
-   */
-  function getTimeSelectOptionsInSlots(
-    slots: TimeSlot[],
-    option_length: number = 30,
-  ): SelectOption[] {
-    const time_options: SelectOption[] = [];
-    const slot_length = new Date(
-      new Date(0).setMinutes(option_length),
-    ).getTime();
-
-    for (const slot of slots) {
-      const d = new Date(slot.start);
-      while (d.getTime() < slot.end.getTime()) {
-        const time = d.toTimeString().substring(0, 5);
-        if (!time_options.some((o) => o.value === time)) {
-          time_options.push({ value: time, label: time, disabled: false });
-        }
-        d.setTime(d.getTime() + slot_length);
-      }
-    }
-
-    return time_options;
-  }
-
-  /**
-   * Get available end times after a given start_time, restricted to the same
-   * slot as the start time.
-   */
-  function getEndTimeOptions(
-    start_time: string = form.getValues("start_time"),
-    timeslots: TimeSlot[] = selectTimeSlots,
-  ): SelectOption[] {
-    if (start_time === "") {
-      return getTimeSelectOptionsInSlots(timeslots);
-    }
-    for (const slot of timeslots) {
-      if (timeInTimeSlots(start_time, [slot])) {
-        return getTimeSelectOptionsInSlots([slot]).filter((opt) => {
-          const start = new Date(formatDateTime(new Date(), start_time));
-          const opt_time = new Date(formatDateTime(new Date(), opt.value));
-          return start < opt_time;
-        });
-      }
-    }
-    return [];
-  }
-
-  /**
-   * Update disabled dates from the available timeslots.
-   * Disables past dates and dates with no available slots (fully booked).
-   */
-  function disableUnavailableDates(
-    available_timeslots: DateTimeSlots[] = availableTimeSlots ?? [],
-    options: { start_date?: Date; end_date?: Date } = {},
-  ) {
-    const dates = getUnavailableDates(available_timeslots, {
-      start_date: options.start_date,
-      end_date: options.end_date,
-    });
-    setDisabledDates([{ before: new Date() }, ...dates]);
-  }
-
-  /**
-   * Update time slot options when the selected date changes.
-   */
-  function handleDateChange(date: Date | undefined) {
-    const timeslots = getDateTimeSlots(date, availableTimeSlots ?? []);
-    setSelectTimeSlots(timeslots);
-    const start_options = getTimeSelectOptionsInSlots(timeslots);
-    setStartTimeOptions(start_options);
-    let start_time: string | undefined = form.getValues("start_time");
-    if (!start_options.map((opt) => opt.value).includes(start_time)) {
-      form.resetField("start_time");
-      start_time = "";
-    }
-    handleStartTimeChange(start_time, timeslots);
-  }
-
-  /**
-   * Update end time options when the start time changes, and reset end time
-   * if the previous value is now invalid.
-   */
-  function handleStartTimeChange(
-    start_time: string,
-    timeslots: TimeSlot[] = selectTimeSlots,
-  ) {
-    const end_options = getEndTimeOptions(start_time, timeslots);
-    setEndTimeOptions(end_options);
-    const end_time: string = form.getValues("end_time");
-    if (!end_options.map((opt) => opt.value).includes(end_time)) {
-      form.resetField("end_time");
-    }
-  }
-
-  /**
-   * Re-compute disabled dates whenever available timeslots or the visible
-   * month range changes.
-   */
-  useEffect(() => {
-    disableUnavailableDates(availableTimeSlots, {
-      start_date: timeslotRange.start,
-      end_date: timeslotRange.end,
-    });
-  }, [availableTimeSlots, timeslotRange.start, timeslotRange.end]);
-
-  if (isErrorTimeSlots) {
-    return (
-      <div>
-        <h2 className="text-2xl font-bold">Error</h2>
-        <p>{resolveErrorMessage(timeSlotsError)}</p>
-      </div>
-    );
-  }
-
   return (
     <Form
       form={form}
@@ -379,21 +220,17 @@ function BookRoomForm({
         "flex flex-col gap-6 bg-white px-8 py-8 md:px-16 md:py-12",
       )}
     >
-      <div className="flex flex-col gap-6 md:flex-row md:gap-3">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-3">
         <FormField
           name="name"
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
+              <FormLabel required>
+                Name <span className="text-bloom-red">*</span>
+              </FormLabel>
               <FormControl>
-                <InputField
-                  kind="text"
-                  required={true}
-                  name="name"
-                  label="Name"
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                />
+                <Input {...field} placeholder="Name" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -404,43 +241,37 @@ function BookRoomForm({
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
+              <FormLabel required>
+                Email <span className="text-bloom-red">*</span>
+              </FormLabel>
               <FormControl>
-                <InputField
-                  kind="text"
-                  required={true}
-                  name="email"
-                  label="Email"
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                />
+                <Input {...field} type="email" placeholder="Email" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
-      <div className="flex flex-col gap-6 md:flex-row md:gap-3">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-3">
         <FormField
           name="date"
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
+              <FormLabel required>
+                Date <span className="text-bloom-red">*</span>
+              </FormLabel>
               <FormControl>
-                <InputField
-                  kind="date"
-                  required={true}
-                  name="date"
-                  label="Date"
-                  value={field.value}
+                <Input
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
                   onChange={(e) => {
-                    field.onChange(e);
-                    // handleDateChange(e);
+                    const val = e.target.value;
+                    field.onChange(
+                      val ? new Date(val + "T00:00:00") : undefined,
+                    );
                   }}
-                  defaultMonth={
-                    field.value === undefined ? new Date() : field.value
-                  }
-                  disabledDates={disabledDates}
-                  onMonthChange={handleMonthChange}
                 />
               </FormControl>
               <FormMessage />
@@ -452,21 +283,21 @@ function BookRoomForm({
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormControl>
-                <InputField
-                  kind="select"
-                  required={true}
-                  name="start_time"
-                  label="Start time"
-                  options={startTimeOptions}
-                  value={field.value || ""}
-                  placeholder="Select a time"
-                  onChange={(e) => {
-                    field.onChange(e);
-                    // handleStartTimeChange(e);
-                  }}
-                />
-              </FormControl>
+              <FormLabel required>
+                Start time <span className="text-bloom-red">*</span>
+              </FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_OPTIONS.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -476,18 +307,21 @@ function BookRoomForm({
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormControl>
-                <InputField
-                  kind="select"
-                  required={true}
-                  name="end_time"
-                  label="End time"
-                  options={endTimeOptions}
-                  value={field.value || ""}
-                  placeholder="Select a time"
-                  onChange={field.onChange}
-                />
-              </FormControl>
+              <FormLabel required>
+                End time <span className="text-bloom-red">*</span>
+              </FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_OPTIONS.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
