@@ -40,7 +40,7 @@ import RecurrenceRuleField from "./recurrence-rule-field";
 import { formatDateTime } from "./room-utils";
 
 // 00:00 → 23:30 in 30-minute steps
-const TIME_OPTIONS: string[] = (() => {
+export const TIME_OPTIONS: string[] = (() => {
   const times: string[] = [];
   for (let hour = 0; hour <= 23; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {

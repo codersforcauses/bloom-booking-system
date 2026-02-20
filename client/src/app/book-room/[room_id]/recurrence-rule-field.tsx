@@ -16,6 +16,7 @@ import {
 
 type RecurrenceRuleFieldProps = {
   onChange: (rrule: string) => void;
+  defaultRRule?: string;
 };
 
 function buildRrule(value: CustomRepeatValue): string {
@@ -58,11 +59,64 @@ function buildRrule(value: CustomRepeatValue): string {
   return rrule;
 }
 
+function parseRrule(rrule: string): CustomRepeatValue {
+  const parts = Object.fromEntries(
+    rrule.split(";").map((p) => p.split("=")),
+  ) as Record<string, string>;
+
+  const freqMap: Record<string, CustomRepeatValue["frequency"]> = {
+    DAILY: "day",
+    WEEKLY: "week",
+    MONTHLY: "month",
+  };
+
+  const dayMap: Record<string, string> = {
+    MO: "mon",
+    TU: "tue",
+    WE: "wed",
+    TH: "thu",
+    FR: "fri",
+    SA: "sat",
+    SU: "sun",
+  };
+
+  const frequency = freqMap[parts.FREQ] ?? "week";
+  const interval = parts.INTERVAL ?? "1";
+  const days = parts.BYDAY
+    ? parts.BYDAY.split(",").map((d) => dayMap[d] ?? d)
+    : [];
+
+  let endType: CustomRepeatValue["endType"] = "never";
+  let endDate: Date | undefined;
+  let occurrences: string | undefined;
+
+  if (parts.UNTIL) {
+    endType = "on";
+    const s = parts.UNTIL.replace("Z", "");
+    endDate = new Date(
+      `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}T00:00:00`,
+    );
+  } else if (parts.COUNT) {
+    endType = "after";
+    occurrences = parts.COUNT;
+  }
+
+  return { frequency, interval, days, endType, endDate, occurrences };
+}
+
+function initRepeat(rrule: string | undefined): string {
+  if (!rrule) return "none";
+  if (rrule === "FREQ=DAILY") return "daily";
+  if (rrule === "FREQ=WEEKLY") return "weekly";
+  return "rule";
+}
+
 export default function RecurrenceRuleField({
   onChange,
+  defaultRRule,
 }: RecurrenceRuleFieldProps) {
-  const [repeat, setRepeat] = useState<string>("none");
-  const [customRule, setCustomRule] = useState<string>("");
+  const [repeat, setRepeat] = useState<string>(() => initRepeat(defaultRRule));
+  const [customRule, setCustomRule] = useState<string>(defaultRRule ?? "");
   const [showModal, setShowModal] = useState<boolean>(false);
 
   function handleValueChange(value: string) {
@@ -122,6 +176,7 @@ export default function RecurrenceRuleField({
           persists between open/close cycles. Visibility is controlled via `open`. */}
       <CustomRepeatModal
         open={showModal}
+        defaultValue={customRule ? parseRrule(customRule) : undefined}
         onClose={() => {
           setShowModal(false);
           // If the user never committed a rule, revert the select to "none"
