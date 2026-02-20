@@ -45,6 +45,7 @@ urlpatterns = [
     path("redoc/", SpectacularRedocView.as_view(url_name="schema"),
          name="redoc"),
     path("api/users/", include(("api.user.urls"))),
+    path("api/dashboard/", include("api.dashboard.urls")),
     path("api/calendar/", get_room_calendar_events, name="room-calendar-events"),
     path("api/", include(router.urls)),
 ]

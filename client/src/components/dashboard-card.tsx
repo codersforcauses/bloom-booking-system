@@ -26,7 +26,7 @@ export function DashboardCard(props: DashboardCardProps) {
     >
       <div
         className={cn(
-          "flex items-center justify-between rounded-[inherit] border-l-8 px-5 py-3",
+          "flex h-full items-center justify-between rounded-[inherit] border-l-8 px-5 py-3",
           props.colorClass,
         )}
       >
