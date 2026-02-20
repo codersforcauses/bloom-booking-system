@@ -1,17 +1,20 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import * as z from "zod";
 
-import { formatDateTime } from "@/app/book-room/[room_id]/room-utils";
 import NotFound from "@/app/not-found";
 import {
   AlertDialog,
   AlertDialogProps,
   AlertDialogVariant,
 } from "@/components/alert-dialog";
+import ReCAPTCHAV2 from "@/components/recaptcha";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -22,28 +25,65 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { useCreateBooking } from "@/hooks/booking";
 import { cn } from "@/lib/utils";
 
+import RecurrenceRuleField from "./recurrence-rule-field";
+import { formatDateTime } from "./room-utils";
+
+// 00:00 → 23:30 in 30-minute steps
+const TIME_OPTIONS: string[] = (() => {
+  const times: string[] = [];
+  for (let hour = 0; hour <= 23; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const hh = hour.toString().padStart(2, "0");
+      const mm = minute.toString().padStart(2, "0");
+      times.push(`${hh}:${mm}`);
+    }
+  }
+  return times;
+})();
+
 type BookRoomFormProps = {
   room_id: number;
-  date: string;
-  start_time: string;
-  end_time: string;
+  date?: string;
+  start_time?: string;
+  end_time?: string;
+  name?: string;
+  email?: string;
+  isCalendar?: boolean;
 };
 
+/**
+ * React hook form component using zod validation for booking a room.
+ * Includes name, email, date, start time and end time fields, reCAPTCHA
+ * verification, and an alert dialog on submission.
+ */
 export default function BookRoomForm({
   room_id,
   date,
   start_time,
   end_time,
+  name,
+  email,
+  isCalendar = true,
 }: BookRoomFormProps) {
   const router = useRouter();
 
   if (room_id === undefined || isNaN(room_id)) {
     return <NotFound />;
   }
+
+  const [verified, setVerified] = useState<boolean>(false);
+  const [recurrenceRule, setRecurrenceRule] = useState<string>("");
 
   function close_dialog() {
     setAlertDialogProps({
@@ -73,8 +113,8 @@ export default function BookRoomForm({
           "Your booking has been submitted successfully.\nYou will receive an email confirmation shortly.",
         variant: "success",
         open: true,
-        onConfirm: () => router.push(`/calendar/${room_id}`),
-        onClose: () => router.push(`/calendar/${room_id}`),
+        onConfirm: () => router.push("/calendar/" + room_id),
+        onClose: () => router.push("/calendar/" + room_id),
       });
     },
     (error) => {
@@ -152,11 +192,11 @@ export default function BookRoomForm({
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      name: "",
-      email: "",
-      date: new Date(date),
-      start_time: start_time,
-      end_time: end_time,
+      name: name ?? "",
+      email: email ?? "",
+      date: date ? new Date(date) : undefined,
+      start_time: start_time ?? "",
+      end_time: end_time ?? "",
     },
   });
 
@@ -170,6 +210,7 @@ export default function BookRoomForm({
       visitor_email: data.email,
       start_datetime: formatDateTime(data.date, data.start_time),
       end_datetime: formatDateTime(data.date, data.end_time),
+      recurrence_rule: recurrenceRule,
     };
 
     createBooking.mutate(payload);
@@ -180,25 +221,21 @@ export default function BookRoomForm({
       form={form}
       onSubmit={form.handleSubmit(onSubmit)}
       className={cn(
-        "h-fit w-full rounded-md md:min-w-[32rem] md:max-w-[56rem]",
-        "flex flex-col gap-6 bg-white px-8 py-8 md:px-16 md:py-12",
+        "h-fit w-full min-w-80 rounded-md md:max-w-4xl",
+        "flex flex-col bg-white px-8 py-8 md:gap-6 md:px-16 md:py-12",
       )}
     >
-      <div className="flex flex-col gap-6 md:flex-row md:gap-3">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-3">
         <FormField
           name="name"
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel>Name</FormLabel>
+              <FormLabel required>
+                Name <span className="text-bloom-red">*</span>
+              </FormLabel>
               <FormControl>
-                <Input
-                  type="text"
-                  required={true}
-                  name="name"
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                />
+                <Input {...field} placeholder="Name" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -209,38 +246,37 @@ export default function BookRoomForm({
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel>Email</FormLabel>
+              <FormLabel required>
+                Email <span className="text-bloom-red">*</span>
+              </FormLabel>
               <FormControl>
-                <Input
-                  type="text"
-                  required={true}
-                  name="email"
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                />
+                <Input {...field} type="email" placeholder="Email" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
-      <div className="flex flex-col gap-6 md:flex-row md:gap-3">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-3">
         <FormField
           name="date"
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel>Date</FormLabel>
+              <FormLabel required>
+                Date <span className="text-bloom-red">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
-                  type="text"
-                  name="date"
-                  value={
-                    field.value
-                      ? field.value.toISOString().substring(0, 10)
-                      : ""
-                  }
-                  disabled
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(
+                      val ? new Date(val + "T00:00:00") : undefined,
+                    );
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -252,16 +288,21 @@ export default function BookRoomForm({
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel>Start time</FormLabel>
-              <FormControl>
-                <Input
-                  type="string"
-                  name="start_time"
-                  value={field.value || ""}
-                  placeholder="Select a time"
-                  disabled
-                />
-              </FormControl>
+              <FormLabel required>
+                Start time <span className="text-bloom-red">*</span>
+              </FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_OPTIONS.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -271,29 +312,51 @@ export default function BookRoomForm({
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel>End time</FormLabel>
-              <FormControl>
-                <Input
-                  type="string"
-                  name="end_time"
-                  value={field.value || ""}
-                  placeholder="Select a time"
-                  disabled
-                />
-              </FormControl>
+              <FormLabel required>
+                End time <span className="text-bloom-red">*</span>
+              </FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_OPTIONS.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
+      {!isCalendar && <RecurrenceRuleField onChange={setRecurrenceRule} />}
 
-      <Button
-        type="submit"
-        disabled={createBooking.isPending}
-        className="w-fit"
-      >
-        {!createBooking.isPending ? "Submit" : <Spinner className="w-6" />}
-      </Button>
+      {/* <ReCAPTCHAV2 setVerified={setVerified} /> */}
+      <div className="flex gap-4">
+        <Button type="submit" disabled={createBooking.isPending}>
+          {!createBooking.isPending ? "Submit" : <Spinner className="w-6" />}
+        </Button>
+        {isCalendar && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const values = form.getValues();
+              const formDate = values.date
+                ? format(values.date, "yyyy-MM-dd")
+                : "";
+              router.push(
+                `/book-room/${room_id}?date=${formDate}&start_time=${values.start_time ?? ""}&end_time=${values.end_time ?? ""}&name=${values.name ?? ""}&email=${values.email ?? ""}`,
+              );
+            }}
+          >
+            Book a recurring slot
+          </Button>
+        )}
+      </div>
       <AlertDialog {...alertDialogProps} />
     </Form>
   );

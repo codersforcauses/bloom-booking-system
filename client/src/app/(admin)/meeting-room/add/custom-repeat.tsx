@@ -12,12 +12,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CustomRepeatSchema, type CustomRepeatValue } from "./schemas";
 
 type CustomRepeatModalProps = {
+  defaultValue?: CustomRepeatValue;
   open: boolean;
   onClose: () => void;
   onDone: (value: CustomRepeatValue) => void;
 };
 
 export default function CustomRepeatModal({
+  defaultValue,
   open,
   onClose,
   onDone,

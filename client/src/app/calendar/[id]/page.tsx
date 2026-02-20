@@ -49,7 +49,7 @@ import RoomAPI from "@/hooks/room";
 import { getAvailableSlots247, normalizeRoom } from "@/lib/room-utils";
 import { cn } from "@/lib/utils";
 
-import BookRoomForm from "./booking-form";
+import BookRoomForm from "../../book-room/[room_id]/booking-form";
 
 const PERTH_TZ = "Australia/Perth";
 const now = new TZDate(new Date(), PERTH_TZ);
