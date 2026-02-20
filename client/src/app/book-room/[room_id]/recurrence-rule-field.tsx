@@ -130,7 +130,6 @@ export default function RecurrenceRuleField({
   function handleSetCustomRule(rrule: string) {
     setCustomRule(rrule);
     onChange(rrule);
-    console.log("Custom RRULE set:", rrule);
     if (rrule == "") setRepeat("none");
     else if (rrule == "FREQ=DAILY") {
       setRepeat("daily");
@@ -138,7 +137,6 @@ export default function RecurrenceRuleField({
       setRepeat("weekly");
     } else {
       setRepeat("rule");
-      // setShowRule(true);
     }
     setShowModal(false);
   }
@@ -188,7 +186,6 @@ export default function RecurrenceRuleField({
           }
         }}
         onDone={(value: CustomRepeatValue) => {
-          console.log("Custom repeat value from modal:", value);
           const rrule = buildRrule(value);
           handleSetCustomRule(rrule);
         }}
