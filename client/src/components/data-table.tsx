@@ -35,13 +35,11 @@ export function DataTable<T extends { id: number }>({
   const headClass = "w-auto px-4 py-2 text-left font-medium text-nowrap";
 
   return (
-    <div className="mb-4 border-t-[2px] border-gray-400 bg-inherit">
+    <div className="mb-4 border-t-2 border-gray-400 bg-inherit">
       {/* Horizontal scroll wrapper */}
       <div className="relative max-h-[60vh] overflow-x-auto overflow-y-auto bg-inherit">
-        <Table
-          className={cn("w-full min-w-[800px] bg-inherit text-sm", className)}
-        >
-          <TableHeader className="sticky top-0 z-10 bg-inherit">
+        <Table className={cn("w-full min-w-[800px] bg-inherit", className)}>
+          <TableHeader className="sticky top-0 z-10 bg-gray-100">
             <TableRow className="bg-inherit">
               {columns.map((col) => (
                 <TableHead
@@ -58,7 +56,7 @@ export function DataTable<T extends { id: number }>({
                 >
                   <span className="flex space-x-2">
                     <span className="absolute left-0 top-0 h-full border-l-2" />
-                    Actions
+                    Action
                   </span>
                 </TableHead>
               )}

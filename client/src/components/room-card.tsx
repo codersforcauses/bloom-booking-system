@@ -14,7 +14,7 @@ import { Room } from "@/types/card";
 
 import { Button } from "./ui/button";
 
-const PLACEHOLDER_IMAGE =
+export const PLACEHOLDER_IMAGE =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-family='sans-serif' font-size='20'>No image</text></svg>";
 
 // Mapping amenity string -> React icon component
@@ -239,6 +239,7 @@ function AdminRoomCard({
       label: "Amenities",
       value: <Amenities amenities={room.amenities} hideIcon={hideIcon} />,
     },
+    { label: "Availability", value: room.availability },
   ];
 
   return (

@@ -1,3 +1,4 @@
+import os
 from rest_framework import permissions
 from .models import Booking
 from .serializers import BookingSerializer, BookingListSerializer
@@ -10,10 +11,12 @@ from rest_framework import viewsets, status
 from .google_calendar.events import create_event, update_event, delete_event
 from googleapiclient.errors import HttpError
 from django.db import transaction
+from ..email_utils import send_booking_confirmed_email, send_booking_cancelled_email
 import logging
 
 logger = logging.getLogger(__name__)
 
+frontend_url = os.getenv("FRONTEND_URL", "")
 
 # For admin to filter booking in /api/bookings
 
@@ -117,6 +120,32 @@ class BookingViewSet(viewsets.ModelViewSet):
 
             # If we get here, both Google Calendar and DB creation succeeded
             response_serializer = self.get_serializer(booking)
+
+            # Send booking confirmation email after successful creation
+            # A non-critical feature - booking creation should not fail if email sending fails
+            # Use on_commit to ensure email is sent only after transaction commits
+            def send_confirmation_email():
+                try:
+                    send_booking_confirmed_email(
+                        subject=f"Booking confirmation #{booking.id}",
+                        recipients=[booking.visitor_email],
+                        context={
+                            "booking_id": booking.id,
+                            "room_name": booking.room.name,
+                            "start_datetime": booking.start_datetime,
+                            "end_datetime": booking.end_datetime,
+                            "recurrence_rule": booking.recurrence_rule,
+                            "visitor_name": booking.visitor_name,
+                            "location_name": booking.room.location.name,
+                            "manage_url": frontend_url + "/find-my-booking"
+                        }
+                    )
+                except Exception as email_error:
+                    logger.error(
+                        f"Booking {booking.id} created, but failed to send confirmation email: {email_error}")
+
+            transaction.on_commit(send_confirmation_email)
+
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
         except ValidationError:
@@ -144,6 +173,11 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "detail": "Visitor email is incorrect."
             })
 
+        if instance.status == "COMPLETED":
+            raise ValidationError({
+                "detail": "Cannot modify or cancel booking when it is already completed."
+            })
+
         # handle when visitor_email in request and instance are different in cases
         # note that filters for visitor_email is case insensitive and visitor_email is immutable
         # use data instead of request.data to update the db
@@ -154,7 +188,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         # Check if this is a cancellation request
         if cancel_reason and cancel_reason.strip():
-            # Handle cancellation with transaction and Google Calendar deletion
+            # Handle cancellation with transaction, Google Calendar deletion and cancellation email
             try:
                 with transaction.atomic():
                     # Delete from Google Calendar first, inside the transaction
@@ -188,6 +222,30 @@ class BookingViewSet(viewsets.ModelViewSet):
 
                     response_serializer = BookingSerializer(booking, fields=(
                         'id', 'status', 'cancel_reason', 'updated_at'))
+
+                    # Send cancellation email
+                    # A non-critical feature - booking cancellation should not fail if email sending fails
+                    # Use on_commit to ensure email is sent only after transaction commits
+                    def send_cancellation_email():
+                        try:
+                            send_booking_cancelled_email(
+                                subject=f"Booking cancellation #{booking.id}",
+                                recipients=[visitor_email],
+                                context={
+                                    "booking_id": booking.id,
+                                    "room_name": booking.room.name,
+                                    "start_datetime": booking.start_datetime,
+                                    "end_datetime": booking.end_datetime,
+                                    "recurrence_rule": booking.recurrence_rule,
+                                    "book_room_url": frontend_url + "/book-room"
+                                }
+                            )
+                        except Exception as email_error:
+                            logger.error(
+                                f"Booking {booking.id} cancelled, but failed to send cancellation email: {email_error}")
+
+                    transaction.on_commit(send_cancellation_email)
+
                     return Response(response_serializer.data)
 
             except ValidationError:
@@ -236,6 +294,32 @@ class BookingViewSet(viewsets.ModelViewSet):
                 # If we get here, both Google Calendar and DB updates succeeded
                 response_serializer = BookingSerializer(
                     updated_booking, fields=('id', 'status', 'updated_at'))
+
+                # Send updated booking confirmation email
+                # A non-critical feature - booking update should not fail if email sending fails
+                # Use on_commit to ensure email is sent only after transaction commits
+                def send_update_confirmation_email():
+                    try:
+                        send_booking_confirmed_email(
+                            subject=f"Booking confirmation #{booking.id} - Booking updated",
+                            recipients=[updated_booking.visitor_email],
+                            context={
+                                "booking_id": updated_booking.id,
+                                "room_name": updated_booking.room.name,
+                                "start_datetime": updated_booking.start_datetime,
+                                "end_datetime": updated_booking.end_datetime,
+                                "recurrence_rule": updated_booking.recurrence_rule,
+                                "visitor_name": updated_booking.visitor_name,
+                                "location_name": updated_booking.room.location.name,
+                                "manage_url": frontend_url + "/find-my-booking"
+                            }
+                        )
+                    except Exception as email_error:
+                        logger.error(
+                            f"Booking {updated_booking.id} updated, but failed to send confirmation email: {email_error}")
+
+                transaction.on_commit(send_update_confirmation_email)
+
                 return Response(response_serializer.data)
 
         except ValidationError:
@@ -262,5 +346,11 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "dateTime": booking.end_datetime.isoformat(),
                 "timeZone": "Australia/Perth",
             },
-            "recurrence": [f"RRULE:{booking.recurrence_rule}"] if booking.recurrence_rule else []
+            "recurrence": [f"RRULE:{booking.recurrence_rule}"] if booking.recurrence_rule else [],
+            # Add for the filtering of events to render in frontend calendar
+            "extendedProperties": {
+                "shared": {
+                    "roomId": str(booking.room.id)
+                }
+            }
         }

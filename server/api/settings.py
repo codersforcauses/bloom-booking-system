@@ -215,6 +215,8 @@ EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False") == "True"
 DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER", "")
 SERVER_EMAIL = os.environ.get("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
 
+BLOOM_LOGO_URL = os.environ.get(
+    "FRONTEND_URL") + "/images/bloom-logo.png"
 
 # =========================
 # AWS S3 storage configuration

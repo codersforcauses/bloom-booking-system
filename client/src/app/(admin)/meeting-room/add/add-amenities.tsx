@@ -1,7 +1,6 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import {
@@ -13,18 +12,22 @@ import RoomAPI from "@/hooks/room";
 import type { AmenityResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
+import { AmenityFormSchema } from "./schemas";
+
 type View = "list" | "form";
 
 type AmenityModalProps = {
   open: boolean;
   onClose: () => void;
   onSelect: (amenity: string | number) => void;
+  onAmenitiesChanged?: () => Promise<void> | void;
 };
 
 export default function AmenityModal({
   open,
   onClose,
   onSelect,
+  onAmenitiesChanged,
 }: AmenityModalProps) {
   const [view, setView] = useState<View>("list");
   const [editingItem, setEditingItem] = useState<AmenityResponse | null>(null);
@@ -39,9 +42,11 @@ export default function AmenityModal({
     variant?: "success" | "error";
   }>({ open: false });
 
-  const queryClient = useQueryClient();
-
-  const { data: amenities = [], isLoading } = RoomAPI.useFetchRoomAmenities({
+  const {
+    data: amenities = [],
+    isLoading,
+    refetch,
+  } = RoomAPI.useFetchRoomAmenities({
     page: 1,
     nrows: 100,
   });
@@ -52,18 +57,28 @@ export default function AmenityModal({
 
   const handleSubmit = async (value: string) => {
     try {
+      // Validate input with Zod
+      const validatedData = AmenityFormSchema.parse({ name: value });
+
       let createdAmenity;
       if (editingItem) {
-        await updateAmenity.mutateAsync({ name: value });
+        await updateAmenity.mutateAsync({ name: validatedData.name });
       } else {
-        createdAmenity = await createAmenity.mutateAsync({ name: value });
+        createdAmenity = await createAmenity.mutateAsync({
+          name: validatedData.name,
+        });
       }
 
-      queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
+      // Refetch to update the list
+      await refetch();
 
-      // If creating a new amenity, pass the amenity ID back to parent
-      if (createdAmenity && !editingItem) {
+      if (!editingItem && createdAmenity) {
         onSelect(createdAmenity.id);
+      }
+
+      // Notify parent that amenities have changed and wait for refetch
+      if (onAmenitiesChanged) {
+        await Promise.resolve(onAmenitiesChanged());
       }
 
       setView("list");
@@ -81,14 +96,31 @@ export default function AmenityModal({
   const handleDelete = async (item: AmenityResponse) => {
     try {
       await deleteAmenity.mutateAsync(item.id);
-      queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
+      // Refetch to update the list
+      await refetch();
+
+      // Notify parent that amenities have changed and wait for refetch
+      if (onAmenitiesChanged) {
+        await Promise.resolve(onAmenitiesChanged());
+      }
+
       setConfirmDelete(null);
+      setAlert({
+        open: true,
+        variant: "success",
+        title: "Success",
+        description: `Amenity "${item.name}" has been deleted.`,
+      });
     } catch (err) {
+      setConfirmDelete(null);
+      const errorMessage = resolveErrorMessage(err);
       setAlert({
         open: true,
         variant: "error",
-        title: "Error",
-        description: resolveErrorMessage(err),
+        title: "Cannot Delete Amenity",
+        description:
+          errorMessage ||
+          `Unable to delete "${item.name}". This amenity may be in use by one or more rooms. Please remove it from those rooms first.`,
       });
     }
   };

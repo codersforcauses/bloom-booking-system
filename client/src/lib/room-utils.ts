@@ -1,9 +1,30 @@
-// copied from issue 115
 import { TZDate } from "@date-fns/tz";
 import { differenceInMinutes, endOfDay, format, startOfDay } from "date-fns";
 import { RRule, rrulestr } from "rrule";
 
-import { RoomResponse } from "@/lib/api-types";
+import { AmenityResponse, RoomResponse } from "@/lib/api-types";
+
+// helper function to bridge the gap between api room data and arguments of RoomCard
+export function normalizeRoom(apiRoom: RoomResponse | undefined) {
+  return {
+    id: apiRoom?.id || 0,
+    title: apiRoom?.name || "",
+    image: apiRoom?.img || "",
+    location: apiRoom?.location.name || "",
+    seats: apiRoom?.capacity || 0,
+    amenities:
+      apiRoom?.amenities?.map((amenity: AmenityResponse) => amenity.name) ?? [],
+    available: true,
+    availability: apiRoom
+      ? getAvailabilityText(
+          apiRoom.is_active,
+          new Date(apiRoom.start_datetime),
+          new Date(apiRoom.end_datetime),
+          apiRoom.recurrence_rule,
+        )
+      : "",
+  };
+}
 
 // helper function to calculate available slots based on start datetime, end datetime and recurrence rule (no booking considered)
 export const getAvailableSlots = (
@@ -29,7 +50,7 @@ export const getAvailableSlots = (
   const fakeUtcSearchEnd = new Date(searchEndString + "Z");
 
   if (room.recurrence_rule) {
-    // Use RRule if it exists (pretend it is in utc)
+    // Use RRule if it exists (pretend it is in utz)
     const options = RRule.parseString(room.recurrence_rule);
     options.dtstart = fakeUtcStart;
     const rule = new RRule(options);
@@ -79,7 +100,7 @@ export const getAvailabilityText = (
   ruleString: string,
 ) => {
   const PERTH_TZ = "Australia/Perth";
-  if (!isActive) return "Unavailable";
+  if (!isActive) return "Inactive";
   try {
     // Extract and format the times
     const startDtPerth = new TZDate(startDt, PERTH_TZ);

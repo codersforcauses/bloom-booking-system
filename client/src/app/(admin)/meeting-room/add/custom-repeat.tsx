@@ -9,15 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-export type CustomRepeatValue = {
-  interval: string;
-  frequency: "day" | "week" | "month";
-  days: string[];
-  endType: "on" | "after" | "never";
-  endDate?: Date;
-  occurrences: string;
-  startDate?: Date;
-};
+import { CustomRepeatSchema, type CustomRepeatValue } from "./schemas";
 
 type CustomRepeatModalProps = {
   open: boolean;
@@ -38,19 +30,31 @@ export default function CustomRepeatModal({
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [occurrences, setOccurrences] = useState<string>("1");
   const [startDate] = useState<Date | undefined>(new Date());
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   if (!open) return null;
 
   const handleDone = () => {
-    onDone({
-      interval,
-      frequency,
-      days,
-      endType,
-      endDate,
-      occurrences,
-      startDate,
-    });
+    try {
+      // Validate with Zod schema
+      const validatedData = CustomRepeatSchema.parse({
+        interval,
+        frequency,
+        days,
+        endType,
+        endDate,
+        occurrences,
+        startDate,
+      });
+      setValidationError(null);
+      onDone(validatedData);
+    } catch (error) {
+      // Surface validation issues to the user instead of only logging them.
+      setValidationError(
+        "The custom repeat settings are invalid. Please review and try again.",
+      );
+      console.error("Validation error:", error);
+    }
   };
 
   const dayOptions = [
@@ -214,6 +218,12 @@ export default function CustomRepeatModal({
             </div>
           </RadioGroup>
         </div>
+
+        {validationError && (
+          <p className="body-sm mb-2 rounded-md bg-red-50 p-2 text-red-700">
+            {validationError}
+          </p>
+        )}
 
         {/* Action buttons */}
         <div className="flex flex-col justify-end gap-2 pt-2 sm:flex-row">

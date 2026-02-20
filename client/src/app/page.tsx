@@ -158,7 +158,7 @@ export default function Home() {
                   <BookingRoomCard
                     key={room.id}
                     room={room}
-                    onBook={() => router.push(`/book-room/${room.id}`)} // todo: to substitute with the correct route
+                    onBook={() => router.push(`/calendar/${room.id}`)} // todo: to substitute with the correct route
                   />
                 ))
             : !loading && (
