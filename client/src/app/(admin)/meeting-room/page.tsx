@@ -100,7 +100,6 @@ export default function RoomsPage() {
     const observer = new IntersectionObserver((observedItems) => {
       const marker = observedItems[0];
       if (marker.isIntersecting && hasNextPage) {
-        console.log("Fetching next page of rooms");
         fetchNextPage();
       }
     });

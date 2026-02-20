@@ -301,7 +301,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                 def send_update_confirmation_email():
                     try:
                         send_booking_confirmed_email(
-                            subject=f"Booking confirmation #{booking.id} - Booking updated",
+                            subject=f"Booking confirmation #{updated_booking.id} - Booking updated",
                             recipients=[updated_booking.visitor_email],
                             context={
                                 "booking_id": updated_booking.id,

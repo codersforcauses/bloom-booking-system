@@ -92,6 +92,27 @@ export const getAvailableSlots = (
   return availableSet;
 };
 
+// helper function to calculate available slots for 24/7 rooms — every 30-min slot in the
+// range is available; room opening hours and recurrence rule are not considered.
+export const getAvailableSlots247 = (rangeStart: string, rangeEnd: string) => {
+  const PERTH_TZ = "Australia/Perth";
+  const availableSet = new Set<number>();
+
+  const searchStart = new TZDate(rangeStart, PERTH_TZ);
+  const searchEnd = new TZDate(rangeEnd, PERTH_TZ);
+
+  const startMs = startOfDay(searchStart).getTime();
+  const endMs = endOfDay(searchEnd).getTime();
+
+  let current = startMs;
+  while (current <= endMs) {
+    availableSet.add(current);
+    current += 30 * 60000; // 30-minute slot
+  }
+
+  return availableSet;
+};
+
 // helper function to transform start_datetime, end_datetime and rrule to readable string
 export const getAvailabilityText = (
   isActive: boolean,

@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.utils.dateparse import parse_date, parse_datetime
 from dateutil.rrule import rruleset, rrulestr
 from api.booking.models import Booking
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from django.utils.timezone import localdate, make_aware, localtime, now
 from collections import defaultdict
 from rest_framework.exceptions import ValidationError
@@ -207,7 +207,9 @@ class RoomViewSet(viewsets.ModelViewSet):
         """
         start_datetime = make_aware(datetime.combine(start_date, time.min))
         end_datetime = make_aware(datetime.combine(end_date, time.max))
-        flattened_availability_slots = self._get_availability_slots(
+        # flattened_availability_slots = self._get_availability_slots(
+        #     room, start_datetime, end_datetime)
+        flattened_availability_slots = self._get_availability_slots_247(
             room, start_datetime, end_datetime)
         # group slots by date
         availability_slots = defaultdict(list)
@@ -218,6 +220,51 @@ class RoomViewSet(viewsets.ModelViewSet):
                 "end": localtime(fi_end).isoformat()
             })
         return [{"date": date, "slots": slots} for date, slots in sorted(availability_slots.items())]
+
+    # Helper function to get availability slots after subtracting booked slots
+    # (24/7 version — ignores room opening hours/recurrence rule)
+    def _get_availability_slots_247(self, room, start_datetime, end_datetime):
+        """
+        Returns a flat list of (free_start, free_end) datetime tuples.
+        Treats all rooms as 24/7 available — only confirmed bookings reduce availability.
+        """
+        # Step 1: get all slots that have been booked (identical to _get_availability_slots)
+        booked_slots = []
+        bookings = Booking.objects.filter(room=room, status="CONFIRMED").filter(
+            Q(recurrence_rule__isnull=False) |
+            Q(start_datetime__lt=end_datetime, end_datetime__gt=start_datetime)
+        )
+        for booking in bookings:
+            duration = booking.end_datetime - booking.start_datetime
+            if booking.recurrence_rule:
+                booking_recurrence_rule = booking.recurrence_rule
+                booking_occurrences = _expand_recurrences(
+                    localtime(booking.start_datetime),
+                    booking_recurrence_rule,
+                ).between(
+                    make_aware(datetime.combine(
+                        start_datetime.date(), time.min)),
+                    make_aware(datetime.combine(end_datetime.date(), time.max))
+                )
+                for occurrence_start in booking_occurrences:
+                    booked_slots.append(
+                        (localtime(occurrence_start), localtime(occurrence_start) + duration))
+            else:
+                booked_slots.append(
+                    (localtime(booking.start_datetime), localtime(booking.end_datetime)))
+
+        # Step 2: since rooms are 24/7, the available window is the full day for each date
+        availability_slots = []
+        current_date = start_datetime.date()
+        while current_date <= end_datetime.date():
+            day_start = make_aware(datetime.combine(current_date, time.min))
+            day_end = make_aware(datetime.combine(current_date, time.max))
+            availability_slots.extend(
+                self._calculate_free_intervals(
+                    day_start, day_end, booked_slots)
+            )
+            current_date += timedelta(days=1)
+        return availability_slots
 
     # Helper function to get availability slots after subtracting booked slots
     def _get_availability_slots(self, room, start_datetime, end_datetime):
