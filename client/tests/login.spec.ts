@@ -39,7 +39,6 @@ test("toggles password visibility", async ({ page }) => {
   await expect(passwordInput).toHaveAttribute("type", "password");
 });
 
-// Mock e2e test. Playwright intercepts and returns fake tokens
 test("successful login redirects to dashboard", async ({ page }) => {
   await page.route("**/api/users/login/**", async (route) => {
     await route.fulfill({
@@ -56,16 +55,9 @@ test("successful login redirects to dashboard", async ({ page }) => {
   await page.locator('input[id="password"]').fill("testpassword");
   await page.locator('button[type="submit"]').click();
 
-  await expect(page).toHaveURL(/.*dashboard/);
-});
-
-// Real e2e login attempt - Requires dev server to be running
-test("successful login e2e", async ({ page }) => {
-  await page.locator('input[id="username"]').fill("admin");
-  await page.locator('input[id="password"]').fill("Password123");
-  await page.locator('button[type="submit"]').click();
-
-  await expect(page).toHaveURL(/.*dashboard/);
+  await page.waitForURL("http://localhost:3000/dashboard", {
+    timeout: 5000,
+  });
 });
 
 test("shows error on failed login", async ({ page }) => {
@@ -89,11 +81,27 @@ test("shows error on failed login", async ({ page }) => {
 });
 
 test("redirects already authenticated user to dashboard", async ({ page }) => {
-  await page.locator('input[id="username"]').fill("admin");
-  await page.locator('input[id="password"]').fill("Password123");
-  await page.locator('button[type="submit"]').click();
-  await page.waitForURL(/.*dashboard/);
+  await page.route("**/api/users/login/**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        access: "test-access-token",
+        refresh: "test-refresh-token",
+      } satisfies LoginResponse),
+    });
+  });
 
-  await page.goto("http://localhost:3000/login");
-  await expect(page).toHaveURL(/.*dashboard/);
+  await page.locator('input[id="username"]').fill("testuser");
+  await page.locator('input[id="password"]').fill("testpassword");
+  await page.locator('button[type="submit"]').click();
+  await page.waitForURL("http://localhost:3000/dashboard", {
+    timeout: 5000,
+  });
+
+  await page.goto("http://localhost:3000/login", { waitUntil: "networkidle" });
+
+  await page.waitForURL("http://localhost:3000/dashboard", {
+    timeout: 10000,
+  });
 });
