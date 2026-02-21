@@ -323,8 +323,6 @@ export default function EditBookingPage() {
     location: "",
     available: false,
     availability: "",
-    seats: 0,
-    amenities: [],
     removed: false,
   };
 

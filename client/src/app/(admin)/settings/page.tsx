@@ -10,17 +10,12 @@ import {
 } from "@/components/admin-settings-card";
 import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import RoomAPI from "@/hooks/room";
-import { AmenityResponse, LocationResponse } from "@/lib/api-types";
+import { LocationResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
-type View =
-  | "summary"
-  | "locations-list"
-  | "locations-form"
-  | "amenities-list"
-  | "amenities-form";
+type View = "summary" | "locations-list" | "locations-form";
 
-type Item = LocationResponse | AmenityResponse;
+type Item = LocationResponse;
 
 export default function AdminSettingsPage() {
   const [view, setView] = useState<View>("summary");
@@ -33,58 +28,39 @@ export default function AdminSettingsPage() {
     description?: string;
   }>({ open: false, variant: "success" });
 
-  const [confirmDelete, setConfirmDelete] = useState<{
-    item: Item;
-    type: "locations" | "amenities";
-  } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ item: Item } | null>(
+    null,
+  );
 
   const queryClient = useQueryClient();
 
   const { data: locations, isLoading: isLocationsLoading } =
     RoomAPI.useFetchRoomLocations({ page: 1, nrows: 100 });
 
-  const { data: amenities, isLoading: isAmenitiesLoading } =
-    RoomAPI.useFetchRoomAmenities({ page: 1, nrows: 100 });
-
   const createLocation = RoomAPI.useCreateRoomLocation();
   const updateLocation = RoomAPI.useUpdateRoomLocation(editingItem?.id ?? 0);
   const deleteLocation = RoomAPI.useDeleteRoomLocation();
 
-  const createAmenity = RoomAPI.useCreateRoomAmenity();
-  const updateAmenity = RoomAPI.useUpdateRoomAmenity(editingItem?.id ?? 0);
-  const deleteAmenity = RoomAPI.useDeleteRoomAmenity();
-
-  const handleAdd = (type: "locations" | "amenities") => {
+  const handleAdd = () => {
     setEditingItem(null);
-    setView(type === "locations" ? "locations-form" : "amenities-form");
+    setView("locations-form");
   };
 
-  const handleEdit = (item: Item, type: "locations" | "amenities") => {
+  const handleEdit = (item: Item) => {
     setEditingItem(item);
-    setView(type === "locations" ? "locations-form" : "amenities-form");
+    setView("locations-form");
   };
 
   const handleSubmit = async (value: string) => {
     try {
       if (editingItem) {
-        if (view.includes("locations")) {
-          await updateLocation.mutateAsync({ name: value });
-          queryClient.invalidateQueries({ queryKey: ["room-locations"] });
-        } else {
-          await updateAmenity.mutateAsync({ name: value });
-          queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
-        }
+        await updateLocation.mutateAsync({ name: value });
       } else {
-        if (view.includes("locations")) {
-          await createLocation.mutateAsync({ name: value });
-          queryClient.invalidateQueries({ queryKey: ["room-locations"] });
-        } else {
-          await createAmenity.mutateAsync({ name: value });
-          queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
-        }
+        await createLocation.mutateAsync({ name: value });
       }
 
-      setView(view.includes("locations") ? "locations-list" : "amenities-list");
+      queryClient.invalidateQueries({ queryKey: ["room-locations"] });
+      setView("locations-list");
 
       setAlert({
         open: true,
@@ -102,15 +78,10 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleDelete = async (item: Item, type: "locations" | "amenities") => {
+  const handleDelete = async (item: Item) => {
     try {
-      if (type === "locations") {
-        await deleteLocation.mutateAsync(item.id);
-        queryClient.invalidateQueries({ queryKey: ["room-locations"] });
-      } else {
-        await deleteAmenity.mutateAsync(item.id);
-        queryClient.invalidateQueries({ queryKey: ["room-amenities"] });
-      }
+      await deleteLocation.mutateAsync(item.id);
+      queryClient.invalidateQueries({ queryKey: ["room-locations"] });
 
       setAlert({
         open: true,
@@ -134,10 +105,8 @@ export default function AdminSettingsPage() {
         {view === "summary" && (
           <AdminSettingsSummaryCard
             locations={locations.map((l) => l.name)}
-            amenities={amenities.map((a) => a.name)}
-            isLoading={isLocationsLoading || isAmenitiesLoading}
+            isLoading={isLocationsLoading}
             onEditLocations={() => setView("locations-list")}
-            onEditAmenities={() => setView("amenities-list")}
           />
         )}
 
@@ -145,37 +114,17 @@ export default function AdminSettingsPage() {
           <AdminSettingsTableCard
             title="Locations"
             items={locations.map((l) => ({ id: l.id, name: l.name }))}
-            onAdd={() => handleAdd("locations")}
+            onAdd={handleAdd}
             onBack={() => setView("summary")}
-            onEditItem={(item) => handleEdit(item, "locations")}
-            onDeleteItem={(item) =>
-              setConfirmDelete({ item, type: "locations" })
-            }
+            onEditItem={handleEdit}
+            onDeleteItem={(item) => setConfirmDelete({ item })}
           />
         )}
-
-        {view === "amenities-list" && (
-          <AdminSettingsTableCard
-            title="Amenities"
-            items={amenities.map((a) => ({ id: a.id, name: a.name }))}
-            onAdd={() => handleAdd("amenities")}
-            onBack={() => setView("summary")}
-            onEditItem={(item) => handleEdit(item, "amenities")}
-            onDeleteItem={(item) =>
-              setConfirmDelete({ item, type: "amenities" })
-            }
-          />
-        )}
-
-        {(view === "locations-form" || view === "amenities-form") && (
+        {view === "locations-form" && (
           <AdminSettingsFormCard
-            title={view === "locations-form" ? "Location" : "Amenity"}
+            title="Location"
             defaultValue={editingItem?.name || ""}
-            onCancel={() =>
-              setView(
-                view === "locations-form" ? "locations-list" : "amenities-list",
-              )
-            }
+            onCancel={() => setView("locations-list")}
             onSubmit={handleSubmit}
           />
         )}
@@ -197,7 +146,7 @@ export default function AdminSettingsPage() {
           description={`Are you sure you want to delete "${confirmDelete.item.name}"?`}
           onClose={() => setConfirmDelete(null)}
           onConfirm={async () => {
-            await handleDelete(confirmDelete.item, confirmDelete.type);
+            await handleDelete(confirmDelete.item);
           }}
         />
       )}

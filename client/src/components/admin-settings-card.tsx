@@ -22,10 +22,8 @@ import { AmenityResponse, LocationResponse } from "@/lib/api-types";
 
 type SummaryCardProps = {
   locations: string[];
-  amenities: string[];
   isLoading: boolean;
   onEditLocations: () => void;
-  onEditAmenities: () => void;
 };
 
 function ListWithViewMore({ items }: { items: string[] }) {
@@ -65,10 +63,8 @@ function ListWithViewMore({ items }: { items: string[] }) {
 
 function AdminSettingsSummaryCard({
   locations,
-  amenities,
   isLoading,
   onEditLocations,
-  onEditAmenities,
 }: SummaryCardProps) {
   // Reusable row
   const SummaryRow = ({
@@ -116,11 +112,6 @@ function AdminSettingsSummaryCard({
           title="Room Locations"
           items={locations}
           onEdit={onEditLocations}
-        />
-        <SummaryRow
-          title="Room Amenities"
-          items={amenities}
-          onEdit={onEditAmenities}
         />
         {/* Logout Row */}
         <div className="flex justify-center py-6">

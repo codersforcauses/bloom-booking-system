@@ -42,13 +42,6 @@ export const AddMeetingRoomSchema = z
         const locationId = typeof val === "string" ? parseInt(val, 10) : val;
         return !isNaN(locationId) && locationId > 0;
       }, "Location is required"),
-    seats: z
-      .number()
-      .or(z.string())
-      .refine((val) => {
-        const numVal = typeof val === "string" ? parseInt(val, 10) : val;
-        return !isNaN(numVal) && numVal > 0;
-      }, "Capacity must be greater than 0"),
     start_datetime: z
       .string()
       .min(1, "Start date/time is required")
@@ -57,7 +50,6 @@ export const AddMeetingRoomSchema = z
       .string()
       .min(1, "End date/time is required")
       .refine((val) => !isNaN(new Date(val).getTime()), "Invalid end date"),
-    amenities: z.array(z.string().or(z.number())).default([]),
     image: z.string().optional(),
     recurrence_rule: z.string().optional(),
   })
