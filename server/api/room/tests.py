@@ -299,18 +299,18 @@ class AvailabilityAPITest(APITestCase):
         print(response.content.decode())
         print()
 
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     room_id = response.data["room_id"]
-    #     self.assertEqual(room_id, self.room2.id)
-    #     availability = response.data["availability"]
-    #     self.assertEqual(len(availability), 1)
-    #     self.assertEqual(availability[0]['date'], next_monday.isoformat())
-    #     self.assertEqual(len(availability[0]["slots"]), 2)
-    #     # Room 2 has a booking from 13:00 to 14:00
-    #     self.assertEqual(availability[0]["slots"][0]['end'], timezone.make_aware(
-    #         timezone.datetime.combine(next_monday, time(13, 0))).isoformat())
-    #     self.assertEqual(availability[0]["slots"][1]['start'], timezone.make_aware(
-    #         timezone.datetime.combine(next_monday, time(14, 0))).isoformat())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        room_id = response.data["room_id"]
+        self.assertEqual(room_id, self.room2.id)
+        availability = response.data["availability"]
+        self.assertEqual(len(availability), 1)
+        self.assertEqual(availability[0]['date'], next_monday.isoformat())
+        self.assertEqual(len(availability[0]["slots"]), 2)
+        # Room 2 has a booking from 13:00 to 14:00
+        self.assertEqual(availability[0]["slots"][0]['end'], timezone.make_aware(
+            timezone.datetime.combine(next_monday, time(13, 0))).isoformat())
+        self.assertEqual(availability[0]["slots"][1]['start'], timezone.make_aware(
+            timezone.datetime.combine(next_monday, time(14, 0))).isoformat())
 
     # Test availability when room and booking have recurrence rules with end date
     def test_availability_recurrence_rule_with_end_date(self):
