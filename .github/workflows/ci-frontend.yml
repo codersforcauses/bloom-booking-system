@@ -68,6 +68,8 @@ jobs:
     defaults:
       run:
         working-directory: client
+    env:
+      NEXT_PUBLIC_BACKEND_URL: "http://localhost:8000/api"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
