@@ -420,7 +420,7 @@ export default function EditMeetingRoomForm({
                   }
                   onChange={(value) => {
                     if (!value) return;
-                    const dateStr = value.toISOString().split("T")[0];
+                    const dateStr = value.toLocaleDateString("en-CA");
                     const time = formValues.start_datetime
                       ? (formValues.start_datetime as string).split("T")[1] ||
                         "09:00"
