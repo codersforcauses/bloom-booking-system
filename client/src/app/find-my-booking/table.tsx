@@ -36,12 +36,13 @@ export default function BookingTable({
    */
   const columns: Column<BookingResponse>[] = [
     // Nested keys are allowed. This reads booking.room.name
-    { key: "room.name", header: "Room Name", className: "h-12" },
-    { key: "visitor_name", header: "Visitor Name" },
-    { key: "visitor_email", header: "Visitor Email" },
+    { key: "id", header: "Id", className: "h-12" },
+    { key: "room.name", header: "Room name", className: "h-12" },
+    { key: "visitor_name", header: "Visitor name" },
+    { key: "visitor_email", header: "Visitor email" },
     {
       key: "start_datetime",
-      header: "Start Date & Time",
+      header: "Start date & time",
       render: (row) => (
         <span className="whitespace-nowrap">
           {new Date(row.start_datetime).toLocaleString()}
@@ -50,7 +51,7 @@ export default function BookingTable({
     },
     {
       key: "end_datetime",
-      header: "End Date & Time",
+      header: "End date & time",
       render: (row) => (
         <span className="whitespace-nowrap">
           {new Date(row.end_datetime).toLocaleString()}
@@ -114,7 +115,7 @@ export default function BookingTable({
     const isActive = row.status === "CONFIRMED";
 
     return (
-      <span className="flex justify-center">
+      <span className="z-20 flex justify-center gap-2 px-2">
         <span className="absolute left-0 top-0 h-full border-l-2" />
         {/* View / Edit */}
         <Button
@@ -131,11 +132,7 @@ export default function BookingTable({
         >
           {isActive ? (
             <Link
-              href={
-                isAdminPage
-                  ? `/bookings/${row.id}`
-                  : `/find-my-booking/${row.id}?email=${encodeURIComponent(row.visitor_email)}`
-              }
+              href={`/edit-booking/${row.id}?email=${encodeURIComponent(row.visitor_email)}`}
             >
               <BiCalendarEdit size={20} />
             </Link>
@@ -144,7 +141,7 @@ export default function BookingTable({
           )}
         </Button>
 
-        {/* <Button
+        <Button
           size="icon"
           title="Cancel"
           aria-label="Cancel"
@@ -164,8 +161,7 @@ export default function BookingTable({
           }
         >
           <BiWindowClose size={20} />
-        </Button> */}
-        <span />
+        </Button>
       </span>
     );
   };
@@ -177,6 +173,15 @@ export default function BookingTable({
         columns={columns}
         isLoading={isLoading}
         actions={renderActions}
+        rowOnClick={(row) => {
+          if (row.status !== "CONFIRMED") return;
+
+          const url = isAdminPage
+            ? `/bookings/${row.id}`
+            : `/find-my-booking/${row.id}?email=${encodeURIComponent(row.visitor_email)}`;
+
+          window.location.href = url;
+        }}
       />
     </div>
   );

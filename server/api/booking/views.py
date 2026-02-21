@@ -56,7 +56,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     ordering = ['-start_datetime', '-created_at']  # Default ordering
 
     # Search: Allow users to search across these fields
-    search_fields = ['visitor_name', 'room__name']
+    search_fields = ['visitor_name', 'room__name', 'id']
 
     http_method_names = ["get", "post", "patch"]
 

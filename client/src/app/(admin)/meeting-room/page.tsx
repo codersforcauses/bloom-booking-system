@@ -161,7 +161,7 @@ export default function RoomsPage() {
               key={room.id}
               room={room}
               onView={() => {
-                router.push(`/calendar/${room.id}`);
+                router.push(`/bookings/?room_id=${room.id}`);
               }}
               onEdit={() => {
                 router.push(`/meeting-room/edit/${room.id}`);
