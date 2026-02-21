@@ -1,11 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { TIME_OPTIONS } from "@/app/book-room/[room_id]/booking-form";
+import RecurrenceRuleField from "@/app/book-room/[room_id]/recurrence-rule-field";
 import NotFound from "@/app/not-found";
 import {
   AlertDialog,
@@ -26,10 +29,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { useFetchBooking, useUpdateBooking } from "@/hooks/booking";
 import RoomAPI from "@/hooks/room";
 import api from "@/lib/api";
+import { BookingResponse } from "@/lib/api-types";
 import { normaliseRoom } from "@/lib/normalise-room";
 import { cn } from "@/lib/utils";
 import { Room } from "@/types/card";
@@ -44,9 +55,14 @@ const formSchema = z.object({
   end_time: z.string(),
 });
 
-function EditBookingForm({ booking }: { booking: any }) {
+type EditBookingFormProps = Partial<BookingResponse>;
+
+function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
   const router = useRouter();
   const [verified, setVerified] = useState(false);
+  const [recurrenceRule, setRecurrenceRule] = useState<string>(
+    booking?.recurrence_rule || "",
+  );
 
   const [alertDialogProps, setAlertDialogProps] = useState<AlertDialogProps>({
     title: "",
@@ -85,17 +101,17 @@ function EditBookingForm({ booking }: { booking: any }) {
     },
   });
 
-  const mutation = useUpdateBooking(booking.id);
+  const mutation = useUpdateBooking(booking.id ?? -1);
   function onSubmit(data: z.infer<typeof formSchema>) {
     const start_datetime = formatDateTime(data.date, data.start_time);
     const end_datetime = formatDateTime(data.date, data.end_time);
     const payload = {
-      room_id: booking.room.id,
+      room_id: booking?.room?.id ?? -1,
       visitor_name: data.name,
       visitor_email: data.email,
       start_datetime,
       end_datetime,
-      recurrence_rule: "",
+      recurrence_rule: recurrenceRule,
     };
     mutation.mutate(payload, {
       onSuccess: () => {
@@ -139,7 +155,10 @@ function EditBookingForm({ booking }: { booking: any }) {
             control={form.control}
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel className="font-bold">Name *</FormLabel>
+                <FormLabel className="font-bold">
+                  {" "}
+                  Name <span className="text-bloom-red">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="text"
@@ -159,7 +178,9 @@ function EditBookingForm({ booking }: { booking: any }) {
             control={form.control}
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel className="font-bold">Email *</FormLabel>
+                <FormLabel className="font-bold">
+                  Email <span className="text-bloom-red">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="text"
@@ -181,14 +202,20 @@ function EditBookingForm({ booking }: { booking: any }) {
             control={form.control}
             render={({ field }) => (
               <FormItem className="w-full">
+                <FormLabel required>
+                  Date <span className="text-bloom-red">*</span>
+                </FormLabel>
                 <FormControl>
-                  <InputField
-                    kind="date"
-                    required
-                    name="date"
-                    label="Date"
-                    value={field.value}
-                    onChange={field.onChange}
+                  <Input
+                    type="date"
+                    min={new Date().toISOString().split("T")[0]}
+                    value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      field.onChange(
+                        val ? new Date(val + "T00:00:00") : undefined,
+                      );
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -200,16 +227,21 @@ function EditBookingForm({ booking }: { booking: any }) {
             control={form.control}
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormControl>
-                  <InputField
-                    kind="text"
-                    required
-                    name="start_time"
-                    label="Start time"
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
+                <FormLabel required>
+                  Start time <span className="text-bloom-red">*</span>
+                </FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
+                    <SelectValue placeholder="Select a time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_OPTIONS.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -219,27 +251,36 @@ function EditBookingForm({ booking }: { booking: any }) {
             control={form.control}
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormControl>
-                  <InputField
-                    kind="text"
-                    required
-                    name="end_time"
-                    label="End time"
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
+                <FormLabel required>
+                  End time <span className="text-bloom-red">*</span>
+                </FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
+                    <SelectValue placeholder="Select a time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_OPTIONS.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
       </div>
-      <ReCAPTCHAV2 setVerified={setVerified} />
+      <RecurrenceRuleField
+        onChange={setRecurrenceRule}
+        defaultRRule={recurrenceRule}
+      />
+      {/* <ReCAPTCHAV2 setVerified={setVerified} /> */}
       <Button
         type="submit"
         className="w-fit px-6"
-        disabled={!verified || mutation.isPending}
+        disabled={mutation.isPending}
       >
         {!mutation.isPending ? "Submit" : <Spinner className="w-6" />}
       </Button>
@@ -295,7 +336,7 @@ export default function EditBookingPage() {
     );
   }
 
-  if (isErrorBooking || isErrorRoom) {
+  if (isErrorBooking || isErrorRoom || !booking) {
     return (
       <AlertDialog
         title="An error has occurred"

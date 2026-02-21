@@ -6,29 +6,41 @@ import { CheckboxGroup, CheckboxItem } from "@/components/checkbox-group";
 import InputField from "@/components/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { CustomRepeatSchema, type CustomRepeatValue } from "./schemas";
 
 type CustomRepeatModalProps = {
+  defaultValue?: CustomRepeatValue;
   open: boolean;
   onClose: () => void;
   onDone: (value: CustomRepeatValue) => void;
 };
 
 export default function CustomRepeatModal({
+  defaultValue,
   open,
   onClose,
   onDone,
 }: CustomRepeatModalProps) {
-  const [interval, setInterval] = useState<string>("1");
-  const [frequency, setFrequency] =
-    useState<CustomRepeatValue["frequency"]>("week");
-  const [days, setDays] = useState<string[]>(["tue"]);
-  const [endType, setEndType] = useState<CustomRepeatValue["endType"]>("on");
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
-  const [occurrences, setOccurrences] = useState<string>("1");
+  const [interval, setInterval] = useState<string>(
+    defaultValue?.interval ?? "1",
+  );
+  const [frequency, setFrequency] = useState<CustomRepeatValue["frequency"]>(
+    defaultValue?.frequency ?? "week",
+  );
+  const [days, setDays] = useState<string[]>(defaultValue?.days ?? []);
+  const [endType, setEndType] = useState<CustomRepeatValue["endType"]>(
+    defaultValue?.endType ?? "never",
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    defaultValue?.endDate ?? new Date(),
+  );
+  const [occurrences, setOccurrences] = useState<string>(
+    defaultValue?.occurrences ?? "1",
+  );
   const [startDate] = useState<Date | undefined>(new Date());
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -117,11 +129,7 @@ export default function CustomRepeatModal({
               className="grid-cols-2 gap-2"
             >
               {dayOptions.map((day) => (
-                <CheckboxItem
-                  key={day.value}
-                  value={day.value}
-                  className="flex cursor-pointer items-center gap-2"
-                >
+                <CheckboxItem key={day.value} value={day.value}>
                   <span className="body text-black">{day.label}</span>
                 </CheckboxItem>
               ))}
@@ -157,14 +165,16 @@ export default function CustomRepeatModal({
                 </div>
 
                 <div className="flex-1 sm:flex-auto">
-                  <InputField
-                    kind="date"
-                    name="endDate"
-                    label=""
-                    value={endDate}
-                    onChange={setEndDate}
-                    placeholder="Fri 30/05/2022"
-                    className="mb-0"
+                  <Input
+                    type="date"
+                    value={endDate ? endDate.toLocaleDateString("en-CA") : ""}
+                    onChange={(e) =>
+                      setEndDate(
+                        e.target.value
+                          ? new Date(e.target.value + "T00:00:00")
+                          : undefined,
+                      )
+                    }
                   />
                 </div>
               </div>

@@ -27,11 +27,18 @@ import {
   View,
   Views,
 } from "react-big-calendar";
+import { LuToggleRight } from "react-icons/lu";
 import { useMediaQuery } from "react-responsive";
 
 import { Calendar as MiniCalendar } from "@/components/calendar";
 import { RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   CalendarEvent,
   GoogleCalendarEvent,
@@ -39,8 +46,10 @@ import {
   useRoomEvents,
 } from "@/hooks/calendar";
 import RoomAPI from "@/hooks/room";
-import { getAvailableSlots, normalizeRoom } from "@/lib/room-utils";
+import { getAvailableSlots247, normalizeRoom } from "@/lib/room-utils";
 import { cn } from "@/lib/utils";
+
+import BookRoomForm from "../../book-room/[room_id]/booking-form";
 
 const PERTH_TZ = "Australia/Perth";
 const now = new TZDate(new Date(), PERTH_TZ);
@@ -67,6 +76,7 @@ export default function ViewCalendarPage() {
   const [selectedSlot, setSelectedSlot] = useState<NewCalendarEvent | null>(
     null,
   );
+  const [dialogOpen, setDialogOpen] = useState(false);
   // to set a 13-day window (mobile) / 3-week window (desktop) to pre-fetch data and prevent ui flickering
   const [dateRange, setDateRange] = useState(() => {
     if (isMobile) {
@@ -99,11 +109,10 @@ export default function ViewCalendarPage() {
   // display both real google events and user's selectedSlot
   const displayEvents = selectedSlot ? [...events, selectedSlot] : events;
 
-  // calculate available slots based on room data and dateRange
+  // calculate available slots — all slots in range are available since rooms are 24/7
   const availableSlots = useMemo(() => {
-    // if room is not active, just skip the calculation
     if (!room || !room.is_active) return new Set<number>();
-    return getAvailableSlots(room, dateRange.start, dateRange.end);
+    return getAvailableSlots247(dateRange.start, dateRange.end);
   }, [room, dateRange]);
 
   // prepare booked slots for selection checking from google events (instead of calling backend API)
@@ -332,13 +341,29 @@ export default function ViewCalendarPage() {
           selectable
           onSelectSlot={handleSelectSlot}
           onSelectEvent={(event) => {
-            setSelectedSlot(null);
+            if (event.isDraft) setDialogOpen(true);
           }}
           // Custom Rendering
           slotPropGetter={slotPropGetter}
           eventPropGetter={eventPropGetter}
         />
       </div>
+      {/* Booking Dialog */}
+      {selectedSlot && selectedSlot.start && selectedSlot.end && (
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-2xl bg-white">
+            <DialogHeader>
+              <DialogTitle>Book a slot</DialogTitle>
+            </DialogHeader>
+            <BookRoomForm
+              room_id={Number(id)}
+              date={format(selectedSlot.start as Date, "yyyy-MM-dd")}
+              start_time={format(selectedSlot.start as Date, "HH:mm")}
+              end_time={format(selectedSlot.end as Date, "HH:mm")}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

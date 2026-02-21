@@ -184,16 +184,9 @@ const logout = () => {
 };
 
 const checkAuth = async (): Promise<boolean> => {
-  const accessToken = getAccessToken();
-  if (!accessToken) return false;
-
   try {
-    const res = await fetch("/api/check-auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken }),
-    });
-    return res.ok;
+    const res = await api.get("/users/check-auth/");
+    return res.status === 200;
   } catch {
     return false;
   }
