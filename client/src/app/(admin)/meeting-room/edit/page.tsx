@@ -1,19 +1,7 @@
-import EditMeetingRoomForm from "./edit-meeting-room-form";
+import { redirect } from "next/navigation";
 
-type PageProps = {
-  searchParams?: { id?: string };
-};
-
-export default function EditMeetingRoomPage({ searchParams }: PageProps) {
-  const roomId = Number(searchParams?.id);
-
-  if (!roomId) {
-    return <div className="p-6">Room id is missing.</div>;
-  }
-
-  return (
-    <div className="space-y-6">
-      <EditMeetingRoomForm roomId={roomId} />
-    </div>
-  );
+export default function EditMeetingRoomPage() {
+  // This route is kept only as a safety net and should not be used for editing.
+  // The canonical edit route is /meeting-room/edit/[id].
+  redirect("/meeting-room");
 }

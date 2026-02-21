@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { type FieldPath, type FieldPathValue, useForm } from "react-hook-form";
@@ -26,8 +27,6 @@ type EditMeetingRoomFormProps = {
   roomId: number;
 };
 
-const ADD_LOCATION_VALUE = "__add_location__";
-
 const getRepeatValue = (recurrenceRule?: string) => {
   if (!recurrenceRule) return "none";
   if (recurrenceRule.startsWith("FREQ=DAILY")) return "daily";
@@ -49,7 +48,9 @@ const buildInitialValues = (room: RoomResponse): AddMeetingRoomFormInput => ({
 export default function EditMeetingRoomForm({
   roomId,
 }: EditMeetingRoomFormProps) {
+  const ADD_LOCATION_VALUE = "__add_location__";
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -147,11 +148,15 @@ export default function EditMeetingRoomForm({
       }
 
       const amenityIds = Array.isArray(values.amenities)
-        ? values.amenities.map((amenityId) => amenityId.toString())
+        ? values.amenities.map((amenityId) => Number(amenityId))
         : [];
-      formDataMultipart.append("amenities_ids", JSON.stringify(amenityIds));
+      if (amenityIds.length > 0) {
+        formDataMultipart.append("amenities_ids", JSON.stringify(amenityIds));
+      }
 
       await api.patch(`/rooms/${roomId}/`, formDataMultipart);
+      // Invalidate the cached room data to ensure fresh data is fetched on navigation
+      await queryClient.invalidateQueries({ queryKey: ["room", roomId] });
       setShowSuccessDialog(true);
     } catch (error) {
       console.error("Failed to update room:", error);
