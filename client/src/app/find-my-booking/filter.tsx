@@ -18,6 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { LocationResponse, RoomShortResponse } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ type FilterPopoverProps = {
   ) => void;
   EnableEmail?: boolean;
   className?: string;
+  scrollClassName?: string;
 };
 
 export function FilterPopover({
@@ -43,6 +45,7 @@ export function FilterPopover({
   onApply,
   EnableEmail = false,
   className,
+  scrollClassName,
 }: FilterPopoverProps) {
   const [open, setOpen] = useState(false);
 
@@ -107,81 +110,85 @@ export function FilterPopover({
         </div>
 
         {/* Scrollable content */}
-        <div className="max-h-[360px] overflow-y-auto px-4 py-2">
-          <Accordion
-            type="multiple"
-            defaultValue={defaultValue}
-            className="w-full divide-y"
-          >
-            {/* Rooms */}
-            <AccordionItem value="room">
-              <AccordionTrigger className="py-3 text-sm font-medium">
-                Room
-              </AccordionTrigger>
-              <AccordionContent>
-                <RoomCombobox value={tempRooms} onChange={setTempRooms} />
-              </AccordionContent>
-            </AccordionItem>
+        <ScrollArea
+          className={cn("flex max-h-[50vh] flex-col", scrollClassName)}
+        >
+          <div className="px-4 py-2">
+            <Accordion
+              type="multiple"
+              defaultValue={defaultValue}
+              className="w-full divide-y"
+            >
+              {/* Rooms */}
+              <AccordionItem value="room">
+                <AccordionTrigger className="py-3 text-sm font-medium">
+                  Room
+                </AccordionTrigger>
+                <AccordionContent>
+                  <RoomCombobox value={tempRooms} onChange={setTempRooms} />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Locations */}
-            <AccordionItem value="location">
-              <AccordionTrigger className="py-3 text-sm font-medium">
-                Location
-              </AccordionTrigger>
-              <AccordionContent>
-                <LocationCombobox
-                  value={tempLocations}
-                  onChange={setTempLocations}
-                />
-              </AccordionContent>
-            </AccordionItem>
+              {/* Locations */}
+              <AccordionItem value="location">
+                <AccordionTrigger className="py-3 text-sm font-medium">
+                  Location
+                </AccordionTrigger>
+                <AccordionContent>
+                  <LocationCombobox
+                    value={tempLocations}
+                    onChange={setTempLocations}
+                  />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Visitor Name */}
-            <AccordionItem value="visitor_name">
-              <AccordionTrigger className="py-3 text-sm font-medium">
-                Visitor Name
-              </AccordionTrigger>
-              <AccordionContent>
-                <Input
-                  type="text"
-                  name="text"
-                  value={tempVisitorName}
-                  onChange={(e) => setTempVisitorName(e.target.value)}
-                  placeholder="Visitor Name"
-                  className="w-full rounded border px-2 py-1 text-sm"
-                />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Visitor Email */}
-            <AccordionItem value="visitor_email">
-              <AccordionTrigger className="py-3 text-sm font-medium">
-                Visitor Email
-              </AccordionTrigger>
-              <AccordionContent>
-                {!EnableEmail ? (
+              {/* Visitor Name */}
+              <AccordionItem value="visitor_name">
+                <AccordionTrigger className="py-3 text-sm font-medium">
+                  Visitor Name
+                </AccordionTrigger>
+                <AccordionContent>
                   <Input
                     type="text"
-                    name="visitor_email"
-                    value={tempVisitorEmail}
-                    readOnly
-                    disabled
+                    name="text"
+                    value={tempVisitorName}
+                    onChange={(e) => setTempVisitorName(e.target.value)}
+                    placeholder="Visitor Name"
                     className="w-full rounded border px-2 py-1 text-sm"
                   />
-                ) : (
-                  <Input
-                    type="text"
-                    name="visitor_email"
-                    value={tempVisitorEmail}
-                    onChange={(e) => setTempVisitorEmail(e.target.value)}
-                    placeholder="Visitor Email"
-                    className="w-full rounded border px-2 py-1 text-sm"
-                  />
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Visitor Email */}
+              <AccordionItem value="visitor_email">
+                <AccordionTrigger className="py-3 text-sm font-medium">
+                  Visitor Email
+                </AccordionTrigger>
+                <AccordionContent>
+                  {!EnableEmail ? (
+                    <Input
+                      type="text"
+                      name="visitor_email"
+                      value={tempVisitorEmail}
+                      readOnly
+                      disabled
+                      className="w-full rounded border px-2 py-1 text-sm"
+                    />
+                  ) : (
+                    <Input
+                      type="text"
+                      name="visitor_email"
+                      value={tempVisitorEmail}
+                      onChange={(e) => setTempVisitorEmail(e.target.value)}
+                      placeholder="Visitor Email"
+                      className="w-full rounded border px-2 py-1 text-sm"
+                    />
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </ScrollArea>
 
         {/* Footer */}
         <div className="flex justify-end gap-3 border-t px-4 py-3">

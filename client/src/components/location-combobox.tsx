@@ -16,6 +16,8 @@ import {
 import { useSearchRoomLocations } from "@/hooks/room";
 import { LocationResponse } from "@/lib/api-types";
 
+import { ScrollArea } from "./ui/scroll-area";
+
 type LocationComboboxProps = {
   value: LocationResponse[];
   onChange: (locations: LocationResponse[]) => void;
@@ -65,13 +67,15 @@ export function LocationCombobox({ value, onChange }: LocationComboboxProps) {
             {isLoading ? "Searching…" : "No Data Found"}
           </div>
         )}
-        <ComboboxList>
-          {items.map((location: LocationResponse) => (
-            <ComboboxItem key={location.id} value={location}>
-              {location.name}
-            </ComboboxItem>
-          ))}
-        </ComboboxList>
+        <ScrollArea className="flex max-h-60 flex-col">
+          <ComboboxList>
+            {items.map((location: LocationResponse) => (
+              <ComboboxItem key={location.id} value={location}>
+                {location.name}
+              </ComboboxItem>
+            ))}
+          </ComboboxList>
+        </ScrollArea>
       </ComboboxContent>
     </Combobox>
   );

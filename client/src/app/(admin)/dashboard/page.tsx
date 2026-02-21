@@ -149,6 +149,7 @@ function BookingPage() {
               });
             }}
             EnableEmail
+            scrollClassName={data.length <= 3 ? "max-h-[30vh]" : "max-h-[50vh]"}
           />
           <Button asChild variant="confirm">
             <Link href="/book-room">Book Room</Link>

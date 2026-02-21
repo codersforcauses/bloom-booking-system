@@ -16,6 +16,8 @@ import {
 import { useSearchRooms } from "@/hooks/room";
 import { RoomShortResponse } from "@/lib/api-types";
 
+import { ScrollArea } from "./ui/scroll-area";
+
 type RoomComboboxProps = {
   value: RoomShortResponse[];
   onChange: (rooms: RoomShortResponse[]) => void;
@@ -65,13 +67,15 @@ export function RoomCombobox({ value, onChange }: RoomComboboxProps) {
             {isLoading ? "Searching…" : "No Data Found"}
           </div>
         )}
-        <ComboboxList>
-          {items.map((room: RoomShortResponse) => (
-            <ComboboxItem key={room.id} value={room}>
-              {room.name}
-            </ComboboxItem>
-          ))}
-        </ComboboxList>
+        <ScrollArea className="flex max-h-60 flex-col">
+          <ComboboxList>
+            {items.map((room: RoomShortResponse) => (
+              <ComboboxItem key={room.id} value={room}>
+                {room.name}
+              </ComboboxItem>
+            ))}
+          </ComboboxList>
+        </ScrollArea>
       </ComboboxContent>
     </Combobox>
   );
