@@ -330,6 +330,12 @@ function useFetchRoom(id: number) {
       const response = await api.get(`/rooms/${id}/`);
       return response.data;
     },
+    retry: (_, err) => {
+      if (err.response?.status === 404) {
+        return false; // Don't retry on 404 errors, error should show up immediately
+      }
+      return true;
+    },
   });
 }
 
