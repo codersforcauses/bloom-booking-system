@@ -100,10 +100,14 @@ class BookingSerializer(DynamicFieldsModelSerializer):
 
             if overlapping_bookings.exists():
                 overlapping_booking = overlapping_bookings.first()
+
+                start = timezone.localtime(overlapping_booking.start_datetime)
+                end = timezone.localtime(overlapping_booking.end_datetime)
+
                 raise serializers.ValidationError({
                     'non_field_errors': [
-                        f'Room is already booked from {overlapping_booking.start_datetime.strftime("%Y-%m-%d %H:%M")} '
-                        f'to {overlapping_booking.end_datetime.strftime("%Y-%m-%d %H:%M")} '
+                        f'Room is already booked from {start.strftime("%Y-%m-%d %H:%M")} '
+                        f'to {end.strftime("%Y-%m-%d %H:%M")} '
                         f'by {overlapping_booking.visitor_name}.'
                     ]
                 })
