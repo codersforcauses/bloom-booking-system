@@ -1,5 +1,7 @@
 import test, { expect } from "@playwright/test";
 
+import type { LoginResponse } from "@/lib/api-types";
+
 test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:3000/login");
 });
@@ -46,7 +48,7 @@ test("successful login redirects to dashboard", async ({ page }) => {
       body: JSON.stringify({
         access: "test-access-token",
         refresh: "test-refresh-token",
-      }),
+      } satisfies LoginResponse),
     });
   });
 
