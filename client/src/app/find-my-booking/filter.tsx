@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FaFilter } from "react-icons/fa";
 
+import { LocationCombobox } from "@/components/location-combobox";
 import { RoomCombobox } from "@/components/room-combobox";
 import {
   Accordion,
@@ -17,17 +18,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { RoomShortResponse } from "@/lib/api-types";
+import { LocationResponse, RoomShortResponse } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 
 import { CustomFetchBookingParams } from "./page";
 
 type FilterPopoverProps = {
   selectedRooms?: RoomShortResponse[];
+  selectedLocations?: LocationResponse[];
   initialFilters?: CustomFetchBookingParams;
   onApply: (
     filters: CustomFetchBookingParams,
     rooms: RoomShortResponse[],
+    locations: LocationResponse[],
   ) => void;
   EnableEmail?: boolean;
   className?: string;
@@ -36,6 +39,7 @@ type FilterPopoverProps = {
 export function FilterPopover({
   initialFilters,
   selectedRooms = [],
+  selectedLocations = [],
   onApply,
   EnableEmail = false,
   className,
@@ -44,6 +48,7 @@ export function FilterPopover({
 
   // Temporary state inside the popover
   const [tempRooms, setTempRooms] = useState<RoomShortResponse[]>([]);
+  const [tempLocations, setTempLocations] = useState<LocationResponse[]>([]);
   const [tempVisitorName, setTempVisitorName] = useState("");
   const [tempVisitorEmail, setTempVisitorEmail] = useState(
     initialFilters?.visitor_email,
@@ -53,6 +58,7 @@ export function FilterPopover({
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
       setTempRooms(selectedRooms);
+      setTempLocations(selectedLocations);
       setTempVisitorName(initialFilters?.visitor_name ?? "");
       setTempVisitorEmail(initialFilters?.visitor_email ?? "");
     }
@@ -65,10 +71,14 @@ export function FilterPopover({
         room_ids: tempRooms.length
           ? tempRooms.map((r) => String(r.id)).join(",")
           : undefined,
+        location_ids: tempLocations.length
+          ? tempLocations.map((l) => String(l.id)).join(",")
+          : undefined,
         visitor_name: tempVisitorName || undefined,
         visitor_email: tempVisitorEmail || undefined,
       },
       tempRooms,
+      tempLocations,
     );
     setOpen(false);
   };
@@ -76,6 +86,7 @@ export function FilterPopover({
   // Automatically open sections that have active filters
   const defaultValue = [
     ...(tempRooms.length ? ["room"] : []),
+    ...(tempLocations.length ? ["location"] : []),
     ...(tempVisitorName ? ["visitor_name"] : []),
     ...(tempVisitorEmail ? ["visitor_email"] : []),
   ];
@@ -109,6 +120,19 @@ export function FilterPopover({
               </AccordionTrigger>
               <AccordionContent>
                 <RoomCombobox value={tempRooms} onChange={setTempRooms} />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Locations */}
+            <AccordionItem value="location">
+              <AccordionTrigger className="py-3 text-sm font-medium">
+                Location
+              </AccordionTrigger>
+              <AccordionContent>
+                <LocationCombobox
+                  value={tempLocations}
+                  onChange={setTempLocations}
+                />
               </AccordionContent>
             </AccordionItem>
 

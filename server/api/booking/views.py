@@ -34,9 +34,14 @@ class ListBookingFilter(django_filters.FilterSet):
         field_name='room_id', lookup_expr='in'
     )
 
+    # New filter to support multiple location IDs
+    location_ids = django_filters.BaseInFilter(
+        field_name='room__location_id', lookup_expr='in'
+    )
+
     class Meta:
         model = Booking
-        fields = ["visitor_name", "visitor_email", "room_ids"]
+        fields = ["visitor_name", "visitor_email", "room_ids", "location_ids"]
 
 
 class BookingViewSet(viewsets.ModelViewSet):

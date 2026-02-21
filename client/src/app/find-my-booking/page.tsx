@@ -13,7 +13,7 @@ import {
 } from "@/components/pagination-bar";
 import { Button } from "@/components/ui/button";
 import { useFetchBookings } from "@/hooks/booking";
-import { RoomShortResponse } from "@/lib/api-types";
+import { LocationResponse, RoomShortResponse } from "@/lib/api-types";
 
 import { FilterPopover } from "./filter";
 import FindMyBookingForm from "./find-my-booking-form";
@@ -49,9 +49,11 @@ export default function FindMyBookingPage() {
  */
 export type CustomFetchBookingParams = PaginationSearchParams & {
   room_ids?: string;
+  location_ids?: string;
   visitor_email?: string;
   visitor_name?: string;
   _selectedRooms?: RoomShortResponse[];
+  _selectedLocations?: LocationResponse[];
 };
 
 function BookingPage({
@@ -108,9 +110,11 @@ function BookingPage({
       page,
       nrows,
       room_ids: "",
+      location_ids: "",
       visitor_email: email,
       visitor_name: "",
       _selectedRooms: [],
+      _selectedLocations: [],
       ...urlVisibleParams,
     }),
   );
@@ -178,13 +182,16 @@ function BookingPage({
           <FilterPopover
             initialFilters={searchParams}
             selectedRooms={searchParams._selectedRooms || []}
+            selectedLocations={searchParams._selectedLocations || []}
             onApply={(
               filters: CustomFetchBookingParams,
               rooms: RoomShortResponse[],
+              locations: LocationResponse[],
             ) => {
               pushParams({
                 ...filters,
                 _selectedRooms: rooms,
+                _selectedLocations: locations,
               });
             }}
           />

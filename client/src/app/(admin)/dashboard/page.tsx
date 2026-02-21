@@ -17,7 +17,7 @@ import {
 } from "@/components/pagination-bar";
 import { Button } from "@/components/ui/button";
 import { useFetchBookings } from "@/hooks/booking";
-import { RoomShortResponse } from "@/lib/api-types";
+import { LocationResponse, RoomShortResponse } from "@/lib/api-types";
 import { resolveErrorMessage } from "@/lib/utils";
 
 import { BookingsStats } from "./statistic";
@@ -49,6 +49,7 @@ function BookingPage() {
       visitor_email: "",
       visitor_name: "",
       _selectedRooms: [],
+      _selectedLocations: [],
       ...urlVisibleParams,
     }),
   );
@@ -135,13 +136,16 @@ function BookingPage() {
           <FilterPopover
             initialFilters={searchParams}
             selectedRooms={searchParams._selectedRooms || []}
+            selectedLocations={searchParams._selectedLocations || []}
             onApply={(
               filters: CustomFetchBookingParams,
               rooms: RoomShortResponse[],
+              locations: LocationResponse[],
             ) => {
               pushParams({
                 ...filters,
                 _selectedRooms: rooms,
+                _selectedLocations: locations,
               });
             }}
             EnableEmail
