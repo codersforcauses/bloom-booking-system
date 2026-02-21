@@ -25,34 +25,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Combobox from "../../../components/combobox";
 import RoomContext from "./room-context";
 
-const RoomFilterSchema = z
-  .object({
-    locations: z.array(z.string()).optional(),
-    amenities: z.array(z.string()).optional(),
-    minSeats: z
-      .number()
-      .int()
-      .min(1, { message: "Must be a positive number" })
-      .optional(),
-    maxSeats: z
-      .number()
-      .int()
-      .min(1, { message: "Must be a positive number" })
-      .optional(),
-    isActive: z.boolean().optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.minSeats !== undefined && data.maxSeats !== undefined) {
-        return data.minSeats <= data.maxSeats;
-      }
-      return true;
-    },
-    {
-      message: "Maximum seats cannot be smaller than minimum seats",
-      path: ["maxSeats"],
-    },
-  );
+const RoomFilterSchema = z.object({
+  locations: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+});
 
 export type RoomFilterSchemaValue = z.infer<typeof RoomFilterSchema>;
 
@@ -60,22 +36,12 @@ export default function FilterDropdown() {
   const ctx = React.useContext(RoomContext);
   if (!ctx) throw new Error("RoomContext not found");
 
-  const {
-    locations,
-    isLocationsLoading,
-    amenities,
-    isAmenitiesLoading,
-    onFilterChange,
-    filterValues,
-  } = ctx;
+  const { locations, isLocationsLoading, onFilterChange, filterValues } = ctx;
 
   const form = useForm<RoomFilterSchemaValue>({
     resolver: zodResolver(RoomFilterSchema),
     defaultValues: {
       locations: [],
-      minSeats: undefined,
-      maxSeats: undefined,
-      amenities: [],
       isActive: undefined,
     },
     mode: "onChange",
@@ -85,9 +51,6 @@ export default function FilterDropdown() {
   React.useEffect(() => {
     form.reset({
       locations: filterValues?.locations ?? [],
-      minSeats: filterValues?.minSeats ?? undefined,
-      maxSeats: filterValues?.maxSeats ?? undefined,
-      amenities: filterValues?.amenities ?? [],
       isActive: filterValues?.isActive ?? undefined,
     });
   }, [filterValues]);
@@ -97,9 +60,6 @@ export default function FilterDropdown() {
     if (onFilterChange) {
       onFilterChange({
         locations: values.locations,
-        minSeats: values.minSeats,
-        maxSeats: values.maxSeats,
-        amenities: values.amenities,
         isActive: values.isActive,
       });
     }
@@ -136,89 +96,6 @@ export default function FilterDropdown() {
                         values={field.value || []}
                         onValueChange={field.onChange}
                         isLoading={isLocationsLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Amenities */}
-          <AccordionItem value="amenities">
-            <AccordionTrigger className="justify-between py-3 text-sm font-medium">
-              Amenities
-            </AccordionTrigger>
-            <AccordionContent>
-              <FormField
-                name="amenities"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Combobox
-                        name="amenities"
-                        items={amenities}
-                        values={field.value || []}
-                        onValueChange={field.onChange}
-                        isLoading={isAmenitiesLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Min Seats */}
-          <AccordionItem value="minSeats">
-            <AccordionTrigger className="justify-between py-3 text-sm font-medium">
-              Minimum Seats
-            </AccordionTrigger>
-            <AccordionContent>
-              <FormField
-                name="minSeats"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        value={field.value || ""}
-                        onChange={(e) =>
-                          field.onChange(Number(e.target.value) || undefined)
-                        }
-                        placeholder="Minimum Seats"
-                        type="number"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Max Seats */}
-          <AccordionItem value="maxSeats">
-            <AccordionTrigger className="justify-between py-3 text-sm font-medium">
-              Maximum Seats
-            </AccordionTrigger>
-            <AccordionContent>
-              <FormField
-                name="maxSeats"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        value={field.value || ""}
-                        onChange={(e) =>
-                          field.onChange(Number(e.target.value) || undefined)
-                        }
-                        placeholder="Maximum Seats"
-                        type="number"
                       />
                     </FormControl>
                     <FormMessage />

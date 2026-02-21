@@ -27,8 +27,6 @@ export type RoomResponse = {
   name: string;
   img: string;
   location: LocationResponse;
-  capacity: number;
-  amenities: AmenityResponse[];
   start_datetime: string;
   end_datetime: string;
   recurrence_rule: string;

@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import api from "@/lib/api";
-import { AmenityResponse, LocationResponse } from "@/lib/api-types";
+import { LocationResponse } from "@/lib/api-types";
 
 const RoomSearchSchemaBase = z.object({
   name: z.string().optional(),
@@ -22,17 +22,6 @@ const RoomSearchSchemaBase = z.object({
   fromTime: z.string().optional(),
   toDate: z.date().optional(),
   toTime: z.string().optional(),
-  amenities: z.array(z.string()).optional(),
-  minSeats: z
-    .number()
-    .int()
-    .min(1, { message: "Must be a positive integer" })
-    .optional(),
-  maxSeats: z
-    .number()
-    .int()
-    .min(1, { message: "Must be a positive integer" })
-    .optional(),
 });
 
 const RoomSearchSchema = RoomSearchSchemaBase.refine(
@@ -47,99 +36,22 @@ const RoomSearchSchema = RoomSearchSchemaBase.refine(
     return true;
   },
   { message: "To Date must be on/after From Date", path: ["toDate"] },
-)
-  .refine(
-    (data) => {
-      if (data.minSeats != null && data.maxSeats != null) {
-        return data.minSeats <= data.maxSeats;
-      }
-      return true;
-    },
-    {
-      message: "Minimum seats cannot exceed maximum seats",
-      path: ["maxSeats"],
-    },
-  )
-  .superRefine((data, ctx) => {
-    const now = new Date();
-    const nowPerth = new Date(
-      now.toLocaleString("en-US", { timeZone: "Australia/Perth" }),
-    );
-    const todayPerth = new Date(nowPerth);
-    todayPerth.setHours(0, 0, 0, 0);
+).superRefine((data, ctx) => {
+  if (data.fromDate && data.toDate && data.fromTime && data.toTime) {
+    const isSameDay =
+      data.fromDate.getFullYear() === data.toDate.getFullYear() &&
+      data.fromDate.getMonth() === data.toDate.getMonth() &&
+      data.fromDate.getDate() === data.toDate.getDate();
 
-    if (data.fromDate) {
-      const fromDate = new Date(
-        `${data.fromDate.toLocaleDateString("en-CA")}T00:00:00+08:00`,
-      );
-
-      if (fromDate < todayPerth) {
-        ctx.addIssue({
-          code: "custom",
-          message: "From date cannot be in the past",
-          path: ["fromDate"],
-        });
-      }
+    if (isSameDay && data.toTime <= data.fromTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "End time must be after start time on the same day",
+        path: ["toTime"],
+      });
     }
-
-    if (data.fromDate && data.fromTime) {
-      const fromFull = new Date(
-        `${data.fromDate.toLocaleDateString("en-CA")}T${data.fromTime}:00+08:00`,
-      );
-
-      if (fromFull < nowPerth) {
-        ctx.addIssue({
-          code: "custom",
-          message: "From time must be in the future",
-          path: ["fromTime"],
-        });
-      }
-    }
-
-    if (data.toDate) {
-      const toDate = new Date(
-        `${data.toDate.toLocaleDateString("en-CA")}T00:00:00+08:00`,
-      );
-
-      if (toDate < todayPerth) {
-        ctx.addIssue({
-          code: "custom",
-          message: "To date cannot be in the past",
-          path: ["toDate"],
-        });
-      }
-    }
-
-    if (data.toDate && data.toTime) {
-      const toFull = new Date(
-        `${data.toDate.toLocaleDateString("en-CA")}T${data.toTime}:00+08:00`,
-      );
-
-      if (toFull < nowPerth) {
-        ctx.addIssue({
-          code: "custom",
-          message: "To time must be in the future",
-          path: ["toTime"],
-        });
-      }
-    }
-  })
-  .superRefine((data, ctx) => {
-    if (data.fromDate && data.toDate && data.fromTime && data.toTime) {
-      const isSameDay =
-        data.fromDate.getFullYear() === data.toDate.getFullYear() &&
-        data.fromDate.getMonth() === data.toDate.getMonth() &&
-        data.fromDate.getDate() === data.toDate.getDate();
-
-      if (isSameDay && data.toTime <= data.fromTime) {
-        ctx.addIssue({
-          code: "custom",
-          message: "End time must be after start time on the same day",
-          path: ["toTime"],
-        });
-      }
-    }
-  });
+  }
+});
 
 export type RoomSearchSchemaValue = z.infer<typeof RoomSearchSchema>;
 
@@ -161,8 +73,6 @@ export default function SearchRoomForm({
   const [locations, setLocations] = useState<
     { label: string; value: string }[]
   >([]);
-  const [amenityNames, setAmenityNames] = useState<string[]>([]);
-
   const currentValues = form.watch();
 
   const hasChangesSinceLastSearch =
@@ -180,13 +90,7 @@ export default function SearchRoomForm({
       );
     };
 
-    const fetchAmenities = async () => {
-      const res = await api.get("/amenities/");
-      const raw = Array.isArray(res.data) ? res.data : (res.data.results ?? []);
-      setAmenityNames(raw.map((a: AmenityResponse) => a.name));
-    };
-
-    Promise.all([fetchLocations(), fetchAmenities()]).catch((e) => {
+    fetchLocations().catch((e) => {
       console.error("Failed to fetch form options", e);
     });
   }, []);
@@ -331,79 +235,6 @@ export default function SearchRoomForm({
                   }}
                   placeholder="HH:MM"
                   required={false}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {/* amenities */}
-      <FormField
-        name="amenities"
-        control={form.control}
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <InputField
-                kind="badge"
-                label="Amenities"
-                name="amenities"
-                options={amenityNames}
-                value={field.value || []}
-                onChange={field.onChange}
-                placeholder="Select amenities"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* seats range */}
-      <div className="grid grid-cols-2 gap-3">
-        <FormField
-          name="minSeats"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <InputField
-                  kind="number"
-                  label="Minimum Seats"
-                  name="minSeats"
-                  value={field.value == null ? "" : String(field.value)}
-                  onChange={(v) => {
-                    const num = v === "" ? undefined : Number(v);
-                    field.onChange(num);
-                  }}
-                  placeholder="e.g. 4"
-                  min={1}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          name="maxSeats"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <InputField
-                  kind="number"
-                  label="Maximum Seats"
-                  name="maxSeats"
-                  value={field.value == null ? "" : String(field.value)}
-                  onChange={(v) => {
-                    const num = v === "" ? undefined : Number(v);
-                    field.onChange(num);
-                  }}
-                  placeholder="e.g. 12"
-                  min={1}
                 />
               </FormControl>
               <FormMessage />

@@ -8,7 +8,7 @@ import { AdminRoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import RoomAPI, { useFetchRooms } from "@/hooks/room";
-import { AmenityResponse, LocationResponse } from "@/lib/api-types";
+import { LocationResponse } from "@/lib/api-types";
 import { Room } from "@/types/card";
 
 import FilterPopOver from "./filter-button";
@@ -32,12 +32,6 @@ export default function RoomsPage() {
     const customParams: Record<string, string> = {};
     if (filters.locations && filters.locations.length)
       customParams.locations = filters.locations.join(",");
-    if (filters.amenities && filters.amenities.length)
-      customParams.amenities = filters.amenities.join(",");
-    if (filters.minSeats)
-      customParams.min_capacity = filters.minSeats.toString();
-    if (filters.maxSeats)
-      customParams.max_capacity = filters.maxSeats.toString();
     if (filters.isActive !== undefined)
       customParams.is_active = filters.isActive.toString();
     return customParams;
@@ -57,14 +51,9 @@ export default function RoomsPage() {
     ...buildCustomParams(),
   });
 
-  // Suppose the number of locations and amenities are small enough to fetch all at once
+  // Suppose the number of locations are small enough to fetch all at once
   const { data: locations, isLoading: isLocationsLoading } =
     RoomAPI.useFetchRoomLocations({
-      page: 1,
-      nrows: 100,
-    });
-  const { data: amenities, isLoading: isAmenitiesLoading } =
-    RoomAPI.useFetchRoomAmenities({
       page: 1,
       nrows: 100,
     });
@@ -113,8 +102,6 @@ export default function RoomsPage() {
         roomNames,
         locations: (locations as LocationResponse[]) || [],
         isLocationsLoading,
-        amenities: (amenities as AmenityResponse[]) || [],
-        isAmenitiesLoading,
         onFilterChange: handleFilterChange,
         filterValues: filters,
       }}
