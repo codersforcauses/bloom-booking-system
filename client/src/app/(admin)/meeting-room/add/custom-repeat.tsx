@@ -167,7 +167,7 @@ export default function CustomRepeatModal({
                 <div className="flex-1 sm:flex-auto">
                   <Input
                     type="date"
-                    value={endDate ? endDate.toISOString().split("T")[0] : ""}
+                    value={endDate ? endDate.toLocaleDateString("en-CA") : ""}
                     onChange={(e) =>
                       setEndDate(
                         e.target.value
