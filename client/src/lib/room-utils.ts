@@ -11,9 +11,6 @@ export function normalizeRoom(apiRoom: RoomResponse | undefined) {
     title: apiRoom?.name || "",
     image: apiRoom?.img || "",
     location: apiRoom?.location.name || "",
-    seats: apiRoom?.capacity || 0,
-    amenities:
-      apiRoom?.amenities?.map((amenity: AmenityResponse) => amenity.name) ?? [],
     available: true,
     availability: apiRoom
       ? getAvailabilityText(
