@@ -129,11 +129,7 @@ export default function CustomRepeatModal({
               className="grid-cols-2 gap-2"
             >
               {dayOptions.map((day) => (
-                <CheckboxItem
-                  key={day.value}
-                  value={day.value}
-                  className="flex cursor-pointer items-center gap-2"
-                >
+                <CheckboxItem key={day.value} value={day.value}>
                   <span className="body text-black">{day.label}</span>
                 </CheckboxItem>
               ))}
