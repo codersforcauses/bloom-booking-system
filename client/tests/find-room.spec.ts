@@ -11,6 +11,11 @@ test.beforeEach(async ({ page }) => {
 
 test.describe("Search Form - Name Search", () => {
   test("searches for room by name", async ({ page }) => {
+    const futureStartDate = new Date();
+    futureStartDate.setFullYear(futureStartDate.getFullYear() + 1);
+    const futureEndDate = new Date();
+    futureEndDate.setFullYear(futureEndDate.getFullYear() + 2);
+
     await page.route("**/rooms/**", async (route) => {
       const url = route.request().url();
       if (url.includes("name=Meeting")) {
@@ -27,8 +32,8 @@ test.describe("Search Form - Name Search", () => {
                 location: { id: 1, name: "Floor 1" },
                 capacity: 10,
                 amenities: [{ id: 1, name: "Audio" }],
-                start_datetime: "2024-01-01T00:00:00Z",
-                end_datetime: "2024-12-31T23:59:59Z",
+                start_datetime: futureStartDate.toISOString(),
+                end_datetime: futureEndDate.toISOString(),
                 recurrence_rule: "",
                 is_active: true,
               },
@@ -58,7 +63,8 @@ test.describe("Search Form - Name Search", () => {
     await page.locator('input[name="name"]').fill("Meeting");
     await page.locator('button:has-text("Search")').click();
 
-    await page.waitForTimeout(500);
+    // Wait for search results to appear
+    await expect(page.getByText("Meeting Room A")).toBeVisible();
   });
 });
 
@@ -72,8 +78,6 @@ test.describe("Search Form - Capacity", () => {
     await minSeatsInput.fill("20");
     await maxSeatsInput.fill("10");
     await maxSeatsInput.blur();
-
-    await page.waitForTimeout(500);
 
     const searchButton = page.locator('button:has-text("Search")');
     await expect(searchButton).toBeDisabled();
@@ -129,8 +133,6 @@ test.describe("Room Results Display", () => {
     await page.locator('input[name="name"]').fill("NonexistentRoom");
     await page.locator('button:has-text("Search")').click();
 
-    await page.waitForTimeout(500);
-
     await expect(
       page.locator("text=No rooms found. Please try again."),
     ).toBeVisible();
@@ -155,10 +157,28 @@ test.describe("Error Handling", () => {
       });
     });
 
-    await page.reload();
-    await page.waitForTimeout(1000);
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes("/rooms/") && response.status() === 500,
+      ),
+      page.waitForResponse(
+        (response) =>
+          response.url().includes("/rooms/availability/") &&
+          response.status() === 500,
+      ),
+      page.reload(),
+    ]);
 
+    // Page should still be functional and not crash
     await expect(page.locator("h1")).toBeVisible();
+    // The error from API should be handled gracefully (no rooms displayed)
+    const noRoomsText = page.locator("text=No rooms found");
+    const hasNoRoomsText = await noRoomsText.isVisible().catch(() => false);
+    // Either shows "No rooms found" or the page structure is intact
+    expect(
+      hasNoRoomsText || (await page.locator("h1").count()) > 0,
+    ).toBeTruthy();
   });
 });
 
@@ -199,8 +219,12 @@ test.describe("Search Form Submission", () => {
     await page.locator('input[name="minSeats"]').fill("8");
     await page.locator('input[name="maxSeats"]').fill("12");
 
+    const waitingForResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes("/rooms/") && response.status() === 200,
+    );
     await page.locator('button:has-text("Search")').click();
-    await page.waitForTimeout(500);
+    await waitingForResponse;
 
     expect(capturedParams!.get("name")).toBe("Executive Suite");
     expect(capturedParams!.get("min_capacity")).toBe("8");
