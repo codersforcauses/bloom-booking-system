@@ -1,3 +1,6 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+
 import { defineConfig } from "eslint/config";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import _import from "eslint-plugin-import";
@@ -16,29 +19,27 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
-export default defineConfig([
-  {
-    files: ["**/*.ts", "**/*.tsx"],
-    extends: compat.extends(
-      "plugin:@next/next/recommended",
-      "plugin:@tanstack/eslint-plugin-query/recommended",
-    ),
+export default defineConfig([{
+  files: ["**/*.ts", "**/*.tsx"],
+  extends: compat.extends(
+    "plugin:@next/next/recommended",
+    "plugin:@tanstack/eslint-plugin-query/recommended",
+  ),
 
-    plugins: {
-      "simple-import-sort": simpleImportSort,
-      import: fixupPluginRules(_import),
-    },
-
-    languageOptions: {
-      parser: tsParser,
-    },
-
-    rules: {
-      "simple-import-sort/imports": "warn",
-      "simple-import-sort/exports": "warn",
-      "import/first": "warn",
-      "import/newline-after-import": "warn",
-      "import/no-duplicates": "warn",
-    },
+  plugins: {
+    "simple-import-sort": simpleImportSort,
+    import: fixupPluginRules(_import),
   },
-]);
+
+  languageOptions: {
+    parser: tsParser,
+  },
+
+  rules: {
+    "simple-import-sort/imports": "warn",
+    "simple-import-sort/exports": "warn",
+    "import/first": "warn",
+    "import/newline-after-import": "warn",
+    "import/no-duplicates": "warn",
+  },
+}, ...storybook.configs["flat/recommended"]]);
