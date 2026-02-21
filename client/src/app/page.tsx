@@ -17,9 +17,6 @@ import { Room } from "@/types/card";
 type Params = {
   name?: string;
   location?: string;
-  amenities?: string;
-  min_capacity?: number;
-  max_capacity?: number;
   start_datetime?: string;
   end_datetime?: string;
 };
@@ -44,9 +41,6 @@ export default function Home() {
       fromTime: undefined,
       toDate: undefined,
       toTime: undefined,
-      amenities: [],
-      minSeats: undefined,
-      maxSeats: undefined,
     },
   });
 
@@ -59,15 +53,6 @@ export default function Home() {
 
     // location search - location id to name
     if (data.location) params.location = data.location;
-
-    // amenities - name
-    if (data.amenities?.length) {
-      params.amenities = data.amenities.join(",");
-    }
-
-    // capacity range
-    if (data.minSeats != null) params.min_capacity = data.minSeats;
-    if (data.maxSeats != null) params.max_capacity = data.maxSeats;
 
     if (data.fromDate && data.fromTime) {
       const fromDateStr = data.fromDate.toLocaleDateString("en-CA");
