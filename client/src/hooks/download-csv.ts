@@ -8,7 +8,7 @@ export function useExportBookingsCsv(path: string) {
       const response = await api.get(path, {
         responseType: "blob",
         headers: {
-          Accept: "text/csv",
+          Accept: "application/json",
         },
       });
 

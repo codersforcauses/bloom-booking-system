@@ -113,7 +113,7 @@ export function BookingList() {
 
           <div className="flex gap-2">
             <DownloadCsvButton
-              path="/bookings/"
+              path="/bookings/download/"
               fileName="bookings-export.csv"
               onSuccess={() =>
                 showAlert("success", "Success", "CSV exported successfully!")
