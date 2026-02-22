@@ -357,16 +357,16 @@ class BookingViewSet(viewsets.ModelViewSet):
         # Write header row
         writer.writerow([
             'ID',
-            'Room Name',
-            'Visitor Name',
-            'Visitor Email',
-            'Start DateTime',
-            'End DateTime',
-            'Recurrence Rule',
+            'Room name',
+            'Visitor name',
+            'Visitor email',
+            'Start datetime',
+            'End datetime',
+            'Recurrence rule',
             'Status',
-            'Cancel Reason',
-            'Created At',
-            'Updated At'
+            'Cancel reason',
+            'Created at',
+            'Updated at'
         ])
 
         # Write data rows
