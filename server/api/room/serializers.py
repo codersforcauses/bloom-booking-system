@@ -43,7 +43,7 @@ class RoomSerializer(serializers.ModelSerializer):
             "recurrence_rule",
             "is_active",
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id']
 
     def validate(self, data):
         start = data.get('start_datetime') or getattr(
