@@ -265,9 +265,9 @@ export default function ViewCalendarPage() {
 
   return (
     <>
-      <div className="flex flex-col px-8 py-4 md:flex-row">
+      <div className="grid grid-cols-2 px-8 py-4 md:grid-cols-7 xl:grid-cols-5">
         {/* Left */}
-        <div className="flex max-w-xs flex-col items-center justify-start">
+        <div className="col-span-2 flex flex-col items-center justify-start md:col-span-2 xl:col-span-1">
           {!isLoading ? (
             <>
               {/* Room Card */}
@@ -321,7 +321,7 @@ export default function ViewCalendarPage() {
         {/* Right */}
         <div
           className={cn(
-            "grow rounded-lg p-4",
+            "col-span-2 rounded-lg p-4 md:col-span-5 xl:col-span-4",
             "[&_.rbc-toolbar]:max-xl:flex-col [&_.rbc-toolbar]:max-xl:gap-2",
             "[&_.rbc-toolbar_.rbc-btn-group:last-child]:max-md:hidden",
           )}
@@ -332,6 +332,26 @@ export default function ViewCalendarPage() {
             events={displayEvents}
             date={date}
             view={view}
+            formats={{
+              dayHeaderFormat: (date: Date, culture, localizer) =>
+                format(date, "dd MMM yyyy"),
+              dayRangeHeaderFormat: (
+                { start, end }: { start: Date; end: Date },
+                culture,
+                localizer,
+              ) =>
+                `${format(start, "dd MMM yyyy")} – ${format(end, "dd MMM yyyy")}`,
+              monthHeaderFormat: (date: Date, culture, localizer) =>
+                format(date, "MMMM yyyy"),
+              agendaDateFormat: (date: Date, culture, localizer) =>
+                format(date, "dd MMM yyyy"),
+              agendaHeaderFormat: (
+                { start, end }: { start: Date; end: Date },
+                culture,
+                localizer,
+              ) =>
+                `${format(start, "dd MMM yyyy")} – ${format(end, "dd MMM yyyy")}`,
+            }}
             onNavigate={(newDate: Date) =>
               setDate(new TZDate(newDate, PERTH_TZ))
             }
@@ -339,7 +359,7 @@ export default function ViewCalendarPage() {
             step={30} // 30 minute intervals
             timeslots={1} // 1 slot per line
             min={new Date(0, 0, 0, 0, 0, 0)} // Start 12 AM
-            max={new Date(0, 0, 0, 23, 59, 59)} // End 6 PM
+            max={new Date(0, 0, 0, 23, 59, 59)} // till 11:59 PM
             // Selection logic
             selectable
             onSelectSlot={handleSelectSlot}
