@@ -105,10 +105,16 @@ def get_room_calendar_events(request):
             events = events_result.get("items", [])
 
             # Transform events to match frontend expectations
+            is_auth = request.user.is_authenticated
             formatted_events = []
             for event in events:
+                raw_summary = event.get("summary", "")
+                if is_auth:
+                    summary = raw_summary
+                else:
+                    summary = raw_summary.split("-")[0].strip() if raw_summary else ""
                 formatted_events.append({
-                    "summary": event.get("summary", ""),
+                    "summary": summary,
                     "description": event.get("description", ""),
                     "start": event.get("start", {}),
                     "end": event.get("end", {}),
