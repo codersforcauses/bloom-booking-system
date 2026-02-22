@@ -214,7 +214,8 @@ class BookingViewTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Type'], 'text/csv')
-        self.assertIn('attachment; filename="bookings.csv"', response['Content-Disposition'])
+        self.assertIn('attachment; filename="bookings.csv"',
+                      response['Content-Disposition'])
 
         content = response.content.decode('utf-8')
         reader = csv.reader(StringIO(content))
@@ -250,16 +251,16 @@ class BookingViewTest(APITestCase):
 
         expected_headers = [
             'ID',
-            'Room Name',
-            'Visitor Name',
-            'Visitor Email',
-            'Start DateTime',
-            'End DateTime',
-            'Recurrence Rule',
+            'Room name',
+            'Visitor name',
+            'Visitor email',
+            'Start datetime',
+            'End datetime',
+            'Recurrence rule',
             'Status',
-            'Cancel Reason',
-            'Created At',
-            'Updated At'
+            'Cancel reason',
+            'Created at',
+            'Updated at'
         ]
         self.assertEqual(headers, expected_headers)
 
@@ -280,8 +281,10 @@ class BookingViewTest(APITestCase):
         self.assertEqual(len(data_rows), 2)
 
         # Find rows by visitor email (order may vary)
-        john_row = next((row for row in data_rows if row[3] == 'john@example.com'), None)
-        jane_row = next((row for row in data_rows if row[3] == 'jane@example.com'), None)
+        john_row = next(
+            (row for row in data_rows if row[3] == 'john@example.com'), None)
+        jane_row = next(
+            (row for row in data_rows if row[3] == 'jane@example.com'), None)
 
         # Verify John's booking data
         self.assertIsNotNone(john_row)
@@ -303,8 +306,10 @@ class BookingViewTest(APITestCase):
             name="Conference Room B",
             location=self.location,
             capacity=20,
-            start_datetime=future_date.replace(hour=9, minute=0, second=0, microsecond=0),
-            end_datetime=future_date.replace(hour=18, minute=0, second=0, microsecond=0),
+            start_datetime=future_date.replace(
+                hour=9, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=18, minute=0, second=0, microsecond=0),
             recurrence_rule="",
             is_active=True
         )
@@ -313,8 +318,10 @@ class BookingViewTest(APITestCase):
             room=other_room,
             visitor_name='Bob Wilson',
             visitor_email='bob@example.com',
-            start_datetime=future_date.replace(hour=10, minute=0, second=0, microsecond=0),
-            end_datetime=future_date.replace(hour=11, minute=0, second=0, microsecond=0),
+            start_datetime=future_date.replace(
+                hour=10, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=11, minute=0, second=0, microsecond=0),
             recurrence_rule="",
             status='CONFIRMED',
             google_event_id='test-google-event-id-3'
@@ -342,8 +349,10 @@ class BookingViewTest(APITestCase):
             name="Conference Room C",
             location=self.location,
             capacity=15,
-            start_datetime=future_date.replace(hour=9, minute=0, second=0, microsecond=0),
-            end_datetime=future_date.replace(hour=18, minute=0, second=0, microsecond=0),
+            start_datetime=future_date.replace(
+                hour=9, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=18, minute=0, second=0, microsecond=0),
             recurrence_rule="",
             is_active=True
         )
@@ -352,8 +361,10 @@ class BookingViewTest(APITestCase):
             room=room2,
             visitor_name='Charlie Brown',
             visitor_email='charlie@example.com',
-            start_datetime=future_date.replace(hour=15, minute=0, second=0, microsecond=0),
-            end_datetime=future_date.replace(hour=16, minute=0, second=0, microsecond=0),
+            start_datetime=future_date.replace(
+                hour=15, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=16, minute=0, second=0, microsecond=0),
             recurrence_rule="",
             status='CONFIRMED',
             google_event_id='test-google-event-id-4'
@@ -481,8 +492,10 @@ class BookingViewTest(APITestCase):
             room=self.room,
             visitor_name='Cancelled User',
             visitor_email='cancelled@example.com',
-            start_datetime=future_date.replace(hour=16, minute=0, second=0, microsecond=0),
-            end_datetime=future_date.replace(hour=17, minute=0, second=0, microsecond=0),
+            start_datetime=future_date.replace(
+                hour=16, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=17, minute=0, second=0, microsecond=0),
             recurrence_rule="",
             status='CANCELLED',
             cancel_reason='Meeting no longer needed',
@@ -501,7 +514,8 @@ class BookingViewTest(APITestCase):
         # Header + 1 cancelled booking
         self.assertEqual(len(rows), 2)
         self.assertEqual(rows[1][7], 'CANCELLED')  # Status
-        self.assertEqual(rows[1][8], 'Meeting no longer needed')  # Cancel Reason
+        # Cancel Reason
+        self.assertEqual(rows[1][8], 'Meeting no longer needed')
 
     def test_booking_download_with_special_characters(self):
         """Test downloading bookings with special characters in fields."""
@@ -510,8 +524,10 @@ class BookingViewTest(APITestCase):
             room=self.room,
             visitor_name='Test "User" O\'Brien',
             visitor_email='test@example.com',
-            start_datetime=future_date.replace(hour=14, minute=0, second=0, microsecond=0),
-            end_datetime=future_date.replace(hour=15, minute=0, second=0, microsecond=0),
+            start_datetime=future_date.replace(
+                hour=14, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=15, minute=0, second=0, microsecond=0),
             recurrence_rule="",
             status='CONFIRMED',
             google_event_id='test-special-id'
@@ -537,8 +553,10 @@ class BookingViewTest(APITestCase):
             room=self.room,
             visitor_name='Recurring User',
             visitor_email='recurring@example.com',
-            start_datetime=future_date.replace(hour=9, minute=0, second=0, microsecond=0),
-            end_datetime=future_date.replace(hour=10, minute=0, second=0, microsecond=0),
+            start_datetime=future_date.replace(
+                hour=9, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=10, minute=0, second=0, microsecond=0),
             recurrence_rule="FREQ=WEEKLY;BYDAY=MO,WE,FR",
             status='CONFIRMED',
             google_event_id='test-recurring-id'
@@ -555,7 +573,8 @@ class BookingViewTest(APITestCase):
 
         # Header + 1 booking
         self.assertEqual(len(rows), 2)
-        self.assertEqual(rows[1][6], 'FREQ=WEEKLY;BYDAY=MO,WE,FR')  # Recurrence Rule
+        # Recurrence Rule
+        self.assertEqual(rows[1][6], 'FREQ=WEEKLY;BYDAY=MO,WE,FR')
 
     def test_booking_download_combined_filters(self):
         """Test downloading bookings with multiple filters combined."""
@@ -564,8 +583,10 @@ class BookingViewTest(APITestCase):
             room=self.room,
             visitor_name='John Smith',
             visitor_email='johnsmith@example.com',
-            start_datetime=future_date.replace(hour=15, minute=0, second=0, microsecond=0),
-            end_datetime=future_date.replace(hour=16, minute=0, second=0, microsecond=0),
+            start_datetime=future_date.replace(
+                hour=15, minute=0, second=0, microsecond=0),
+            end_datetime=future_date.replace(
+                hour=16, minute=0, second=0, microsecond=0),
             recurrence_rule="",
             status='CONFIRMED',
             google_event_id='test-john-smith'
@@ -595,8 +616,10 @@ class BookingViewTest(APITestCase):
                 room=self.room,
                 visitor_name=f'Bulk User {i}',
                 visitor_email=f'bulk{i}@example.com',
-                start_datetime=future_date.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=i),
-                end_datetime=future_date.replace(hour=11, minute=0, second=0, microsecond=0) + timedelta(days=i),
+                start_datetime=future_date.replace(
+                    hour=10, minute=0, second=0, microsecond=0) + timedelta(days=i),
+                end_datetime=future_date.replace(
+                    hour=11, minute=0, second=0, microsecond=0) + timedelta(days=i),
                 recurrence_rule="",
                 status='CONFIRMED',
                 google_event_id=f'test-bulk-{i}'
@@ -829,14 +852,18 @@ class BookingViewTest(APITestCase):
             room=mock_room,
             visitor_name="Alice Johnson",
             visitor_email="alice@example.com",
-            start_datetime=future_date.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=1),
-            end_datetime=future_date.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=1),
+            start_datetime=future_date.replace(
+                hour=10, minute=0, second=0, microsecond=0) + timedelta(days=1),
+            end_datetime=future_date.replace(
+                hour=12, minute=0, second=0, microsecond=0) + timedelta(days=1),
             recurrence_rule="FREQ=DAILY;COUNT=5"
         )
 
         booking_viewset = BookingViewSet()
         event_data = booking_viewset._build_event_data(mock_booking)
 
-        self.assertEqual(event_data["summary"], f"Booking of {self.room.name} - Alice Johnson")
+        self.assertEqual(
+            event_data["summary"], f"Booking of {self.room.name} - Alice Johnson")
         self.assertIn("description", event_data)
-        self.assertEqual(event_data["extendedProperties"]["shared"].get("roomId"), str(self.room.id))
+        self.assertEqual(event_data["extendedProperties"]["shared"].get(
+            "roomId"), str(self.room.id))
