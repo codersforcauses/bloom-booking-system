@@ -47,13 +47,42 @@ import { Room } from "@/types/card";
 
 import { formatDateTime } from "../../book-room/[room_id]/room-utils";
 
-const formSchema = z.object({
-  name: z.string().min(1, "This is a required field."),
-  email: z.email("Must be a valid email address."),
-  date: z.date(),
-  start_time: z.string(),
-  end_time: z.string(),
-});
+const formSchema = z
+  .object({
+    name: z.string().min(1, "This is a required field."),
+    email: z.email("Must be a valid email address."),
+    date: z.date(),
+    start_time: z.iso.time("Must be a valid time."),
+    end_time: z.iso.time("Must be a valid time."),
+  })
+  .refine(
+    (data) => {
+      const now = new Date();
+      const start_datetime = new Date(
+        Date.parse(formatDateTime(data.date, data.start_time)),
+      );
+      return now < start_datetime;
+    },
+    {
+      message: "Start time must be in the future.",
+      path: ["start_time"],
+    },
+  )
+  .refine(
+    (data) => {
+      const start_datetime = new Date(
+        Date.parse(formatDateTime(data.date, data.start_time)),
+      );
+      const end_datetime = new Date(
+        Date.parse(formatDateTime(data.date, data.end_time)),
+      );
+      return start_datetime < end_datetime;
+    },
+    {
+      message: "End time must be after start time.",
+      path: ["end_time"],
+    },
+  );
 
 type EditBookingFormProps = Partial<BookingResponse>;
 
@@ -145,143 +174,138 @@ function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
       onSubmit={form.handleSubmit(onSubmit)}
       className={cn(
         "h-fit w-full rounded-md md:min-w-[32rem] md:max-w-[56rem]",
-        "flex flex-col gap-6 bg-white px-8 py-8 md:px-16 md:py-12",
+        "flex flex-col bg-white px-8 py-8 md:gap-4 md:px-16 md:py-12",
       )}
     >
-      <div>
-        <div className="mb-4 flex flex-col gap-4 md:flex-row">
-          <FormField
-            name="name"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel className="font-bold">
-                  {" "}
-                  Name <span className="text-bloom-red">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    required
-                    name="name"
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    disabled={true}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="email"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel className="font-bold">
-                  Email <span className="text-bloom-red">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    required
-                    name="email"
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    disabled={true}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="flex flex-col gap-4 md:flex-row">
-          <FormField
-            name="date"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel required>
-                  Date <span className="text-bloom-red">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    min={new Date().toISOString().split("T")[0]}
-                    value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      field.onChange(
-                        val ? new Date(val + "T00:00:00") : undefined,
-                      );
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="start_time"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel required>
-                  Start time <span className="text-bloom-red">*</span>
-                </FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
-                    <SelectValue placeholder="Select a time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIME_OPTIONS.map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="end_time"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel required>
-                  End time <span className="text-bloom-red">*</span>
-                </FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
-                    <SelectValue placeholder="Select a time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIME_OPTIONS.map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+      <div className="flex flex-col items-start gap-4 md:flex-row">
+        <FormField
+          name="name"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel className="font-bold">
+                {" "}
+                Name <span className="text-bloom-red">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="text"
+                  required
+                  name="name"
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  disabled={true}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          name="email"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel className="font-bold">
+                Email <span className="text-bloom-red">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="text"
+                  required
+                  name="email"
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  disabled={true}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
+      <div className="flex flex-col items-start gap-4 md:flex-row">
+        <FormField
+          name="date"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel required>
+                Date <span className="text-bloom-red">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(
+                      val ? new Date(val + "T00:00:00") : undefined,
+                    );
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          name="start_time"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel required>
+                Start time <span className="text-bloom-red">*</span>
+              </FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_OPTIONS.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          name="end_time"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel required>
+                End time <span className="text-bloom-red">*</span>
+              </FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_OPTIONS.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
       <RecurrenceRuleField
         onChange={setRecurrenceRule}
         defaultRRule={recurrenceRule}
       />
       {/* <ReCAPTCHAV2 setVerified={setVerified} /> */}
-      <Button
-        type="submit"
-        className="w-fit px-6"
-        disabled={mutation.isPending}
-      >
+      <Button type="submit" className="w-fit" disabled={mutation.isPending}>
         {!mutation.isPending ? "Submit" : <Spinner className="w-6" />}
       </Button>
       <AlertDialog {...alertDialogProps} />
@@ -316,19 +340,8 @@ export default function EditBookingPage() {
     if (!room) return null;
     return normaliseRoom(room);
   }, [room]);
-  const loading_room: Room = {
-    id: -1,
-    title: "Loading...",
-    image: PLACEHOLDER_IMAGE,
-    location: "",
-    available: false,
-    availability: "",
-    seats: 0,
-    amenities: [],
-    removed: false,
-  };
 
-  if (isLoadingBooking || isLoadingRoom) {
+  if (isLoadingBooking || isLoadingRoom || !normalisedRoom) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Spinner className="w-6" />
@@ -351,7 +364,7 @@ export default function EditBookingPage() {
 
   return (
     <div className="w-full">
-      <div className="flex w-full items-center px-[1rem] pt-[1rem] md:px-[3rem]">
+      <div className="flex w-full items-center px-4 pt-4 md:px-12">
         <h1 className="text-xl font-semibold">Edit booking</h1>
       </div>
       <div
@@ -361,7 +374,7 @@ export default function EditBookingPage() {
         )}
       >
         <div className="w-96">
-          <RoomCard room={normalisedRoom || loading_room} />
+          <RoomCard room={normalisedRoom} />
         </div>
         <EditBookingForm booking={booking} />
       </div>

@@ -141,7 +141,7 @@ export default function BookingTable({
           )}
         </Button>
 
-        <Button
+        {/* <Button
           size="icon"
           title="Cancel"
           aria-label="Cancel"
@@ -161,7 +161,7 @@ export default function BookingTable({
           }
         >
           <BiWindowClose size={20} />
-        </Button>
+        </Button> */}
       </span>
     );
   };

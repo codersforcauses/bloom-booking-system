@@ -222,10 +222,10 @@ export default function BookRoomForm({
       onSubmit={form.handleSubmit(onSubmit)}
       className={cn(
         "h-fit w-full min-w-80 rounded-md md:max-w-4xl",
-        "flex flex-col bg-white px-8 py-8 md:gap-6 md:px-16 md:py-12",
+        "flex flex-col bg-white px-8 py-8 md:gap-4 md:px-16 md:py-12",
       )}
     >
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-3">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-3">
         <FormField
           name="name"
           control={form.control}
@@ -257,7 +257,7 @@ export default function BookRoomForm({
           )}
         />
       </div>
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-3">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-3">
         <FormField
           name="date"
           control={form.control}
