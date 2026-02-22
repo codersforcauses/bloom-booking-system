@@ -11,8 +11,6 @@ export function normalizeRoom(apiRoom: RoomResponse): Room {
     location: apiRoom.location.name,
     available: apiRoom.is_active,
     isActive: apiRoom.is_active,
-    seats: apiRoom.capacity,
-    amenities: apiRoom.amenities?.map((a) => a.name) ?? [],
     availability: apiRoom
       ? getAvailabilityText(
           apiRoom.is_active,
