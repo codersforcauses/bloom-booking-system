@@ -129,13 +129,13 @@ export default function BookRoomForm({
         };
 
         if (res.start_datetime) {
-          errorMessage = cn(res.start_datetime);
+          errorMessage = res.start_datetime.join(" ");
         } else if (res.end_datetime) {
-          errorMessage = cn(res.end_datetime);
+          errorMessage = res.end_datetime.join(" ");
         } else if (res.non_field_errors) {
-          errorMessage = cn(res.non_field_errors);
+          errorMessage = res.non_field_errors.join(" ");
         } else if (res.detail) {
-          errorMessage = cn(res.detail);
+          errorMessage = res.detail;
         }
       }
 
