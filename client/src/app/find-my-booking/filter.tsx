@@ -117,7 +117,7 @@ export function FilterPopover({
             <Accordion
               type="multiple"
               defaultValue={defaultValue}
-              className="w-full divide-y"
+              className="w-full"
             >
               {/* Rooms */}
               <AccordionItem value="room">
@@ -191,7 +191,7 @@ export function FilterPopover({
         </ScrollArea>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 border-t px-4 py-3">
+        <div className="b flex justify-end gap-3 px-4 py-3">
           <Button variant="outline" onClick={() => setOpen(false)}>
             Close
           </Button>
