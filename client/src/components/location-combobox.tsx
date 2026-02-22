@@ -13,28 +13,28 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from "@/components/ui/combobox";
-import { useSearchRooms } from "@/hooks/room";
-import { RoomShortResponse } from "@/lib/api-types";
+import { useSearchRoomLocations } from "@/hooks/room";
+import { LocationResponse } from "@/lib/api-types";
 
 import { ScrollArea } from "./ui/scroll-area";
 
-type RoomComboboxProps = {
-  value: RoomShortResponse[];
-  onChange: (rooms: RoomShortResponse[]) => void;
+type LocationComboboxProps = {
+  value: LocationResponse[];
+  onChange: (locations: LocationResponse[]) => void;
 };
 
-export function RoomCombobox({ value, onChange }: RoomComboboxProps) {
+export function LocationCombobox({ value, onChange }: LocationComboboxProps) {
   const anchor = useComboboxAnchor();
   const [search, setSearch] = React.useState("");
 
-  const { data: rooms = [], isLoading } = useSearchRooms(search);
+  const { data: locations = [], isLoading } = useSearchRoomLocations(search);
 
   const items = React.useMemo(() => {
-    const map = new Map<string, RoomShortResponse>();
+    const map = new Map<string, LocationResponse>();
     value.forEach((v) => map.set(String(v.id), v));
-    rooms.forEach((r: RoomShortResponse) => map.set(String(r.id), r));
+    locations.forEach((r: LocationResponse) => map.set(String(r.id), r));
     return Array.from(map.values());
-  }, [rooms, value]);
+  }, [locations, value]);
 
   return (
     <Combobox
@@ -42,18 +42,18 @@ export function RoomCombobox({ value, onChange }: RoomComboboxProps) {
       items={items}
       value={value}
       onValueChange={onChange}
-      itemToStringValue={(room) => room.name}
+      itemToStringValue={(location) => location.name}
       autoHighlight
     >
       <ComboboxChips ref={anchor} className="w-full">
         <ComboboxValue>
           {(values) => (
             <>
-              {values.map((room: RoomShortResponse) => (
-                <ComboboxChip key={room.id}>{room.name}</ComboboxChip>
+              {values.map((location: LocationResponse) => (
+                <ComboboxChip key={location.id}>{location.name}</ComboboxChip>
               ))}
               <ComboboxChipsInput
-                placeholder="Search rooms..."
+                placeholder="Search locations..."
                 onChange={(e) => setSearch(e.target.value)}
               />
             </>
@@ -69,9 +69,9 @@ export function RoomCombobox({ value, onChange }: RoomComboboxProps) {
         )}
         <ScrollArea className="flex max-h-60 flex-col">
           <ComboboxList>
-            {items.map((room: RoomShortResponse) => (
-              <ComboboxItem key={room.id} value={room}>
-                {room.name}
+            {items.map((location: LocationResponse) => (
+              <ComboboxItem key={location.id} value={location}>
+                {location.name}
               </ComboboxItem>
             ))}
           </ComboboxList>

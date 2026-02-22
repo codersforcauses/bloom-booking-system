@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { AlertDialog, AlertDialogVariant } from "@/components/alert-dialog";
 import InputField from "@/components/input";
 import {
   PaginationBar,
@@ -12,8 +13,7 @@ import {
 } from "@/components/pagination-bar";
 import { Button } from "@/components/ui/button";
 import { useFetchBookings } from "@/hooks/booking";
-import { RoomShortResponse } from "@/lib/api-types";
-import { cn } from "@/lib/utils";
+import { LocationResponse, RoomShortResponse } from "@/lib/api-types";
 
 import { FilterPopover } from "./filter";
 import FindMyBookingForm from "./find-my-booking-form";
@@ -49,9 +49,11 @@ export default function FindMyBookingPage() {
  */
 export type CustomFetchBookingParams = PaginationSearchParams & {
   room_ids?: string;
+  location_ids?: string;
   visitor_email?: string;
   visitor_name?: string;
   _selectedRooms?: RoomShortResponse[];
+  _selectedLocations?: LocationResponse[];
 };
 
 function BookingPage({
@@ -68,6 +70,21 @@ function BookingPage({
   const search = oldSearchParams.get("search") ?? "";
   const page = Number(oldSearchParams.get("page") ?? 1);
   const nrows = Number(oldSearchParams.get("nrows") ?? 5);
+
+  const [alert, setAlert] = useState<{
+    open: boolean;
+    variant: AlertDialogVariant;
+    title?: string;
+    description?: string;
+  }>({ open: false, variant: "success" });
+
+  const showAlert = (
+    variant: AlertDialogVariant,
+    title: string,
+    desc: string,
+  ) => setAlert({ open: true, variant, title, description: desc });
+
+  const onClose = () => setAlert((prev) => ({ ...prev, open: false }));
 
   /**
    * urlVisibleParams
@@ -93,9 +110,11 @@ function BookingPage({
       page,
       nrows,
       room_ids: "",
+      location_ids: "",
       visitor_email: email,
       visitor_name: "",
       _selectedRooms: [],
+      _selectedLocations: [],
       ...urlVisibleParams,
     }),
   );
@@ -163,20 +182,23 @@ function BookingPage({
           <FilterPopover
             initialFilters={searchParams}
             selectedRooms={searchParams._selectedRooms || []}
+            selectedLocations={searchParams._selectedLocations || []}
             onApply={(
               filters: CustomFetchBookingParams,
               rooms: RoomShortResponse[],
+              locations: LocationResponse[],
             ) => {
               pushParams({
                 ...filters,
                 _selectedRooms: rooms,
+                _selectedLocations: locations,
               });
             }}
           />
         </div>
       </div>
 
-      <BookingTable data={data} isLoading={isLoading} />
+      <BookingTable data={data} isLoading={isLoading} showAlert={showAlert} />
 
       <PaginationBar
         page={searchParams.page ?? page}
@@ -188,6 +210,14 @@ function BookingPage({
         onRowChange={(newNrows) =>
           pushParams({ nrows: Number(newNrows), page: 1 })
         }
+      />
+      <AlertDialog
+        open={alert.open}
+        variant={alert.variant}
+        title={alert.title}
+        description={alert.description}
+        onConfirm={onClose}
+        onClose={onClose}
       />
     </div>
   );

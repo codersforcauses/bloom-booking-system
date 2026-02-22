@@ -109,7 +109,6 @@ function useSearchRooms(search?: string, limit = 20) {
       });
       return response.data.results;
     },
-    enabled: !!search,
   });
 }
 
@@ -221,6 +220,21 @@ function useFetchRoomLocation(id?: number) {
     queryFn: async () => {
       const response = await api.get(`/locations/${id}/`);
       return response.data;
+    },
+  });
+}
+
+function useSearchRoomLocations(search?: string, limit = 20) {
+  return useQuery<LocationResponse[]>({
+    queryKey: ["locations", search, limit],
+    queryFn: async () => {
+      const response = await api.get("/locations/", {
+        params: {
+          limit,
+          ...(search ? { search } : {}),
+        },
+      });
+      return response.data.results;
     },
   });
 }
@@ -351,5 +365,10 @@ const RoomAPI = {
   useFetchRoomAvailability,
 };
 
-export { useFetchRooms, useSearchRooms, useUpdateRoomStatus };
+export {
+  useFetchRooms,
+  useSearchRoomLocations,
+  useSearchRooms,
+  useUpdateRoomStatus,
+};
 export default RoomAPI;
