@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useMemo } from "react";
 
 import DetailPage from "@/app/find-my-booking/[bookingId]/detail-page";

@@ -200,7 +200,7 @@ type RowProps = {
 export function SelectRow({
   id,
   selectedRow,
-  options = [5, 7, 10, 15, 20, 50, 100],
+  options = [10, 20, 50, 100],
   onChange,
   className,
 }: RowProps) {
@@ -210,7 +210,7 @@ export function SelectRow({
 
   return (
     <Select
-      defaultValue="10"
+      defaultValue="20"
       value={selectedRow ? selectedRow.toString() : ""}
       onValueChange={onValueChange}
     >

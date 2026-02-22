@@ -129,13 +129,13 @@ export default function BookRoomForm({
         };
 
         if (res.start_datetime) {
-          errorMessage = cn(res.start_datetime);
+          errorMessage = res.start_datetime.join(" ");
         } else if (res.end_datetime) {
-          errorMessage = cn(res.end_datetime);
+          errorMessage = res.end_datetime.join(" ");
         } else if (res.non_field_errors) {
-          errorMessage = cn(res.non_field_errors);
+          errorMessage = res.non_field_errors.join(" ");
         } else if (res.detail) {
-          errorMessage = cn(res.detail);
+          errorMessage = res.detail;
         }
       }
 
@@ -222,10 +222,10 @@ export default function BookRoomForm({
       onSubmit={form.handleSubmit(onSubmit)}
       className={cn(
         "h-fit w-full min-w-80 rounded-md md:max-w-4xl",
-        "flex flex-col bg-white px-8 py-8 md:gap-6 md:px-16 md:py-12",
+        "flex flex-col bg-white px-8 py-8 md:gap-4 md:px-16 md:py-12",
       )}
     >
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-3">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-3">
         <FormField
           name="name"
           control={form.control}
@@ -257,7 +257,7 @@ export default function BookRoomForm({
           )}
         />
       </div>
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-3">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-3">
         <FormField
           name="date"
           control={form.control}

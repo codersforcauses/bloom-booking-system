@@ -69,7 +69,7 @@ function BookingPage({
 
   const search = oldSearchParams.get("search") ?? "";
   const page = Number(oldSearchParams.get("page") ?? 1);
-  const nrows = Number(oldSearchParams.get("nrows") ?? 5);
+  const nrows = Number(oldSearchParams.get("nrows") ?? 10);
 
   const [alert, setAlert] = useState<{
     open: boolean;
@@ -157,7 +157,7 @@ function BookingPage({
 
   return (
     <div className="w-full rounded-xl p-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col items-center justify-between md:flex-row">
         <h2 className="text-xl font-semibold">List of Bookings</h2>
         <div className="flex gap-2">
           <InputField
@@ -165,7 +165,7 @@ function BookingPage({
             name="search"
             label=""
             value={searchParams.search || ""}
-            placeholder="Search Name"
+            placeholder="Visitor name, location, or ID"
             onSearch={(val) => pushParams({ search: val })}
             className="w-full space-y-0"
           />

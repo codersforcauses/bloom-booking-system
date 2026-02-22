@@ -57,7 +57,7 @@ export default function BookRoomPage() {
 
   return (
     <div className="h-fit w-full">
-      <div className="flex w-full items-center p-4">
+      <div className="flex w-full items-center px-4 pt-4 md:px-12">
         <h1 className="text-xl font-semibold">Book room</h1>
       </div>
       <div

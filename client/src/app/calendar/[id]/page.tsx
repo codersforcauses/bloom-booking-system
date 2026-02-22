@@ -27,7 +27,6 @@ import {
   View,
   Views,
 } from "react-big-calendar";
-import { LuToggleRight } from "react-icons/lu";
 import { useMediaQuery } from "react-responsive";
 
 import { Calendar as MiniCalendar } from "@/components/calendar";
@@ -265,88 +264,93 @@ export default function ViewCalendarPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="grid grid-cols-1 px-8 py-4 md:grid-cols-7 xl:grid-cols-5">
-      {/* Left */}
-      <div className="col-span-1 flex flex-col items-center justify-start md:col-span-2 xl:col-span-1">
-        {!isLoading ? (
-          <>
-            {/* Room Card */}
-            {!isError && (
-              <div className="mx- w-full">
-                <RoomCard room={normalizeRoom(room)} />
+    <>
+      <div className="flex flex-col px-8 py-4 md:flex-row">
+        {/* Left */}
+        <div className="flex max-w-xs flex-col items-center justify-start">
+          {!isLoading ? (
+            <>
+              {/* Room Card */}
+              {!isError && (
+                <div className="mx- w-full">
+                  <RoomCard room={normalizeRoom(room)} />
+                </div>
+              )}
+              {/* Axios Error Message */}
+              {isError && (
+                <p className="text-[var(--bloom-red)]">
+                  {error.response?.data?.detail ||
+                    error.response?.data?.message ||
+                    error.message}
+                </p>
+              )}
+              {/* Button */}
+              <Button
+                variant="confirm"
+                className="my-3"
+                onClick={onSubmit}
+                disabled={isError || !room?.is_active}
+              >
+                Book a slot
+              </Button>
+              {/* MiniCalendar */}
+              <div className="flex w-full items-center justify-center">
+                <MiniCalendar
+                  fixedWeeks
+                  className="h-auto w-full rounded-md border border-[hsl(var(--border))]"
+                  classNames={{
+                    day: "w-full h-auto flex items-center justify-center",
+                    cell: "w-full",
+                  }}
+                  captionLayout="dropdown"
+                  style={{ "--cell-size": "20px" } as React.CSSProperties}
+                  mode="single" // Only one day can be active
+                  selected={date} // Share state with big calendar
+                  onSelect={(newDate) => {
+                    if (newDate) {
+                      setDate(new TZDate(newDate, PERTH_TZ));
+                    }
+                  }}
+                />
               </div>
-            )}
-            {/* Axios Error Message */}
-            {isError && (
-              <p className="text-[var(--bloom-red)]">
-                {error.response?.data?.detail ||
-                  error.response?.data?.message ||
-                  error.message}
-              </p>
-            )}
-            {/* Button */}
-            <Button
-              variant="confirm"
-              className="my-3"
-              onClick={onSubmit}
-              disabled={isError || !room?.is_active}
-            >
-              Book a slot
-            </Button>
-            {/* MiniCalendar */}
-            <div className="flex w-full items-center justify-center">
-              <MiniCalendar
-                fixedWeeks
-                className="h-auto w-full rounded-md border border-[hsl(var(--border))]"
-                classNames={{
-                  day: "w-full h-auto flex items-center justify-center",
-                  cell: "w-full",
-                }}
-                style={{ "--cell-size": "20px" } as React.CSSProperties}
-                mode="single" // Only one day can be active
-                selected={date} // Share state with big calendar
-                onSelect={(newDate) => {
-                  if (newDate) {
-                    setDate(new TZDate(newDate, PERTH_TZ));
-                  }
-                }}
-              />
-            </div>
-          </>
-        ) : (
-          <p>Loading...</p>
-        )}
-      </div>
-      {/* Right */}
-      <div
-        className={cn(
-          "col-span-1 rounded-lg p-4 md:col-span-5 xl:col-span-4",
-          "[&_.rbc-toolbar]:max-xl:flex-col [&_.rbc-toolbar]:max-xl:gap-2",
-          "[&_.rbc-toolbar_.rbc-btn-group:last-child]:max-md:hidden",
-        )}
-      >
-        <Calendar
-          className="w-full"
-          localizer={localizer}
-          events={displayEvents}
-          date={date}
-          view={view}
-          onNavigate={(newDate: Date) => setDate(new TZDate(newDate, PERTH_TZ))}
-          onView={(newView: View) => setView(newView)}
-          step={30} // 30 minute intervals
-          timeslots={1} // 1 slot per line
-          min={new Date(0, 0, 0, 0, 0, 0)} // Start 12 AM
-          max={new Date(0, 0, 0, 23, 59, 59)} // End 6 PM
-          // Selection logic
-          selectable
-          onSelectSlot={handleSelectSlot}
-          onSelectEvent={(event) => {
-            if (event.isDraft) setDialogOpen(true);
-          }}
-          // Custom Rendering
-          slotPropGetter={slotPropGetter}
-          eventPropGetter={eventPropGetter}
-        />
+            </>
+          ) : (
+            <p>Loading...</p>
+          )}
+        </div>
+        {/* Right */}
+        <div
+          className={cn(
+            "grow rounded-lg p-4",
+            "[&_.rbc-toolbar]:max-xl:flex-col [&_.rbc-toolbar]:max-xl:gap-2",
+            "[&_.rbc-toolbar_.rbc-btn-group:last-child]:max-md:hidden",
+          )}
+        >
+          <Calendar
+            className="w-full"
+            localizer={localizer}
+            events={displayEvents}
+            date={date}
+            view={view}
+            onNavigate={(newDate: Date) =>
+              setDate(new TZDate(newDate, PERTH_TZ))
+            }
+            onView={(newView: View) => setView(newView)}
+            step={30} // 30 minute intervals
+            timeslots={1} // 1 slot per line
+            min={new Date(0, 0, 0, 0, 0, 0)} // Start 12 AM
+            max={new Date(0, 0, 0, 23, 59, 59)} // End 6 PM
+            // Selection logic
+            selectable
+            onSelectSlot={handleSelectSlot}
+            onSelectEvent={(event) => {
+              if (event.isDraft) setDialogOpen(true);
+            }}
+            // Custom Rendering
+            slotPropGetter={slotPropGetter}
+            eventPropGetter={eventPropGetter}
+          />
+        </div>
       </div>
       {/* Booking Dialog */}
       {selectedSlot && selectedSlot.start && selectedSlot.end && (
@@ -364,6 +368,6 @@ export default function ViewCalendarPage() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+    </>
   );
 }

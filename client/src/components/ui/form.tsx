@@ -62,7 +62,7 @@ const FormComponent = React.forwardRef<HTMLFormElement, FormProps<FieldValues>>(
         <form
           ref={ref}
           className={cn(
-            "flex w-full flex-col space-y-3 rounded-md border border-[hsl(var(--border))] bg-background px-8 py-8",
+            "flex w-full flex-col space-y-4 rounded-md border border-[hsl(var(--border))] bg-background px-8 py-8",
             className,
           )}
           {...props}

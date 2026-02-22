@@ -21,6 +21,7 @@ type DataTableProps<T extends { id: number }> = {
   isLoading?: boolean;
   className?: string;
   actions?: (row: T) => React.ReactNode;
+  rowOnClick?: (row: T) => void;
 };
 
 export function DataTable<T extends { id: number }>({
@@ -29,6 +30,7 @@ export function DataTable<T extends { id: number }>({
   isLoading = false,
   className,
   actions,
+  rowOnClick,
 }: DataTableProps<T>) {
   const showActions = Boolean(actions);
 
@@ -37,7 +39,7 @@ export function DataTable<T extends { id: number }>({
   return (
     <div className="mb-4 border-t-2 border-gray-400 bg-inherit">
       {/* Horizontal scroll wrapper */}
-      <div className="relative max-h-[60vh] overflow-x-auto overflow-y-auto bg-inherit">
+      <div className="relative overflow-x-auto bg-inherit">
         <Table className={cn("w-full min-w-[800px] bg-inherit", className)}>
           <TableHeader className="sticky top-0 z-10 bg-gray-100">
             <TableRow className="bg-inherit">
@@ -81,12 +83,15 @@ export function DataTable<T extends { id: number }>({
               data.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="border-0 border-b-2 border-inherit bg-white hover:bg-gray-50"
+                  className="cursor-pointer border-0 border-b-2 border-inherit bg-white hover:bg-gray-50"
                 >
                   {columns.map((col) => (
                     <TableCell
                       key={String(col.key)}
                       className={cn(col.className, "px-4")}
+                      onClick={() =>
+                        col.key !== "recurrence_rule" && rowOnClick?.(row)
+                      }
                     >
                       {col.render
                         ? col.render(row)

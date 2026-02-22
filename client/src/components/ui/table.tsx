@@ -6,10 +6,6 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  // NOTE: The scroll wrapper is intentionally removed here.
-  // Sticky table headers only work if the table's scrollable ancestor is outside the table.
-  // Wrapping the table inside a scrollable div here will break sticky headers.
-  // <div className="relative w-full overflow-auto">
   <table
     ref={ref}
     className={cn("w-full caption-bottom text-sm", className)}
