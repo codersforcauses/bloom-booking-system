@@ -1,7 +1,7 @@
 import { rrulestr } from "rrule";
 
 export type RecurrenceSummary = {
-  label: string; // "One Time", "Daily", "Weekly", etc.
+  label: string; // "One time", "Daily", "Weekly", etc.
   detail?: string; // optional, e.g., "Mon, Wed, Fri"
   upcoming?: string[]; // first N dates as strings
   text?: string;
@@ -19,7 +19,7 @@ export function parseRecurrenceRule(
   start?: string,
   limit = 20,
 ): RecurrenceSummary {
-  if (!rruleString || !start) return { label: "One Time" };
+  if (!rruleString || !start) return { label: "One time" };
 
   const dtStart = new Date(start);
   let recurrence: RecurrenceSummary = { label: "Custom" };

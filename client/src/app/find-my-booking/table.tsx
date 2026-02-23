@@ -87,7 +87,7 @@ export default function BookingTable({
         );
 
         // One Time = plain text, repeating = clickable button
-        return recurrence.label === "One Time" ? (
+        return recurrence.label === "One time" ? (
           <span>{recurrence.label}</span>
         ) : (
           <button

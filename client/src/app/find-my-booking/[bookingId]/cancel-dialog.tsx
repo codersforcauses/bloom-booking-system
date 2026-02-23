@@ -125,7 +125,7 @@ export default function CancelBookingDialog({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
+        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
           <DialogTitle className="text-center">
             Reason to cancel booking
           </DialogTitle>

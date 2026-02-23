@@ -4,8 +4,9 @@ type PageProps = {
   params: { id: string };
 };
 
-export default function EditMeetingRoomPage({ params }: PageProps) {
-  const roomId = Number(params.id);
+export default async function EditMeetingRoomPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const roomId = Number(resolvedParams.id);
 
   if (Number.isNaN(roomId) || roomId <= 0) {
     return (

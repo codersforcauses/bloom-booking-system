@@ -374,8 +374,13 @@ export default function ViewCalendarPage() {
       </div>
       {/* Booking Dialog */}
       {selectedSlot && selectedSlot.start && selectedSlot.end && (
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl bg-white">
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen} modal={false}>
+          <DialogContent
+            className="max-h-[90vh] max-w-2xl overflow-y-auto bg-white"
+            onInteractOutside={(e) => {
+              e.preventDefault();
+            }}
+          >
             <DialogHeader>
               <DialogTitle>Book a slot</DialogTitle>
             </DialogHeader>

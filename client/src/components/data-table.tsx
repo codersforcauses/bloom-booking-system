@@ -89,9 +89,14 @@ export function DataTable<T extends { id: number }>({
                     <TableCell
                       key={String(col.key)}
                       className={cn(col.className, "px-4")}
-                      onClick={() =>
-                        col.key !== "recurrence_rule" && rowOnClick?.(row)
-                      }
+                      onClick={() => {
+                        if (
+                          col.key !== "recurrence_rule" ||
+                          getNestedValue(row, "recurrence_rule") === ""
+                        ) {
+                          rowOnClick?.(row);
+                        }
+                      }}
                     >
                       {col.render
                         ? col.render(row)
