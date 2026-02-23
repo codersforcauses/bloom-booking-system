@@ -70,6 +70,11 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
+    // add custom header to identify requests from Bloom
+    config.headers = config.headers || {};
+    config.headers["X-Requested-With"] =
+      process.env.NEXT_PUBLIC_BLOOM_CLIENT_HEADER || "";
+
     return config;
   },
   (error) => Promise.reject(error),

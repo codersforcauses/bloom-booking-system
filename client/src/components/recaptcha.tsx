@@ -43,7 +43,11 @@ const ReCAPTCHAV2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
   };
 
   return (
-    <ReCAPTCHA sitekey={siteKey || ""} onChange={handleCaptchaSubmission} />
+    <ReCAPTCHA
+      sitekey={siteKey || ""}
+      onChange={handleCaptchaSubmission}
+      className="z-9999"
+    />
   );
 };
 

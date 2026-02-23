@@ -92,8 +92,18 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def _check_custom_header(self, request):
+        # Require X-Requested-With header for all requests
+        if request.headers.get("X-Requested-With") != os.getenv("BLOOM_CLIENT_HEADER", ""):
+            return Response({"detail": "Forbidden: Not authorized."}, status=status.HTTP_403_FORBIDDEN)
+        return None
+
     # custom create logic to integrate Google calendar api
     def create(self, request, *args, **kwargs):
+        header_error = self._check_custom_header(request)
+        if header_error:
+            return header_error
+
         """Create booking with Google Calendar integration and transaction rollback."""
         try:
             # Step 1: Validate booking data
@@ -169,6 +179,10 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     # custom PATCH (including both booking update and deletion)
     def partial_update(self, request, *args, **kwargs):
+        header_error = self._check_custom_header(request)
+        if header_error:
+            return header_error
+
         instance = self.get_object()
         visitor_email = request.data.get('visitor_email')
         if not visitor_email:
