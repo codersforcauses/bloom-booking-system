@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
 import RecurrenceRuleField from "./recurrence-rule-field";
 import { formatDateTime } from "./room-utils";
 
-// 00:00 → 23:30 in 30-minute steps
+// 00:00 → 23:30 in 30-minute steps, and 23:59
 export const TIME_OPTIONS: string[] = (() => {
   const times: string[] = [];
   for (let hour = 0; hour <= 23; hour++) {
@@ -49,6 +49,7 @@ export const TIME_OPTIONS: string[] = (() => {
       times.push(`${hh}:${mm}`);
     }
   }
+  times.push("23:59");
   return times;
 })();
 
@@ -84,6 +85,20 @@ export default function BookRoomForm({
 
   const [verified, setVerified] = useState<boolean>(false);
   const [recurrenceRule, setRecurrenceRule] = useState<string>("");
+  const [selectedStartTime, setSelectedStartTime] = useState<string>(
+    start_time ?? "00:00",
+  );
+  const [endTimeOptions, setEndTimeOptions] = useState<string[]>(TIME_OPTIONS);
+
+  useEffect(() => {
+    function changeEndTimeOptions() {
+      setEndTimeOptions(
+        TIME_OPTIONS.filter((time) => time > selectedStartTime),
+      );
+    }
+
+    changeEndTimeOptions();
+  }, [selectedStartTime]);
 
   function close_dialog() {
     setAlertDialogProps({
@@ -113,8 +128,8 @@ export default function BookRoomForm({
           "Your booking has been submitted successfully.\nYou will receive an email confirmation shortly.",
         variant: "success",
         open: true,
-        onConfirm: () => router.push("/calendar/" + room_id),
-        onClose: () => router.push("/calendar/" + room_id),
+        onConfirm: close_dialog,
+        onClose: close_dialog,
       });
     },
     (error) => {
@@ -291,7 +306,17 @@ export default function BookRoomForm({
               <FormLabel required>
                 Start time <span className="text-bloom-red">*</span>
               </FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  setSelectedStartTime(value);
+                  const end_time = form.getValues("end_time");
+                  if (end_time && value > end_time) {
+                    form.setValue("end_time", "");
+                  }
+                }}
+              >
                 <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
                   <SelectValue placeholder="Select a time" />
                 </SelectTrigger>
@@ -320,7 +345,7 @@ export default function BookRoomForm({
                   <SelectValue placeholder="Select a time" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TIME_OPTIONS.map((time) => (
+                  {endTimeOptions.map((time) => (
                     <SelectItem key={time} value={time}>
                       {time}
                     </SelectItem>
@@ -352,6 +377,7 @@ export default function BookRoomForm({
                 `/book-room/${room_id}?date=${formDate}&start_time=${values.start_time ?? ""}&end_time=${values.end_time ?? ""}&name=${values.name ?? ""}&email=${values.email ?? ""}`,
               );
             }}
+            disabled={createBooking.isPending}
           >
             Book a recurring slot
           </Button>

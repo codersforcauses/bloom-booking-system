@@ -10,12 +10,7 @@ import * as z from "zod";
 import { TIME_OPTIONS } from "@/app/book-room/[room_id]/booking-form";
 import RecurrenceRuleField from "@/app/book-room/[room_id]/recurrence-rule-field";
 import NotFound from "@/app/not-found";
-import {
-  AlertDialog,
-  AlertDialogProps,
-  AlertDialogVariant,
-} from "@/components/alert-dialog";
-import InputField, { SelectOption } from "@/components/input";
+import { AlertDialog, AlertDialogProps } from "@/components/alert-dialog";
 import ReCAPTCHAV2 from "@/components/recaptcha";
 import { PLACEHOLDER_IMAGE, RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +23,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -39,11 +33,9 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { useFetchBooking, useUpdateBooking } from "@/hooks/booking";
 import RoomAPI from "@/hooks/room";
-import api from "@/lib/api";
 import { BookingResponse } from "@/lib/api-types";
 import { normaliseRoom } from "@/lib/normalise-room";
 import { cn } from "@/lib/utils";
-import { Room } from "@/types/card";
 
 import { formatDateTime } from "../../book-room/[room_id]/room-utils";
 
@@ -84,14 +76,30 @@ const formSchema = z
     },
   );
 
-type EditBookingFormProps = Partial<BookingResponse>;
+type EditBookingFormProps = BookingResponse;
 
 function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
   const router = useRouter();
   const [verified, setVerified] = useState(false);
   const [recurrenceRule, setRecurrenceRule] = useState<string>(
-    booking?.recurrence_rule || "",
+    booking.recurrence_rule || "",
   );
+  const [selectedStartTime, setSelectedStartTime] = useState<string>(
+    booking.start_datetime
+      ? new Date(booking.start_datetime).toTimeString().substring(0, 5)
+      : "00:00",
+  );
+  const [endTimeOptions, setEndTimeOptions] = useState<string[]>(TIME_OPTIONS);
+
+  useEffect(() => {
+    function changeEndTimeOptions() {
+      setEndTimeOptions(
+        TIME_OPTIONS.filter((time) => time > selectedStartTime),
+      );
+    }
+
+    changeEndTimeOptions();
+  }, [selectedStartTime]);
 
   const [alertDialogProps, setAlertDialogProps] = useState<AlertDialogProps>({
     title: "",
@@ -116,26 +124,26 @@ function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      name: booking?.visitor_name || "",
-      email: booking?.visitor_email || "",
-      date: booking?.start_datetime
+      name: booking.visitor_name || "",
+      email: booking.visitor_email || "",
+      date: booking.start_datetime
         ? new Date(booking.start_datetime)
         : undefined,
-      start_time: booking?.start_datetime
+      start_time: booking.start_datetime
         ? new Date(booking.start_datetime).toTimeString().substring(0, 5)
         : "",
-      end_time: booking?.end_datetime
+      end_time: booking.end_datetime
         ? new Date(booking.end_datetime).toTimeString().substring(0, 5)
         : "",
     },
   });
 
-  const mutation = useUpdateBooking(booking.id ?? -1);
+  const mutation = useUpdateBooking(booking.id);
   function onSubmit(data: z.infer<typeof formSchema>) {
     const start_datetime = formatDateTime(data.date, data.start_time);
     const end_datetime = formatDateTime(data.date, data.end_time);
     const payload = {
-      room_id: booking?.room?.id ?? -1,
+      room_id: booking?.room?.id,
       visitor_name: data.name,
       visitor_email: data.email,
       start_datetime,
@@ -258,7 +266,17 @@ function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
               <FormLabel required>
                 Start time <span className="text-bloom-red">*</span>
               </FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  setSelectedStartTime(value);
+                  const end_time = form.getValues("end_time");
+                  if (end_time && value > end_time) {
+                    form.setValue("end_time", "");
+                  }
+                }}
+              >
                 <SelectTrigger className="flex w-full rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
                   <SelectValue placeholder="Select a time" />
                 </SelectTrigger>
@@ -287,7 +305,7 @@ function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
                   <SelectValue placeholder="Select a time" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TIME_OPTIONS.map((time) => (
+                  {endTimeOptions.map((time) => (
                     <SelectItem key={time} value={time}>
                       {time}
                     </SelectItem>

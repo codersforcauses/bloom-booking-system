@@ -39,7 +39,7 @@ const buildInitialValues = (room: RoomResponse): AddMeetingRoomFormInput => ({
   seats: room.capacity ?? 1,
   location: room.location?.id?.toString() ?? "",
   amenities: room.amenities?.map((amenity) => amenity.id.toString()) ?? [],
-  image: "",
+  image: room.img ?? "",
   start_datetime: room.start_datetime ?? "",
   end_datetime: room.end_datetime ?? "",
   recurrence_rule: room.recurrence_rule ?? "",
@@ -358,9 +358,9 @@ export default function EditMeetingRoomForm({
                     <div className="body flex flex-1 items-center overflow-hidden px-3 py-2">
                       <span
                         className="truncate text-bloom-gray"
-                        title={imageFile ? imageFile.name : "No file selected"}
+                        title={imageFile ? imageFile.name : formValues.image}
                       >
-                        {imageFile ? imageFile.name : "No file selected"}
+                        {imageFile ? imageFile.name : formValues.image}
                       </span>
                     </div>
 
