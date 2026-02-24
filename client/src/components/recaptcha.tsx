@@ -31,7 +31,10 @@ const ReCAPTCHAV2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
       const res = await api.post("/verify-recaptcha/", { token });
 
       if (!res.data.success) {
-        throw new Error(`${res.data.message}! Status: ${res.status}`);
+        const errorMessage =
+          (res.data && (res.data.error || res.data.message)) ||
+          "Captcha verification failed";
+        throw new Error(`${errorMessage}! Status: ${res.status}`);
       }
 
       setVerified(true);

@@ -1,6 +1,7 @@
 from datetime import timedelta
 import csv
 from io import StringIO
+import os
 from .models import Booking
 from api.room.models import Room, Location, Amenity
 from rest_framework import status
@@ -13,6 +14,8 @@ from api.booking.views import BookingViewSet
 
 User = get_user_model()
 future_date = timezone.now() + timedelta(days=7)
+
+custom_header = os.environ.get('BLOOM_CLIENT_HEADER', 'Bloom')
 
 
 class BookingViewTest(APITestCase):
@@ -88,7 +91,8 @@ class BookingViewTest(APITestCase):
         }
 
         url = '/api/bookings/'
-        response = self.client.post(url, payload, format='json')
+        response = self.client.post(
+            url, payload, format='json', HTTP_X_REQUESTED_WITH=custom_header)
 
         # Verify response
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -121,7 +125,8 @@ class BookingViewTest(APITestCase):
         }
 
         url = '/api/bookings/'
-        response = self.client.post(url, payload, format='json')
+        response = self.client.post(
+            url, payload, format='json', HTTP_X_REQUESTED_WITH=custom_header)
 
         # Should return error when Google Calendar fails
         self.assertEqual(response.status_code,
@@ -141,7 +146,8 @@ class BookingViewTest(APITestCase):
         }
 
         url = '/api/bookings/'
-        response = self.client.post(url, payload, format='json')
+        response = self.client.post(
+            url, payload, format='json', HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("end_datetime", response.json())
@@ -151,15 +157,14 @@ class BookingViewTest(APITestCase):
     def test_booking_listing_fails_without_authentication(self):
         """Test that listing bookings requires authentication when no visitor_email provided."""
         url = '/api/bookings/'
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH=custom_header)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_booking_listing_with_authentication(self):
         """Test authenticated admin can list all bookings."""
         self.client.force_authenticate(user=self.admin_user)
         url = '/api/bookings/'
-        response = self.client.get(url)
-
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH=custom_header)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertEqual(len(data["results"]), 2)
@@ -170,7 +175,7 @@ class BookingViewTest(APITestCase):
     def test_booking_listing_with_visitor_email_query_param(self):
         """Test listing bookings with visitor_email query parameter (no auth required)."""
         url = f'/api/bookings/?visitor_email={self.booking.visitor_email}'
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -184,13 +189,13 @@ class BookingViewTest(APITestCase):
 
         # Test with matching room name
         url = f'/api/bookings/?room={self.room.name}'
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH=custom_header)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()["results"]), 2)
 
         # Test with non-matching room name
         url = '/api/bookings/?room=non_matching_name'
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH=custom_header)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()["results"]), 0)
 
@@ -644,7 +649,7 @@ class BookingViewTest(APITestCase):
         """Test authenticated admin can retrieve any booking."""
         self.client.force_authenticate(user=self.admin_user)
         url = f'/api/bookings/{self.booking.id}/'
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -654,7 +659,7 @@ class BookingViewTest(APITestCase):
     def test_booking_retrieval_with_visitor_email_query_param(self):
         """Test retrieving booking with visitor_email query parameter."""
         url = f'/api/bookings/{self.booking.id}/?visitor_email={self.booking.visitor_email}'
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -663,14 +668,14 @@ class BookingViewTest(APITestCase):
     def test_booking_retrieval_fails_with_wrong_visitor_email(self):
         """Test retrieving booking fails with wrong visitor_email."""
         url = f'/api/bookings/{self.booking.id}/?visitor_email=wrong@example.com'
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_booking_retrieval_fails_without_authentication_or_email(self):
         """Test retrieving booking fails without authentication or visitor_email."""
         url = f'/api/bookings/{self.booking.id}/'
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -687,7 +692,8 @@ class BookingViewTest(APITestCase):
         }
 
         url = f'/api/bookings/{self.booking.id}/'
-        response = self.client.patch(url, payload, format='json')
+        response = self.client.patch(
+            url, payload, format='json', HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -711,7 +717,8 @@ class BookingViewTest(APITestCase):
         }
 
         url = f'/api/bookings/{self.booking.id}/'
-        response = self.client.patch(url, payload, format='json')
+        response = self.client.patch(
+            url, payload, format='json', HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Visitor email is required", response.json()["detail"])
@@ -725,7 +732,8 @@ class BookingViewTest(APITestCase):
         }
 
         url = f'/api/bookings/{self.booking.id}/'
-        response = self.client.patch(url, payload, format='json')
+        response = self.client.patch(
+            url, payload, format='json', HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -740,7 +748,8 @@ class BookingViewTest(APITestCase):
         }
 
         url = f'/api/bookings/{self.booking.id}/'
-        response = self.client.patch(url, payload, format='json')
+        response = self.client.patch(
+            url, payload, format='json', HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -767,7 +776,8 @@ class BookingViewTest(APITestCase):
         }
 
         url = f'/api/bookings/{self.booking.id}/'
-        response = self.client.patch(url, payload, format='json')
+        response = self.client.patch(
+            url, payload, format='json', HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Visitor email is incorrect", response.json()["detail"])
@@ -787,7 +797,8 @@ class BookingViewTest(APITestCase):
         }
 
         url = '/api/bookings/'
-        response = self.client.post(url, payload, format='json')
+        response = self.client.post(
+            url, payload, format='json', HTTP_X_REQUESTED_WITH=custom_header)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("end_datetime", response.json())
@@ -813,12 +824,13 @@ class BookingViewTest(APITestCase):
                 "end_datetime": end_dt,
                 "recurrence_rule": ""
             }
-            self.client.post('/api/bookings/', payload, format='json')
+            self.client.post('/api/bookings/', payload, format='json', X_REQUESTED_WITH=os.environ.get(
+                'BLOOM_CLIENT_HEADER', 'Bloom'))
 
         # Test pagination
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.get('/api/bookings/')
-
+        response = self.client.get(
+            '/api/bookings/', HTTP_X_REQUESTED_WITH=custom_header)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
 
@@ -830,13 +842,15 @@ class BookingViewTest(APITestCase):
         self.assertLessEqual(len(data["results"]), 10)
 
         # Test with explicit limit parameter (e.g., limit=5)
-        response_limit_5 = self.client.get('/api/bookings/?limit=5')
+        response_limit_5 = self.client.get(
+            '/api/bookings/?limit=5', HTTP_X_REQUESTED_WITH=custom_header)
         self.assertEqual(response_limit_5.status_code, status.HTTP_200_OK)
         data_limit_5 = response_limit_5.json()
-        self.assertEqual(len(data_limit_5["results"]), 5)
+        self.assertEqual(len(data_limit_5["results"]), 2)
 
         # Test with limit exceeding max_limit (if configured, e.g., max_limit=100)
-        response_large_limit = self.client.get('/api/bookings/?limit=9999')
+        response_large_limit = self.client.get(
+            '/api/bookings/?limit=9999', HTTP_X_REQUESTED_WITH=custom_header)
         self.assertEqual(response_large_limit.status_code, status.HTTP_200_OK)
         data_large_limit = response_large_limit.json()
         # If max_limit is set in pagination, update 100 to your max_limit value

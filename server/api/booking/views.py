@@ -94,7 +94,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def _check_custom_header(self, request):
         # Require X-Requested-With header for all requests
-        if request.headers.get("X-Requested-With") != os.getenv("BLOOM_CLIENT_HEADER", ""):
+        if request.headers.get("X-Requested-With") != os.getenv("BLOOM_CLIENT_HEADER", "Bloom"):
             return Response({"detail": "Forbidden: Not authorized."}, status=status.HTTP_403_FORBIDDEN)
         return None
 
