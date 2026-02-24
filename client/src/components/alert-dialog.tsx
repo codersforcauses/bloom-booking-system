@@ -123,7 +123,7 @@ function AlertDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose?.()}>
-      <DialogContent className="flex h-auto flex-col items-center rounded-lg bg-white p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden">
+      <DialogContent className="flex h-auto max-h-[90vh] flex-col items-center overflow-y-auto rounded-lg bg-white p-6 shadow-xl [&_button:has(svg.lucide-x)]:hidden">
         {showIcon && (
           <div className="mt-6">
             {isPending ? (

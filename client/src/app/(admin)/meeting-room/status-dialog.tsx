@@ -24,11 +24,6 @@ interface StatusDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const Title = {
-  setActive: "Active",
-  setInactive: "Inactive",
-} as const;
-
 const Status = {
   setActive: "active",
   setInactive: "inactive",
@@ -65,14 +60,14 @@ export default function StatusDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="round-md rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
+      <DialogContent className="round-md max-h-[90vh] overflow-y-auto rounded-md border border-border bg-white p-6 max-sm:w-[90%]">
         <DialogTitle className="text-center">
-          Set Room {Title[action]}
+          Set room {Status[action]}?
         </DialogTitle>
         <DialogDescription className="px-4 pt-2">
           Are you sure you want to set the room{" "}
-          <span className="font-bold">{room.name}</span> {action}? Click confirm
-          to proceed.
+          <span className="font-bold">{room.name}</span> {Status[action]}? Click
+          confirm to proceed.
         </DialogDescription>
         <DialogDescription className="px-4">
           {errorMessage && (

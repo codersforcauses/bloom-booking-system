@@ -3,6 +3,8 @@
 import React, { useEffect } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 
+import api from "@/lib/api";
+
 interface ReCAPTCHAV2Props {
   setVerified: (verified: boolean) => void;
 }
@@ -26,18 +28,13 @@ const ReCAPTCHAV2: React.FC<ReCAPTCHAV2Props> = ({ setVerified }) => {
         return;
       }
 
-      const res = await fetch("/api/verify-recaptcha", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      });
+      const res = await api.post("/verify-recaptcha/", { token });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(`${data.message}! Status: ${res.status}`);
+      if (!res.data.success) {
+        const errorMessage =
+          (res.data && (res.data.error || res.data.message)) ||
+          "Captcha verification failed";
+        throw new Error(`${errorMessage}! Status: ${res.status}`);
       }
 
       setVerified(true);

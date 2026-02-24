@@ -30,6 +30,7 @@ from rest_framework.routers import APIRootView
 from api.booking.urls import router as bookings_router
 from api.room.urls import router as room_router
 from api.booking.google_calendar.calendar_views import get_room_calendar_events
+from api.recaptcha.views import verify_recaptcha
 
 router = DefaultRouter()
 router.APIRootView = APIRootView
@@ -47,6 +48,7 @@ urlpatterns = [
     path("api/users/", include(("api.user.urls"))),
     path("api/dashboard/", include("api.dashboard.urls")),
     path("api/calendar/", get_room_calendar_events, name="room-calendar-events"),
+    path("api/verify-recaptcha/", verify_recaptcha, name="verify_recaptcha"),
     path("api/", include(router.urls)),
 ]
 

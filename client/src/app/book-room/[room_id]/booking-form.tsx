@@ -334,9 +334,9 @@ export default function BookRoomForm({
       </div>
       {!isCalendar && <RecurrenceRuleField onChange={setRecurrenceRule} />}
 
-      {/* <ReCAPTCHAV2 setVerified={setVerified} /> */}
+      <ReCAPTCHAV2 setVerified={setVerified} />
       <div className="flex gap-4">
-        <Button type="submit" disabled={createBooking.isPending}>
+        <Button type="submit" disabled={!verified || createBooking.isPending}>
           {!createBooking.isPending ? "Submit" : <Spinner className="w-6" />}
         </Button>
         {isCalendar && (

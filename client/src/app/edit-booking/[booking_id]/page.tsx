@@ -304,8 +304,12 @@ function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
         onChange={setRecurrenceRule}
         defaultRRule={recurrenceRule}
       />
-      {/* <ReCAPTCHAV2 setVerified={setVerified} /> */}
-      <Button type="submit" className="w-fit" disabled={mutation.isPending}>
+      <ReCAPTCHAV2 setVerified={setVerified} />
+      <Button
+        type="submit"
+        className="w-fit"
+        disabled={mutation.isPending || !verified}
+      >
         {!mutation.isPending ? "Submit" : <Spinner className="w-6" />}
       </Button>
       <AlertDialog {...alertDialogProps} />
