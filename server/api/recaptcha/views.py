@@ -2,8 +2,10 @@ import requests
 from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django_ratelimit.decorators import ratelimit
 
 
+@ratelimit(key='ip', rate='200/h', block=True)
 @api_view(["POST"])
 def verify_recaptcha(request):
     token = request.data.get("token")
