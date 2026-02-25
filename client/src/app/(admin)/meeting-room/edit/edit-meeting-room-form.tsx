@@ -14,7 +14,6 @@ import RoomAPI from "@/hooks/room";
 import api from "@/lib/api";
 import type { AmenityResponse, RoomResponse } from "@/lib/api-types";
 
-import AmenityModal from "../add/add-amenities";
 import LocationModal from "../add/add-location";
 import CustomRepeatModal from "../add/custom-repeat";
 import {
@@ -36,13 +35,10 @@ const getRepeatValue = (recurrenceRule?: string) => {
 
 const buildInitialValues = (room: RoomResponse): AddMeetingRoomFormInput => ({
   title: room.name ?? "",
-  seats: room.capacity ?? 1,
+
   location: room.location?.id?.toString() ?? "",
-  amenities: room.amenities?.map((amenity) => amenity.id.toString()) ?? [],
+
   image: room.img ?? "",
-  start_datetime: room.start_datetime ?? "",
-  end_datetime: room.end_datetime ?? "",
-  recurrence_rule: room.recurrence_rule ?? "",
 });
 
 export default function EditMeetingRoomForm({
@@ -81,13 +77,8 @@ export default function EditMeetingRoomForm({
     resolver: zodResolver(AddMeetingRoomSchema),
     defaultValues: {
       title: "",
-      seats: 1,
       location: "",
-      amenities: [],
       image: "",
-      start_datetime: "",
-      end_datetime: "",
-      recurrence_rule: "",
     },
     mode: "onSubmit",
   });
@@ -97,7 +88,6 @@ export default function EditMeetingRoomForm({
   useEffect(() => {
     if (!room) return;
     reset(buildInitialValues(room));
-    setRepeat(getRepeatValue(room.recurrence_rule));
   }, [room, reset]);
 
   const { data: locations = [], refetch: refetchLocations } =
@@ -128,30 +118,12 @@ export default function EditMeetingRoomForm({
           ? values.location
           : String(values.location);
       const locationId = parseInt(locationValue, 10);
-      const capacityId =
-        typeof values.seats === "string"
-          ? parseInt(values.seats, 10)
-          : values.seats;
 
       const formDataMultipart = new FormData();
       formDataMultipart.append("name", values.title);
-      formDataMultipart.append("is_active", room.is_active ? "true" : "false");
       formDataMultipart.append("location_id", locationId.toString());
-      formDataMultipart.append("capacity", capacityId.toString());
-      formDataMultipart.append("start_datetime", values.start_datetime);
-      formDataMultipart.append("end_datetime", values.end_datetime);
-      if (values.recurrence_rule) {
-        formDataMultipart.append("recurrence_rule", values.recurrence_rule);
-      }
       if (imageFile) {
         formDataMultipart.append("img", imageFile);
-      }
-
-      const amenityIds = Array.isArray(values.amenities)
-        ? values.amenities.map((amenityId) => Number(amenityId))
-        : [];
-      if (amenityIds.length > 0) {
-        formDataMultipart.append("amenities_ids", JSON.stringify(amenityIds));
       }
 
       await api.patch(`/rooms/${roomId}/`, formDataMultipart);
@@ -170,20 +142,16 @@ export default function EditMeetingRoomForm({
     } else {
       reset({
         title: "",
-        seats: 1,
+
         location: "",
-        amenities: [],
+
         image: "",
-        start_datetime: "",
-        end_datetime: "",
-        recurrence_rule: "",
       });
     }
     setImageFile(null);
     if (imageInputRef.current) {
       imageInputRef.current.value = "";
     }
-    setRepeat(getRepeatValue(room?.recurrence_rule));
   };
 
   const locationOptions = [
@@ -253,102 +221,6 @@ export default function EditMeetingRoomForm({
                   error={errors.location?.message}
                 />
 
-                <InputField
-                  kind="number"
-                  name="seat"
-                  label="Seat Capacity"
-                  placeholder="Capacity"
-                  value={formValues.seats?.toString() || ""}
-                  onChange={(value) =>
-                    handleInputChange("seats", parseInt(value) || 0)
-                  }
-                  min={1}
-                  required
-                  error={errors.seats?.message}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                  <InputField
-                    kind="badge"
-                    name="amenities"
-                    label="Amenities"
-                    options={amenitiesFromAPI.map((a) => a.name)}
-                    value={
-                      Array.isArray(formValues.amenities)
-                        ? formValues.amenities.map((amenityId) => {
-                            const numericId =
-                              typeof amenityId === "string"
-                                ? parseInt(amenityId, 10)
-                                : amenityId;
-                            const amenity = amenitiesFromAPI.find(
-                              (a) => a.id === numericId,
-                            );
-                            return amenity?.name || `Amenity ${amenityId}`;
-                          })
-                        : []
-                    }
-                    onChange={(selectedNames) => {
-                      const selectedIds = selectedNames
-                        .map((name) => {
-                          const amenity = amenitiesFromAPI.find(
-                            (a) => a.name === name,
-                          );
-                          return amenity ? amenity.id.toString() : null;
-                        })
-                        .filter((id): id is string => id !== null);
-                      setValue("amenities", selectedIds, { shouldDirty: true });
-                    }}
-                    actionElement={
-                      <Button
-                        type="button"
-                        onClick={() => setAddAmenityOpen(true)}
-                        className="caption inline-flex h-auto items-center rounded-md border bg-[hsl(var(--secondary))] px-2 py-0.5 text-[hsl(var(--card-foreground))]"
-                      >
-                        + Add
-                      </Button>
-                    }
-                  />
-                </div>
-
-                <AmenityModal
-                  open={addAmenityOpen}
-                  onClose={() => setAddAmenityOpen(false)}
-                  onSelect={(amenityId) => {
-                    const newAmenityId =
-                      typeof amenityId === "number"
-                        ? amenityId.toString()
-                        : amenityId;
-                    const currentAmenities = Array.isArray(formValues.amenities)
-                      ? formValues.amenities
-                      : [];
-                    setValue("amenities", [...currentAmenities, newAmenityId], {
-                      shouldDirty: true,
-                    });
-                    setAddAmenityOpen(false);
-                  }}
-                  onAmenitiesChanged={async () => {
-                    const refreshed = await refetchAmenities();
-                    const refreshedAmenities =
-                      refreshed.data?.results ?? amenitiesFromAPI;
-                    const validAmenityIds = new Set(
-                      refreshedAmenities.map((amenity: AmenityResponse) =>
-                        amenity.id.toString(),
-                      ),
-                    );
-                    const currentAmenities = Array.isArray(
-                      getValues("amenities"),
-                    )
-                      ? getValues("amenities")
-                      : [];
-                    const nextAmenities = (currentAmenities || [])
-                      .map((amenityId) => amenityId.toString())
-                      .filter((amenityId) => validAmenityIds.has(amenityId));
-                    setValue("amenities", nextAmenities, { shouldDirty: true });
-                  }}
-                />
-
                 <div className="space-y-2">
                   <label htmlFor="image" className="body-sm-bold block">
                     Upload Image
@@ -367,7 +239,7 @@ export default function EditMeetingRoomForm({
                     <Button
                       type="button"
                       onClick={() => document.getElementById("image")?.click()}
-                      className="rounded-l-none rounded-r-md text-white"
+                      className="rounded-l-none rounded-r-md"
                     >
                       Choose File
                     </Button>
@@ -412,7 +284,7 @@ export default function EditMeetingRoomForm({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {/* <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <InputField
                   kind="date"
                   name="date"
@@ -572,7 +444,7 @@ export default function EditMeetingRoomForm({
                     }}
                   />
                 )}
-              </div>
+              </div> */}
 
               <div className="flex gap-4 pt-4">
                 <Button
@@ -582,11 +454,7 @@ export default function EditMeetingRoomForm({
                 >
                   Reset
                 </Button>
-                <Button
-                  onClick={onSubmit}
-                  disabled={isSubmitting}
-                  className="text-white"
-                >
+                <Button onClick={onSubmit} disabled={isSubmitting}>
                   {isSubmitting ? "Saving..." : "Save"}
                 </Button>
               </div>
@@ -614,7 +482,6 @@ export default function EditMeetingRoomForm({
         title="Updated"
         description="Meeting room was updated successfully."
         onConfirm={() => {
-          handleCancel();
           setShowSuccessDialog(false);
           router.push("/meeting-room");
         }}

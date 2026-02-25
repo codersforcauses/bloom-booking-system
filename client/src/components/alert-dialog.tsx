@@ -161,7 +161,6 @@ function AlertDialog({
             variant="confirm"
             disabled={isPending}
             onClick={handleConfirm}
-            className={cn(color ? "text-white hover:brightness-90" : "")}
             style={{ backgroundColor: color }}
           >
             {confirmText}

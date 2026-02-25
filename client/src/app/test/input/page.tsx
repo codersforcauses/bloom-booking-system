@@ -6,15 +6,6 @@ import React from "react";
 
 import InputField from "@/components/input";
 
-const AMENITIES = [
-  "Audio",
-  "Video",
-  "White Board",
-  "HDMI",
-  "Projector",
-  "Speaker Phone",
-];
-
 const FREQUENCIES = [
   { label: "Does not repeat", value: "dnr" },
   { label: "Daily", value: "daily" },
@@ -29,7 +20,6 @@ const FREQUENCIES = [
 export default function TestInputPage() {
   const [name, setName] = React.useState("");
   const [occurences, setOccurences] = React.useState("");
-  const [amenities, setAmenities] = React.useState<string[]>([]);
   const [frequency, setFrequency] = React.useState("");
 
   const [timeManual, setTimeManual] = React.useState("");
@@ -62,17 +52,6 @@ export default function TestInputPage() {
           value={occurences}
           onChange={setOccurences}
           placeholder="Number"
-        />
-
-        {/* Badge input */}
-        <InputField
-          kind="badge"
-          label="Amenities"
-          name="amenities"
-          options={AMENITIES}
-          value={amenities}
-          onChange={setAmenities}
-          placeholder="Select amenities"
         />
 
         {/* Select input */}
