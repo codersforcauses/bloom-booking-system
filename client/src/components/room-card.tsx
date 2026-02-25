@@ -21,7 +21,7 @@ function RoomCard({ room }: { room: Room }) {
   const roomDetailsGroups = [
     { label: "Room Name", value: room.title },
     { label: "Location", value: room.location },
-    { label: "Availability", value: room.availability },
+    // { label: "Availability", value: room.availability },
   ];
 
   return (
@@ -112,7 +112,7 @@ function AdminRoomCard({
   const roomDetails = [
     { label: "Room Name", value: room.title },
     { label: "Location", value: room.location },
-    { label: "Availability", value: room.availability },
+    // { label: "Availability", value: room.availability },
   ];
 
   return (
@@ -164,7 +164,7 @@ function AdminRoomCard({
         ) : (
           <Button
             className={cn(
-              "caption hover:bg-bloom-red-blue-light h-6 bg-bloom-blue text-white",
+              "caption hover:bg-bloom-red-blue-light h-6 text-white",
             )}
             onClick={onStatusChange}
           >

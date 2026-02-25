@@ -195,7 +195,7 @@ export default function AddMeetingRoomForm() {
                     <Button
                       type="button"
                       onClick={() => document.getElementById("image")?.click()}
-                      className="rounded-l-none rounded-r-md text-white"
+                      className="rounded-l-none rounded-r-md"
                     >
                       Choose File
                     </Button>
@@ -248,11 +248,7 @@ export default function AddMeetingRoomForm() {
                 >
                   Clear
                 </Button>
-                <Button
-                  onClick={onSubmit}
-                  disabled={isSubmitting}
-                  className="text-white"
-                >
+                <Button onClick={onSubmit} disabled={isSubmitting}>
                   {isSubmitting ? "Adding..." : "Add"}
                 </Button>
               </div>

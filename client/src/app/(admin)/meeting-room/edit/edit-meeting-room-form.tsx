@@ -239,7 +239,7 @@ export default function EditMeetingRoomForm({
                     <Button
                       type="button"
                       onClick={() => document.getElementById("image")?.click()}
-                      className="rounded-l-none rounded-r-md text-white"
+                      className="rounded-l-none rounded-r-md"
                     >
                       Choose File
                     </Button>
@@ -454,11 +454,7 @@ export default function EditMeetingRoomForm({
                 >
                   Reset
                 </Button>
-                <Button
-                  onClick={onSubmit}
-                  disabled={isSubmitting}
-                  className="text-white"
-                >
+                <Button onClick={onSubmit} disabled={isSubmitting}>
                   {isSubmitting ? "Saving..." : "Save"}
                 </Button>
               </div>

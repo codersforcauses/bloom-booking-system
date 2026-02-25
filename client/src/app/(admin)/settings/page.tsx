@@ -100,7 +100,7 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="min-h-layout-header flex items-center justify-center">
       <div className="w-full max-w-md">
         {view === "summary" && (
           <AdminSettingsSummaryCard
