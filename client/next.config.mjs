@@ -22,16 +22,16 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "bloom-images-dev.s3.amazonaws.com",
-        pathname: "/**",
-      },
-      {
         protocol: "http",
         hostname: "localhost",
         port: "8000",
         pathname: "/**",
       },
+      //    {
+      //   protocol: "https",
+      //   hostname: "your-droplet-domain.com",
+      //   pathname: "/media/**",
+      // },
     ],
   },
 };

@@ -142,7 +142,7 @@ export default function RoomsPage() {
           <div className="mb-4">No rooms found. Please try again.</div>
         )}
 
-        <div className="grid min-w-80 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid min-w-80 grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {normalizedRooms.map((room) => (
             <AdminRoomCard
               key={room.id}
