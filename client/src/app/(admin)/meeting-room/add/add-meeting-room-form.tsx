@@ -83,6 +83,7 @@ export default function AddMeetingRoomForm() {
       const formDataMultipart = new FormData();
       formDataMultipart.append("name", values.title);
       formDataMultipart.append("location_id", locationId.toString());
+      formDataMultipart.append("is_active", "true");
 
       if (imageFile) {
         formDataMultipart.append("img", imageFile);

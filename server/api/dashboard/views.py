@@ -5,7 +5,6 @@ from datetime import timedelta
 
 from api.room.models import Room
 from api.booking.models import Booking
-from api.user.models import CustomUser
 
 
 @api_view(['GET'])
@@ -24,6 +23,6 @@ def get_dashboard_stats(request):
         'weekly_bookings': Booking.objects.filter(
             created_at__gte=week_start
         ).count(),
-        'total_users': CustomUser.objects.count()
+        'total_users': Booking.objects.values('visitor_email').distinct().count()
     }
     return Response(stats)
