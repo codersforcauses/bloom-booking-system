@@ -126,6 +126,10 @@
   .min-h-layout-header {
     min-height: calc(100vh - var(--layout-header-height));
   }
+
+  .bloom-input-field {
+    @apply rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background;
+  }
 }
 
 @layer utilities {

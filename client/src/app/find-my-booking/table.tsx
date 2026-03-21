@@ -117,11 +117,11 @@ export default function BookingTable({
     return (
       <span className="z-20 flex justify-center gap-2 px-2">
         <span className="absolute left-0 top-0 h-full border-l-2" />
-        {/* View / Edit */}
+        {/* Edit */}
         <Button
           size="icon"
-          title="View"
-          aria-label="View"
+          title="Edit"
+          aria-label="Edit"
           disabled={!isActive}
           className={cn(
             "rounded-full border-2 bg-transparent p-0",

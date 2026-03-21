@@ -60,7 +60,7 @@ const Textarea: React.FC<TextareaProps> = ({
         placeholder={placeholder ? placeholder : capitalizeFirstLetter(name)}
         rows={rows ? rows : 4}
         className={cn(
-          "w-full rounded-md border border-border bg-background shadow-bloom-input outline-none",
+          "bloom-input-field w-full outline-none",
           "body px-3 py-2 placeholder:text-bloom-gray",
           className,
         )}

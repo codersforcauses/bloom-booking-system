@@ -11,6 +11,7 @@ import { TIME_OPTIONS } from "@/app/book-room/[room_id]/booking-form";
 import RecurrenceRuleField from "@/app/book-room/[room_id]/recurrence-rule-field";
 import NotFound from "@/app/not-found";
 import { AlertDialog, AlertDialogProps } from "@/components/alert-dialog";
+import InputField from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
 import { PLACEHOLDER_IMAGE, RoomCard } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
@@ -242,16 +243,12 @@ function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
                 Date <span className="text-bloom-red">*</span>
               </FormLabel>
               <FormControl>
-                <Input
-                  type="date"
-                  min={new Date().toISOString().split("T")[0]}
-                  value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    field.onChange(
-                      val ? new Date(val + "T00:00:00") : undefined,
-                    );
-                  }}
+                <InputField
+                  kind="date"
+                  name="date"
+                  label=""
+                  value={field.value}
+                  onChange={field.onChange}
                 />
               </FormControl>
               <FormMessage />

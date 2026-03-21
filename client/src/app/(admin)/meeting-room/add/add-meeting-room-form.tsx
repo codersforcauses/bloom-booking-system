@@ -183,7 +183,7 @@ export default function AddMeetingRoomForm() {
                     Upload Image
                   </label>
 
-                  <div className="flex items-stretch overflow-hidden rounded-md border bg-background shadow-bloom-input">
+                  <div className="bloom-input-field flex h-10 items-stretch overflow-hidden">
                     <div className="body flex flex-1 items-center overflow-hidden px-3 py-2">
                       <span
                         className="truncate text-bloom-gray"

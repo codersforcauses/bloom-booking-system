@@ -170,7 +170,7 @@ function LoginForm() {
             Password
           </Label>
 
-          <div className="body flex w-full items-center justify-between rounded-md border bg-background shadow-bloom-input outline-none">
+          <div className="body bloom-input-field flex w-full items-center justify-between outline-none">
             <input
               id="password"
               className="h-full w-full px-3 py-2 outline-none placeholder:text-bloom-gray disabled:cursor-not-allowed disabled:opacity-50"
