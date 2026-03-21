@@ -148,29 +148,27 @@ export default function RecurrenceRuleField({
 
   return (
     <div className="md:w-1/2">
-      <div className="space-y-2">
-        <Label>Repeat</Label>
-        <Select value={repeat} onValueChange={handleValueChange}>
-          <SelectTrigger className="flex rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
-            <SelectValue placeholder="Does not repeat" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Does not repeat</SelectItem>
-            <SelectItem value="daily">Daily</SelectItem>
-            <SelectItem value="weekly">Weekly</SelectItem>
-            <SelectItem
-              value="rule"
-              disabled={!showCustomRule}
-              className={`${showCustomRule ? "" : "hidden"} `}
-            >
-              {showCustomRule ? rrulestr(customRule).toText() : ""}
-            </SelectItem>
-            <SelectItem value="custom" onSelect={() => setShowModal(true)}>
-              Custom...
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Label>Repeat</Label>
+      <Select value={repeat} onValueChange={handleValueChange}>
+        <SelectTrigger className="bloom-input-field mt-1 flex px-3 py-2 text-sm">
+          <SelectValue placeholder="Does not repeat" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">Does not repeat</SelectItem>
+          <SelectItem value="daily">Daily</SelectItem>
+          <SelectItem value="weekly">Weekly</SelectItem>
+          <SelectItem
+            value="rule"
+            disabled={!showCustomRule}
+            className={`${showCustomRule ? "" : "hidden"} `}
+          >
+            {showCustomRule ? rrulestr(customRule).toText() : ""}
+          </SelectItem>
+          <SelectItem value="custom" onSelect={() => setShowModal(true)}>
+            Custom...
+          </SelectItem>
+        </SelectContent>
+      </Select>
 
       {/* Always mounted so internal modal state (frequency, days, end type, etc.)
           persists between open/close cycles. Visibility is controlled via `open`. */}
