@@ -137,21 +137,22 @@ export default function BookRoomForm({
       let errorMessage = "Unknown error.";
 
       if (axios.isAxiosError(error) && error.response?.data) {
-        const res = error.response.data as {
-          start_datetime?: string[];
-          end_datetime?: string[];
-          non_field_errors?: string[];
-          detail?: string;
-        };
-
-        if (res.start_datetime) {
-          errorMessage = res.start_datetime.join(" ");
-        } else if (res.end_datetime) {
-          errorMessage = res.end_datetime.join(" ");
-        } else if (res.non_field_errors) {
-          errorMessage = res.non_field_errors.join(" ");
-        } else if (res.detail) {
-          errorMessage = res.detail;
+        const data: unknown = error.response.data;
+        if (typeof data === "string") {
+          errorMessage = data;
+        } else if (typeof data === "object" && data !== null) {
+          const anyData = data as {
+            message?: string;
+            detail?: string;
+            error?: string;
+          };
+          errorMessage =
+            anyData.message ??
+            anyData.detail ??
+            anyData.error ??
+            JSON.stringify(data);
+        } else {
+          errorMessage = String(data);
         }
       }
 
