@@ -107,7 +107,7 @@
   }
 
   .body-sm-bold {
-    @apply text-sm font-bold leading-5 tracking-wide;
+    @apply text-sm font-medium leading-5 tracking-wide;
   }
 
   .body-sm {
@@ -128,7 +128,7 @@
   }
 
   .bloom-input-field {
-    @apply rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background;
+    @apply rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-white;
   }
 }
 

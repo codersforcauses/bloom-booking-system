@@ -27,7 +27,7 @@ const NavbarLinks = ({
         </Link>
         <Link href="/meeting-room">
           <Button variant="text" onClick={() => setOpen(false)}>
-            Meeting Rooms
+            Meeting rooms
           </Button>
         </Link>
         <Link href="/settings">

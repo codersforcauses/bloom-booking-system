@@ -61,7 +61,7 @@ const Textarea: React.FC<TextareaProps> = ({
         rows={rows ? rows : 4}
         className={cn(
           "bloom-input-field w-full outline-none",
-          "body px-3 py-2 placeholder:text-bloom-gray",
+          "body px-3 py-2 placeholder:text-gray-500",
           className,
         )}
         value={value}

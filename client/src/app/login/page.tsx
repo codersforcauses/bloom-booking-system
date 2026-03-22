@@ -173,7 +173,7 @@ function LoginForm() {
           <div className="body bloom-input-field flex w-full items-center justify-between outline-none">
             <input
               id="password"
-              className="h-full w-full px-3 py-2 outline-none placeholder:text-bloom-gray disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-full w-full px-3 py-2 outline-none placeholder:text-gray-500 disabled:cursor-not-allowed disabled:opacity-50"
               type={showPassword ? "text" : "password"}
               placeholder="Enter Password"
               autoComplete="current-password"

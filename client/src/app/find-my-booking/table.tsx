@@ -127,7 +127,7 @@ export default function BookingTable({
             "rounded-full border-2 bg-transparent p-0",
             isActive
               ? "border-bloom-yellow text-bloom-yellow hover:bg-muted"
-              : "cursor-not-allowed border-gray-300 text-gray-300",
+              : "cursor-not-allowed border-gray-300 text-gray-500",
           )}
         >
           {isActive ? (
@@ -150,7 +150,7 @@ export default function BookingTable({
             "rounded-full border-2 bg-transparent p-0",
             isActive
               ? "border-bloom-red text-bloom-red hover:bg-muted"
-              : "cursor-not-allowed border-gray-300 text-gray-300",
+              : "cursor-not-allowed border-gray-300 text-gray-500",
           )}
           onClick={() =>
             showAlert?.(

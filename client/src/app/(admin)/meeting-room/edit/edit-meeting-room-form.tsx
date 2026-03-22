@@ -181,7 +181,7 @@ export default function EditMeetingRoomForm({
     <>
       <div className="min-h-screen p-6">
         <div className="mx-auto max-w-6xl">
-          <h2 className="mb-6 text-2xl font-bold">Edit Meeting Room</h2>
+          <h2 className="subtitle mb-6">Edit a meeting room</h2>
 
           <Card className="w-full bg-white p-8 shadow-sm">
             <div className="space-y-6">
@@ -222,14 +222,17 @@ export default function EditMeetingRoomForm({
                 />
 
                 <div className="space-y-2">
-                  <label htmlFor="image" className="body-sm-bold block">
-                    Upload Image
+                  <label
+                    htmlFor="image"
+                    className="body-sm-bold block text-gray-700"
+                  >
+                    Upload image
                   </label>
 
                   <div className="bloom-input-field flex h-10 items-stretch overflow-hidden">
-                    <div className="body flex flex-1 items-center overflow-hidden px-3 py-2">
+                    <div className="body-sm flex flex-1 items-center overflow-hidden px-3 py-2">
                       <span
-                        className="truncate text-bloom-gray"
+                        className={`truncate ${imageFile ? "" : "text-gray-500"}`}
                         title={imageFile ? imageFile.name : formValues.image}
                       >
                         {imageFile ? imageFile.name : formValues.image}
@@ -240,9 +243,9 @@ export default function EditMeetingRoomForm({
                       type="button"
                       size="sm"
                       onClick={() => document.getElementById("image")?.click()}
-                      className="rounded-l-none rounded-r-md"
+                      className="h-9 rounded-l-none rounded-r-sm"
                     >
-                      Choose File
+                      Choose file
                     </Button>
 
                     <input

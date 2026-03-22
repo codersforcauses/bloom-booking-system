@@ -80,7 +80,7 @@ function AdminSettingsSummaryCard({
       <div>
         <p className="font-medium">{title}</p>
         {isLoading ? (
-          <span className="text-sm italic text-gray-400">Loading data...</span>
+          <span className="text-sm italic text-gray-500">Loading data...</span>
         ) : (
           <ListWithViewMore items={items} />
         )}
@@ -169,7 +169,7 @@ function AdminSettingsTableCard({
 
       {/* Table */}
       <div className="max-h-[60vh] overflow-auto rounded-xl border">
-        <table className="w-full bg-white text-sm font-medium text-gray-400">
+        <table className="w-full bg-white text-sm font-medium text-gray-500">
           <thead className="sticky top-0 bg-gray-50 text-left">
             <tr>
               <th className="px-4 py-2">Name</th>
@@ -185,7 +185,7 @@ function AdminSettingsTableCard({
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="text"
-                        className="hover:border-transparent hover:text-bloom-gray"
+                        className="hover:border-transparent hover:text-gray-500"
                       >
                         <MoreHorizontal size={28} />
                       </Button>

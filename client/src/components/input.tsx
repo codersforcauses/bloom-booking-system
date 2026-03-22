@@ -180,7 +180,7 @@ const InputField: React.FC<InputFieldProps> = (props) => {
   return (
     <div className={cn(wrapperClasses)}>
       {label && (
-        <label htmlFor={name} className="body-sm-bold mb-2 block">
+        <label htmlFor={name} className="body-sm-bold mb-2 block text-gray-700">
           {label}
           {required && <span className="text-bloom-red"> *</span>}
         </label>
@@ -230,7 +230,7 @@ function renderTextFieldControl(props: TextFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body-sm h-9 w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
+      className="body-sm h-9 w-full bg-transparent px-3 py-2 outline-none placeholder:text-gray-500"
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
       placeholder={props.placeholder ?? "Text"}
@@ -243,7 +243,7 @@ function renderNumberFieldControl(props: NumberFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body-sm h-9 w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
+      className="body-sm h-9 w-full bg-transparent px-3 py-2 outline-none placeholder:text-gray-500"
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
       placeholder={props.placeholder ?? "Number"}
@@ -284,11 +284,11 @@ function renderDateFieldControl(props: DateFieldProps) {
       <PopoverTrigger
         className={
           "body-sm flex h-9 w-full justify-between bg-transparent px-3 py-2 text-left outline-none" +
-          (!hasValue ? "text-bloom-gray" : "")
+          (hasValue ? "" : " text-gray-500")
         }
       >
         {label}
-        <ChevronDownIcon />
+        <ChevronDownIcon className="w-4 pb-1 text-black" />
       </PopoverTrigger>
 
       <PopoverContent align="start" className="p-0">
@@ -337,7 +337,7 @@ function renderTimeFieldControl(props: TimeFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body-sm w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
+      className="body-sm w-full bg-transparent px-3 py-2 outline-none placeholder:text-gray-500"
       value={props.value}
       onChange={(e) => handleChange(e.target.value)}
       placeholder={props.placeholder ?? "HH:MM"}
@@ -368,7 +368,7 @@ function renderBadgeFieldControl(props: BadgeFieldProps) {
   return (
     <div className="flex min-h-[38px] flex-wrap items-center gap-2 px-1.5 py-1.5">
       {props.value.length === 0 ? (
-        <span className="body-sm mx-1.5 text-bloom-gray opacity-100">
+        <span className="body-sm mx-1.5 text-gray-500 opacity-100">
           {props.placeholder ?? "Select amenities"}
         </span>
       ) : (
@@ -409,13 +409,13 @@ function renderSearchFieldControl(props: SearchFieldProps, name: string) {
         .filter(Boolean)
         .join(" ")}
     >
-      <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+      <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
 
       <input
         id={name}
         name={name}
         type="text"
-        className="body-sm h-full w-full rounded-md px-3 py-1 pl-8 outline-none placeholder:text-[var(--bloom-gray)]"
+        className="body-sm h-full w-full rounded-md px-3 py-1 pl-8 outline-none placeholder:text-gray-500"
         placeholder={props.placeholder ?? "Search..."}
         value={tempValue}
         onChange={(e) => setTempValue(e.target.value)}
