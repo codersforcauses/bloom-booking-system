@@ -124,9 +124,14 @@ class BookingSerializer(DynamicFieldsModelSerializer):
             until_match = re.search(r'UNTIL=(\d{8}T\d{6}Z)', recurrence_rule)
             if until_match:
                 until_str = until_match.group(1)
-                # UTC+8
+                # Debug print
+                print(f"Extracted UNTIL from recurrence_rule: {until_str}")
+                # UTC+0
                 until_dt = timezone.datetime.strptime(
-                    until_str, '%Y%m%dT%H%M%SZ').replace(tzinfo=timezone.get_fixed_timezone(480))
+                    until_str, '%Y%m%dT%H%M%SZ').replace(tzinfo=timezone.get_fixed_timezone(0))
+                # Subtract 8 hours to convert from UTC+8 to UTC
+                from datetime import timedelta
+                until_dt = until_dt - timedelta(hours=8)
 
                 if until_dt < end_datetime:
                     raise serializers.ValidationError({

@@ -47,13 +47,24 @@ export default function CustomRepeatModal({
 
   const handleDone = () => {
     try {
+      // Convert endDate string to Date(in perth time zone) but until doesn't include time, so we can just set it to 00:00:00 of that day in UTC, which is 08:00:00 of that day in Perth time.
+      const parsedEndDate = endDate
+        ? new Date(
+            Date.UTC(
+              endDate.getFullYear(),
+              endDate.getMonth(),
+              endDate.getDate(),
+            ),
+          )
+        : undefined;
+
       // Validate with Zod schema
       const validatedData = CustomRepeatSchema.parse({
         interval,
         frequency,
         days,
         endType,
-        endDate,
+        endDate: parsedEndDate,
         occurrences,
         startDate,
       });
