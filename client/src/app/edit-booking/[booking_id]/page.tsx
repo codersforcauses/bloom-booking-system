@@ -251,6 +251,7 @@ function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
                   label=""
                   value={field.value}
                   onChange={field.onChange}
+                  disabledDates={{ before: new Date() }}
                 />
               </FormControl>
               <FormMessage />
