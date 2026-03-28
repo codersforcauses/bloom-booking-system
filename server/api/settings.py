@@ -38,6 +38,13 @@ ALLOWED_HOSTS = (
     else []
 )
 
+CSRF_TRUSTED_ORIGINS = (
+    os.environ.get("API_CSRF_TRUSTED_ORIGINS").split()
+    if os.environ.get("API_CSRF_TRUSTED_ORIGINS")
+    else ([FRONTEND_URL] if FRONTEND_URL else [])
+)
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
