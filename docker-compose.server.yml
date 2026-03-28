@@ -19,7 +19,7 @@ services:
     entrypoint: /entrypoint.sh
     volumes:
       - ./opt/accesslogs/:/var/log/accesslogs/
-      - ./opt/static_files:/opt/static_files
+      - ./opt/static_files:/app/static_files
       - ./opt/media:/app/media
     environment:
       - DJANGO_SETTINGS_MODULE=api.settings
