@@ -31,12 +31,9 @@ const nextConfig = {
       ...(BACKEND_URL
         ? [
             {
-              protocol: "https",
-              hostname: BACKEND_URL.replace(/^https?:\/\//, "").replace(
-                /\/$/,
-                "",
-              ),
-              pathname: "/media/**",
+              protocol: new URL(BACKEND_URL).protocol.replace(":", ""),
+              hostname: new URL(BACKEND_URL).hostname,
+              pathname: "/**",
             },
           ]
         : []),
