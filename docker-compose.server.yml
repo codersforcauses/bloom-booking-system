@@ -22,21 +22,12 @@ services:
     volumes:
       - ./opt/accesslogs/:/var/log/accesslogs/
       - ./opt/static_files:/opt/static_files
+      - ./opt/media:/app/media
     environment:
       - DJANGO_SETTINGS_MODULE=api.settings
     depends_on:
-      - db
-
-  client:
-    image: ghcr.io/codersforcauses/bloom-booking-system-prod-client:latest
-    container_name: bloom-booking-system-prod-client
-    restart: unless-stopped
-    env_file: ./.env.prod
-    ports:
-      - 3000:3000
-    entrypoint: /entrypoint.sh
-    depends_on:
-      - server
+      db:
+        condition: service_healthy
 
   nginx:
     image: nginx:stable-alpine3.21
@@ -45,13 +36,12 @@ services:
     ports:
       - 80:80
       - 443:443
-
     volumes:
-      - ./docker/nginx/custom.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/server.conf:/etc/nginx/nginx.conf
       - ./opt/static_files:/app/static_files
+      - ./opt/media:/app/media
     depends_on:
       - server
-      - client
 
   watchtower:
     image: containrrr/watchtower:latest
