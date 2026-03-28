@@ -21,6 +21,7 @@ type DataTableProps<T extends { id: number }> = {
   isLoading?: boolean;
   className?: string;
   actions?: (row: T) => React.ReactNode;
+  rowIsClickable?: (row: T) => boolean;
   rowOnClick?: (row: T) => void;
 };
 
@@ -30,6 +31,7 @@ export function DataTable<T extends { id: number }>({
   isLoading = false,
   className,
   actions,
+  rowIsClickable,
   rowOnClick,
 }: DataTableProps<T>) {
   const showActions = Boolean(actions);
@@ -83,7 +85,7 @@ export function DataTable<T extends { id: number }>({
               data.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer border-0 border-b-2 border-inherit bg-white hover:bg-gray-50"
+                  className={`${rowIsClickable?.(row) ? "cursor-pointer hover:bg-gray-50" : ""} border-0 border-b-2 border-inherit bg-white`}
                 >
                   {columns.map((col) => (
                     <TableCell
@@ -105,7 +107,7 @@ export function DataTable<T extends { id: number }>({
                   ))}
 
                   {showActions && (
-                    <TableCell className="sticky right-0 bg-inherit p-0 hover:bg-inherit">
+                    <TableCell className="sticky right-0 z-50 bg-inherit p-0 hover:bg-inherit">
                       {actions?.(row)}
                     </TableCell>
                   )}

@@ -182,6 +182,10 @@ export default function BookingTable({
         columns={columns}
         isLoading={isLoading}
         actions={renderActions}
+        rowIsClickable={(row) => {
+          if (row.status !== "CONFIRMED") return false;
+          return true;
+        }}
         rowOnClick={(row) => {
           if (row.status !== "CONFIRMED") return;
 
