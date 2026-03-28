@@ -108,7 +108,7 @@ export default function RoomsPage() {
     >
       <div className="mx-auto my-auto min-h-screen px-10 py-5">
         <div className="mb-3 flex w-full flex-col items-center justify-between md:flex-row">
-          <div className="subtitle mb-2 h-full py-2">Meeting Room</div>
+          <div className="subtitle mb-2 h-full py-2">Meeting rooms</div>
           <div className="flex items-center gap-2 whitespace-nowrap">
             <Input
               className="min-w-24 max-w-64"
@@ -123,7 +123,7 @@ export default function RoomsPage() {
             <FilterPopOver />
 
             <Link href="/meeting-room/add" passHref>
-              <Button variant="confirm">Add Room</Button>
+              <Button variant="confirm">Add room</Button>
             </Link>
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function RoomsPage() {
           <div className="mb-4">No rooms found. Please try again.</div>
         )}
 
-        <div className="grid min-w-80 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid min-w-80 grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {normalizedRooms.map((room) => (
             <AdminRoomCard
               key={room.id}

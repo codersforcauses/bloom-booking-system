@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BiCalendarCheck, BiCalendarEdit, BiWindowClose } from "react-icons/bi";
+import { dateInTimeZone } from "rrule/dist/esm/dateutil";
 
 import { AlertDialogVariant } from "@/components/alert-dialog";
 import { Column, DataTable } from "@/components/data-table";
@@ -63,19 +64,27 @@ export default function BookingTable({
       header: "Status",
       // render is optional and only needed when
       // you want custom UI instead of raw text
-      render: (row) => (
-        <span
-          className={cn(
-            row.status === "COMPLETED"
-              ? "text-green-600"
-              : row.status === "CONFIRMED"
-                ? "text-blue-600"
-                : "text-gray-500",
-          )}
-        >
-          {row.status}
-        </span>
-      ),
+      render: (row) => {
+        if (
+          new Date(row.end_datetime) < new Date() &&
+          row.status === "CONFIRMED"
+        ) {
+          row.status = "COMPLETED";
+        }
+        return (
+          <span
+            className={cn(
+              row.status === "COMPLETED"
+                ? "text-green-600"
+                : row.status === "CONFIRMED"
+                  ? "text-blue-600"
+                  : "text-gray-500",
+            )}
+          >
+            {row.status}
+          </span>
+        );
+      },
     },
     {
       key: "recurrence_rule",
@@ -117,17 +126,17 @@ export default function BookingTable({
     return (
       <span className="z-20 flex justify-center gap-2 px-2">
         <span className="absolute left-0 top-0 h-full border-l-2" />
-        {/* View / Edit */}
+        {/* Edit */}
         <Button
           size="icon"
-          title="View"
-          aria-label="View"
+          title="Edit"
+          aria-label="Edit"
           disabled={!isActive}
           className={cn(
             "rounded-full border-2 bg-transparent p-0",
             isActive
               ? "border-bloom-yellow text-bloom-yellow hover:bg-muted"
-              : "cursor-not-allowed border-gray-300 text-gray-300",
+              : "cursor-not-allowed border-gray-300 text-gray-500",
           )}
         >
           {isActive ? (
@@ -150,7 +159,7 @@ export default function BookingTable({
             "rounded-full border-2 bg-transparent p-0",
             isActive
               ? "border-bloom-red text-bloom-red hover:bg-muted"
-              : "cursor-not-allowed border-gray-300 text-gray-300",
+              : "cursor-not-allowed border-gray-300 text-gray-500",
           )}
           onClick={() =>
             showAlert?.(
@@ -173,6 +182,10 @@ export default function BookingTable({
         columns={columns}
         isLoading={isLoading}
         actions={renderActions}
+        rowIsClickable={(row) => {
+          if (row.status !== "CONFIRMED") return false;
+          return true;
+        }}
         rowOnClick={(row) => {
           if (row.status !== "CONFIRMED") return;
 

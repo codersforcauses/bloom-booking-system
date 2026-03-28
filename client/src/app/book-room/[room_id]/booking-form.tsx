@@ -14,6 +14,7 @@ import {
   AlertDialogProps,
   AlertDialogVariant,
 } from "@/components/alert-dialog";
+import InputField from "@/components/input";
 import ReCAPTCHAV2 from "@/components/recaptcha";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/contexts/auth-context";
 import { useCreateBooking } from "@/hooks/booking";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +80,7 @@ export default function BookRoomForm({
   isCalendar = true,
 }: BookRoomFormProps) {
   const router = useRouter();
+  const { isLoggedIn } = useAuth();
 
   if (room_id === undefined || isNaN(room_id)) {
     return <NotFound />;
@@ -136,21 +139,22 @@ export default function BookRoomForm({
       let errorMessage = "Unknown error.";
 
       if (axios.isAxiosError(error) && error.response?.data) {
-        const res = error.response.data as {
-          start_datetime?: string[];
-          end_datetime?: string[];
-          non_field_errors?: string[];
-          detail?: string;
-        };
-
-        if (res.start_datetime) {
-          errorMessage = res.start_datetime.join(" ");
-        } else if (res.end_datetime) {
-          errorMessage = res.end_datetime.join(" ");
-        } else if (res.non_field_errors) {
-          errorMessage = res.non_field_errors.join(" ");
-        } else if (res.detail) {
-          errorMessage = res.detail;
+        const data: unknown = error.response.data;
+        if (typeof data === "string") {
+          errorMessage = data;
+        } else if (typeof data === "object" && data !== null) {
+          const anyData = data as {
+            message?: string;
+            detail?: string;
+            error?: string;
+          };
+          errorMessage =
+            anyData.message ??
+            anyData.detail ??
+            anyData.error ??
+            JSON.stringify(data);
+        } else {
+          errorMessage = String(data);
         }
       }
 
@@ -282,22 +286,20 @@ export default function BookRoomForm({
                 Date <span className="text-bloom-red">*</span>
               </FormLabel>
               <FormControl>
-                <Input
-                  type="date"
-                  min={new Date().toISOString().split("T")[0]}
-                  value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    field.onChange(
-                      val ? new Date(val + "T00:00:00") : undefined,
-                    );
-                  }}
+                <InputField
+                  kind="date"
+                  name="date"
+                  label=""
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabledDates={(date) => date < new Date()}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           name="start_time"
           control={form.control}
@@ -357,14 +359,16 @@ export default function BookRoomForm({
           )}
         />
       </div>
-      {!isCalendar && <RecurrenceRuleField onChange={setRecurrenceRule} />}
+      {!isCalendar && isLoggedIn && (
+        <RecurrenceRuleField onChange={setRecurrenceRule} />
+      )}
 
       <ReCAPTCHAV2 setVerified={setVerified} />
       <div className="flex gap-4">
         <Button type="submit" disabled={!verified || createBooking.isPending}>
           {!createBooking.isPending ? "Submit" : <Spinner className="w-6" />}
         </Button>
-        {isCalendar && (
+        {isCalendar && isLoggedIn && (
           <Button
             type="button"
             variant="outline"

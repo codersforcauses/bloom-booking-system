@@ -19,7 +19,7 @@ export const PLACEHOLDER_IMAGE =
  */
 function RoomCard({ room }: { room: Room }) {
   const roomDetailsGroups = [
-    { label: "Room Name", value: room.title },
+    { label: "Room name", value: room.title },
     { label: "Location", value: room.location },
     // { label: "Availability", value: room.availability },
   ];
@@ -40,10 +40,8 @@ function RoomCard({ room }: { room: Room }) {
       <div className="grid grid-cols-[7rem_1fr] gap-y-3 px-4 pb-4">
         {roomDetailsGroups.map((item) => (
           <div key={item.label} className="contents">
-            <span className="text-[14px] font-medium text-gray-400">
-              {item.label}
-            </span>
-            <span className="text-[14px] font-medium">{item.value}</span>
+            <span className="body-sm-bold text-gray-500">{item.label}</span>
+            <span className="body-sm-bold">{item.value}</span>
           </div>
         ))}
       </div>
@@ -75,10 +73,8 @@ function BookingRoomCard({ room, onBook }: BookingRoomProps) {
       </div>
 
       <div className="flex flex-col gap-1 px-4 py-3">
-        <span className="text-[14px] font-bold">{room.title}</span>
-        <span className="text-[13px] font-semibold text-gray-400">
-          {room.location}
-        </span>
+        <span className="body-bold">{room.title}</span>
+        <span className="body-sm-bold text-gray-500">{room.location}</span>
       </div>
 
       <div className="mt-auto flex justify-start px-4 pb-4">
@@ -110,7 +106,7 @@ function AdminRoomCard({
   onStatusChange,
 }: AdminRoomCardProps) {
   const roomDetails = [
-    { label: "Room Name", value: room.title },
+    { label: "Room name", value: room.title },
     { label: "Location", value: room.location },
     // { label: "Availability", value: room.availability },
   ];
@@ -130,9 +126,9 @@ function AdminRoomCard({
         {roomDetails.map((item) => (
           <div
             key={item.label}
-            className="grid grid-cols-[6rem_1fr] gap-x-2 text-[14px] font-medium"
+            className="body-sm-bold grid grid-cols-[6rem_1fr] gap-x-2"
           >
-            <span className="text-gray-400">{item.label}</span>
+            <span className="text-gray-500">{item.label}</span>
             <span>{item.value}</span>
           </div>
         ))}
@@ -143,7 +139,7 @@ function AdminRoomCard({
           className="caption h-6 bg-bloom-orbit text-white hover:bg-bloom-orbit-light"
           onClick={onView}
         >
-          View Bookings
+          View bookings
         </Button>
         <Button
           className="caption h-6 bg-bloom-yellow text-white hover:bg-bloom-yellow-light"

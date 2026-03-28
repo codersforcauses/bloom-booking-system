@@ -150,7 +150,7 @@ export default function RecurrenceRuleField({
     <div className="md:w-1/2">
       <Label>Repeat</Label>
       <Select value={repeat} onValueChange={handleValueChange}>
-        <SelectTrigger className="flex rounded-md border border-b-4 border-gray-200 border-b-gray-300 bg-background px-3 py-2 text-sm">
+        <SelectTrigger className="bloom-input-field mt-1 flex px-3 py-2 text-sm">
           <SelectValue placeholder="Does not repeat" />
         </SelectTrigger>
         <SelectContent>

@@ -168,7 +168,7 @@ export default function Home() {
   return (
     <div className="grid min-h-screen grid-cols-1 gap-4 p-4 md:grid-cols-2 md:gap-8 md:p-8 lg:grid-cols-5">
       <div className="col-span-1 lg:col-span-2">
-        <h1 className="title mb-4">Book a Meeting Room</h1>
+        <h1 className="title mb-4">Book a meeting room</h1>
         <SearchRoomForm
           form={form}
           onSubmit={onSubmit}
@@ -179,7 +179,7 @@ export default function Home() {
       </div>
 
       <div className="col-span-1 lg:col-span-3">
-        <h2 className="title mb-4">Rooms Availability</h2>
+        <h2 className="title mb-4">Room availability</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
           {rooms.filter((room) => room.available).length > 0
             ? rooms

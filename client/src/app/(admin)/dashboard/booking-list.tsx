@@ -99,7 +99,7 @@ export function BookingList() {
   return (
     <div className="w-full rounded-xl p-6">
       <div className="mb-4 flex flex-col items-center justify-between gap-4 md:flex-row">
-        <h2 className="text-xl font-semibold">List of Bookings</h2>
+        <h2 className="text-xl font-semibold">List of bookings</h2>
         <div className="flex flex-col gap-2 sm:flex-row">
           <InputField
             kind="search"
@@ -141,7 +141,7 @@ export function BookingList() {
               scrollClassName="max-h-[50vh]"
             />
             <Button asChild variant="confirm">
-              <Link href="/book-room">Book Room</Link>
+              <Link href="/book-room">Book boom</Link>
             </Button>
           </div>
         </div>

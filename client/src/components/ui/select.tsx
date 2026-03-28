@@ -22,7 +22,7 @@ const SelectTrigger = React.forwardRef<
         "flex w-full items-center justify-between",
         "bg-transparent text-sm outline-none",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        "data-[placeholder]:text-[var(--bloom-gray)]",
+        "data-[placeholder]:text-gray-500",
         className,
       )}
       {...props}

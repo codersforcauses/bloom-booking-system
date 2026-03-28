@@ -9,7 +9,7 @@
 // - Search
 
 import { format } from "date-fns";
-import { SearchIcon } from "lucide-react";
+import { ChevronDownIcon, SearchIcon } from "lucide-react";
 import React, { useState } from "react";
 import { Matcher, MonthChangeEventHandler } from "react-day-picker";
 
@@ -112,14 +112,14 @@ type SearchFieldProps = BaseFieldProps & {
 // 08:00 → 17:00 in 30-minute steps
 const TIME_OPTIONS_30_MIN: string[] = (() => {
   const times: string[] = [];
-  for (let hour = 8; hour <= 17; hour++) {
+  for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
-      if (hour === 17 && minute > 0) break; // stop at 17:00
       const hh = hour.toString().padStart(2, "0");
       const mm = minute.toString().padStart(2, "0");
       times.push(`${hh}:${mm}`);
     }
   }
+  times.push("23:59"); // add the last option
   return times;
 })();
 
@@ -150,12 +150,8 @@ const InputField: React.FC<InputFieldProps> = (props) => {
   const isTimeSelect = kind === "time-select";
   const timeSelectProps = isTimeSelect ? (props as TimeSelectFieldProps) : null;
 
-  const wrapperClasses = ["space-y-2", className].filter(Boolean).join(" ");
-  const fieldClasses = [
-    "rounded-md border bg-background",
-    "shadow-bloom-input",
-    fieldClassName,
-  ]
+  const wrapperClasses = [className].filter(Boolean).join(" ");
+  const fieldClasses = ["bloom-input-field", fieldClassName]
     .filter(Boolean)
     .join(" ");
 
@@ -183,10 +179,12 @@ const InputField: React.FC<InputFieldProps> = (props) => {
 
   return (
     <div className={cn(wrapperClasses)}>
-      <label htmlFor={name} className="body-sm-bold block">
-        {label}
-        {required && <span className="text-bloom-red"> *</span>}
-      </label>
+      {label && (
+        <label htmlFor={name} className="body-sm-bold mb-2 block text-gray-700">
+          {label}
+          {required && <span className="text-bloom-red"> *</span>}
+        </label>
+      )}
 
       <div className={fieldClasses}>{control}</div>
 
@@ -232,7 +230,7 @@ function renderTextFieldControl(props: TextFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
+      className="body-sm h-9 w-full bg-transparent px-3 py-2 outline-none placeholder:text-gray-500"
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
       placeholder={props.placeholder ?? "Text"}
@@ -245,7 +243,7 @@ function renderNumberFieldControl(props: NumberFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
+      className="body-sm h-9 w-full bg-transparent px-3 py-2 outline-none placeholder:text-gray-500"
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
       placeholder={props.placeholder ?? "Number"}
@@ -261,7 +259,7 @@ function renderNumberFieldControl(props: NumberFieldProps, name: string) {
 function renderSelectFieldControl(props: SelectFieldProps) {
   return (
     <Select value={props.value} onValueChange={props.onChange}>
-      <SelectTrigger className="body flex w-full items-center justify-between border-none bg-transparent px-3 py-2 shadow-none focus:ring-0 focus:ring-offset-0">
+      <SelectTrigger className="body-sm flex h-9 w-full items-center justify-between border-none bg-transparent px-3 py-2 shadow-none focus:ring-0 focus:ring-offset-0">
         <SelectValue placeholder={props.placeholder ?? "Select an option"} />
       </SelectTrigger>
       <SelectContent>
@@ -285,11 +283,12 @@ function renderDateFieldControl(props: DateFieldProps) {
     <Popover>
       <PopoverTrigger
         className={
-          "body w-full bg-transparent px-3 py-2 text-left outline-none " +
-          (!hasValue ? "text-bloom-gray" : "")
+          "body-sm flex h-9 w-full justify-between bg-transparent px-3 py-2 text-left outline-none" +
+          (hasValue ? "" : " text-gray-500")
         }
       >
         {label}
+        <ChevronDownIcon className="w-4 pb-1 text-black" />
       </PopoverTrigger>
 
       <PopoverContent align="start" className="p-0">
@@ -338,7 +337,7 @@ function renderTimeFieldControl(props: TimeFieldProps, name: string) {
     <input
       id={name}
       name={name}
-      className="body w-full bg-transparent px-3 py-2 outline-none placeholder:text-bloom-gray"
+      className="body-sm w-full bg-transparent px-3 py-2 outline-none placeholder:text-gray-500"
       value={props.value}
       onChange={(e) => handleChange(e.target.value)}
       placeholder={props.placeholder ?? "HH:MM"}
@@ -351,7 +350,7 @@ function renderTimeFieldControl(props: TimeFieldProps, name: string) {
 function renderTimeSelectFieldControl(props: TimeSelectFieldProps) {
   return (
     <Select value={props.value} onValueChange={props.onChange}>
-      <SelectTrigger className="body flex w-full items-center justify-between border-none bg-transparent px-3 py-2 shadow-none focus:ring-0 focus:ring-offset-0">
+      <SelectTrigger className="body-sm flex h-9 w-full items-center justify-between border-none bg-transparent px-3 py-2 shadow-none focus:ring-0 focus:ring-offset-0">
         <SelectValue placeholder={props.placeholder ?? "Select a time"} />
       </SelectTrigger>
       <SelectContent>
@@ -369,7 +368,7 @@ function renderBadgeFieldControl(props: BadgeFieldProps) {
   return (
     <div className="flex min-h-[38px] flex-wrap items-center gap-2 px-1.5 py-1.5">
       {props.value.length === 0 ? (
-        <span className="body mx-1.5 text-bloom-gray opacity-100">
+        <span className="body-sm mx-1.5 text-gray-500 opacity-100">
           {props.placeholder ?? "Select amenities"}
         </span>
       ) : (
@@ -406,25 +405,23 @@ function renderSearchFieldControl(props: SearchFieldProps, name: string) {
 
   return (
     <div
-      className={["flex flex-col", props.className].filter(Boolean).join(" ")}
+      className={["relative h-9", props.fieldClassName, props.className]
+        .filter(Boolean)
+        .join(" ")}
     >
-      <div
-        className={["relative", props.fieldClassName].filter(Boolean).join(" ")}
-      >
-        <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+      <SearchIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
 
-        <input
-          id={name}
-          name={name}
-          type="text"
-          className="body w-full rounded-md border bg-white px-3 py-1 pl-8 outline-none placeholder:text-[var(--bloom-gray)]"
-          placeholder={props.placeholder ?? "Search..."}
-          value={tempValue}
-          onChange={(e) => setTempValue(e.target.value)}
-          onBlur={handleOnBlur}
-          onKeyDown={handleOnKeyDown}
-        />
-      </div>
+      <input
+        id={name}
+        name={name}
+        type="text"
+        className="body-sm h-full w-full rounded-md px-3 py-1 pl-8 outline-none placeholder:text-gray-500"
+        placeholder={props.placeholder ?? "Search..."}
+        value={tempValue}
+        onChange={(e) => setTempValue(e.target.value)}
+        onBlur={handleOnBlur}
+        onKeyDown={handleOnKeyDown}
+      />
     </div>
   );
 }

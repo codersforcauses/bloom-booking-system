@@ -49,7 +49,7 @@ export default function FindMyBookingForm({
           name="email"
           render={({ field }) => (
             <InputField
-              className="w-[90vw] md:w-[50vw]"
+              className="w-[90vw] md:w-[640px]"
               kind="text"
               label=""
               name="email"

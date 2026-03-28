@@ -27,7 +27,7 @@ const NavbarLinks = ({
         </Link>
         <Link href="/meeting-room">
           <Button variant="text" onClick={() => setOpen(false)}>
-            Meeting Rooms
+            Meeting rooms
           </Button>
         </Link>
         <Link href="/settings">
@@ -67,7 +67,7 @@ export default function Navbar() {
   const { isLoggedIn } = useAuth();
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-white">
+    <nav className="sticky top-0 z-50 w-full border-b border-black bg-white">
       <div className="max-w-8xl mx-auto flex items-center justify-between px-12 py-3">
         {/* logo */}
         <Link href="/" className="text-xl font-semibold">
@@ -108,7 +108,7 @@ export default function Navbar() {
       {/* mobile hamburger */}
       {open && (
         <div className="absolute left-0 top-full min-h-screen w-full overflow-y-auto bg-white md:hidden">
-          <div className="flex min-h-screen flex-col items-center gap-6 px-8 py-6">
+          <div className="flex min-h-screen flex-col items-center gap-6 px-8 pt-20">
             <NavbarLinks loggedIn={isLoggedIn} setOpen={setOpen} />
           </div>
         </div>

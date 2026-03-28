@@ -154,7 +154,7 @@ export function FilterPopover({
                     value={tempVisitorName}
                     onChange={(e) => setTempVisitorName(e.target.value)}
                     placeholder="Visitor Name"
-                    className="w-full rounded border px-2 py-1 text-sm"
+                    className="w-full px-2 py-1 text-sm"
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -172,7 +172,7 @@ export function FilterPopover({
                       value={tempVisitorEmail}
                       readOnly
                       disabled
-                      className="w-full rounded border px-2 py-1 text-sm"
+                      className="w-full px-2 py-1 text-sm"
                     />
                   ) : (
                     <Input
@@ -181,7 +181,7 @@ export function FilterPopover({
                       value={tempVisitorEmail}
                       onChange={(e) => setTempVisitorEmail(e.target.value)}
                       placeholder="Visitor Email"
-                      className="w-full rounded border px-2 py-1 text-sm"
+                      className="w-full px-2 py-1 text-sm"
                     />
                   )}
                 </AccordionContent>

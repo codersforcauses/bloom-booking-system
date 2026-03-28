@@ -80,7 +80,7 @@ function AdminSettingsSummaryCard({
       <div>
         <p className="font-medium">{title}</p>
         {isLoading ? (
-          <span className="text-sm italic text-gray-400">Loading data...</span>
+          <span className="text-sm italic text-gray-500">Loading data...</span>
         ) : (
           <ListWithViewMore items={items} />
         )}
@@ -169,23 +169,23 @@ function AdminSettingsTableCard({
 
       {/* Table */}
       <div className="max-h-[60vh] overflow-auto rounded-xl border">
-        <table className="w-full bg-white text-sm font-medium text-gray-400">
+        <table className="w-full bg-white">
           <thead className="sticky top-0 bg-gray-50 text-left">
             <tr>
-              <th className="px-4 py-2">Name</th>
+              <th className="body px-4 py-2">Name</th>
               <th className="px-4 py-2" />
             </tr>
           </thead>
           <tbody>
             {items.map((item) => (
               <tr key={item.id}>
-                <td className="px-4 py-2">{item.name}</td>
+                <td className="body-sm px-4 py-2">{item.name}</td>
                 <td className="px-4 py-2 text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="text"
-                        className="hover:border-transparent hover:text-bloom-gray"
+                        className="text-gray-500 hover:border-transparent hover:text-black"
                       >
                         <MoreHorizontal size={28} />
                       </Button>
@@ -250,9 +250,13 @@ function AdminSettingsFormCard({
           onSubmit={handleSubmit((data) => onSubmit(data.name))}
           className="space-y-2"
         >
-          <label className="font-medium">Enter {title} name</label>
+          <label className="font-medium">{title} name</label>
 
-          <Input {...register("name")} autoFocus placeholder={"Enter name"} />
+          <Input
+            {...register("name")}
+            autoFocus
+            placeholder={`Enter ${title.toLowerCase()} name`}
+          />
 
           {errors.name && (
             <p className="text-sm text-red-500">{errors.name.message}</p>

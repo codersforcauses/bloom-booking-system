@@ -158,7 +158,7 @@ function BookingPage({
   return (
     <div className="w-full rounded-xl p-6">
       <div className="mb-4 flex flex-col items-center justify-between md:flex-row">
-        <h2 className="text-xl font-semibold">List of Bookings</h2>
+        <h2 className="text-xl font-semibold">List of bookings</h2>
         <div className="flex gap-2">
           <InputField
             kind="search"

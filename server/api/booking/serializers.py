@@ -121,6 +121,23 @@ class BookingSerializer(DynamicFieldsModelSerializer):
                     'recurrence_rule': 'Recurrence rule must start with FREQ= and use a valid frequency (DAILY, WEEKLY, MONTHLY, YEARLY).'
                 })
 
+            until_match = re.search(r'UNTIL=(\d{8}T\d{6}Z)', recurrence_rule)
+            if until_match:
+                until_str = until_match.group(1)
+                # Debug print
+                print(f"Extracted UNTIL from recurrence_rule: {until_str}")
+                # UTC+0
+                until_dt = timezone.datetime.strptime(
+                    until_str, '%Y%m%dT%H%M%SZ').replace(tzinfo=timezone.get_fixed_timezone(0))
+                # Subtract 8 hours to convert from UTC+8 to UTC
+                from datetime import timedelta
+                until_dt = until_dt - timedelta(hours=8)
+
+                if until_dt < end_datetime:
+                    raise serializers.ValidationError({
+                        'recurrence_rule': 'UNTIL date in recurrence rule must be greater than the booking end datetime.'
+                    })
+
         return data
 
     def save(self, **kwargs):

@@ -18,20 +18,20 @@ const nextConfig = {
         return config;
       }
     : undefined,
-  // allow images from s3 to render
+  // allow images from the local backend (e.g., localhost:8000) to render
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "bloom-images-dev.s3.amazonaws.com",
-        pathname: "/**",
-      },
       {
         protocol: "http",
         hostname: "localhost",
         port: "8000",
         pathname: "/**",
       },
+      //    {
+      //   protocol: "https",
+      //   hostname: "your-droplet-domain.com",
+      //   pathname: "/media/**",
+      // },
     ],
   },
 };

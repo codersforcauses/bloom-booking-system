@@ -106,11 +106,11 @@ export default function SearchRoomForm({
             <FormControl>
               <InputField
                 kind="text"
-                label="Name"
+                label="Room name"
                 name="name"
                 value={field.value || ""}
                 onChange={field.onChange}
-                placeholder="Enter name"
+                placeholder="Enter room name"
                 required={false}
               />
             </FormControl>
@@ -152,7 +152,7 @@ export default function SearchRoomForm({
               <FormControl>
                 <InputField
                   kind="date"
-                  label="From Date"
+                  label="From date"
                   name="fromDate"
                   value={field.value}
                   onChange={(v) => {
@@ -202,7 +202,7 @@ export default function SearchRoomForm({
               <FormControl>
                 <InputField
                   kind="date"
-                  label="To Date"
+                  label="To date"
                   name="toDate"
                   value={field.value}
                   onChange={(v) => {
