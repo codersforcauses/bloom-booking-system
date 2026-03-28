@@ -19,7 +19,7 @@ python manage.py collectstatic --noinput
 
 # Create Django Superuser
 echo "Creating Django Superuser"
-python manage.py createsuperuser --noinput
+python manage.py createsuperuser --noinput || true
 
 # Run inbuilt Django server if ENV is development
 if [ "${APP_ENV^^}" = "DEVELOPMENT" ]; then
