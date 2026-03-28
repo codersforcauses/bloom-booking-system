@@ -179,7 +179,7 @@ export default function EditMeetingRoomForm({
 
   return (
     <>
-      <div className="min-h-screen p-6">
+      <div className="p-6">
         <div className="mx-auto max-w-6xl">
           <h2 className="subtitle mb-6">Edit a meeting room</h2>
 

@@ -106,11 +106,11 @@ export default function SearchRoomForm({
             <FormControl>
               <InputField
                 kind="text"
-                label="Name"
+                label="Room name"
                 name="name"
                 value={field.value || ""}
                 onChange={field.onChange}
-                placeholder="Enter name"
+                placeholder="Enter room name"
                 required={false}
               />
             </FormControl>

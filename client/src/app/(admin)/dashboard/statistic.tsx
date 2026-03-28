@@ -15,26 +15,27 @@ export function BookingsStats() {
 
   const metrics: DashboardCardProps[] = [
     {
-      label: "Total Meeting Rooms",
+      label: "Active meeting rooms",
       value: data?.total_meeting_rooms ?? 0,
       icon: SiGoogleclassroom,
       colorClass: "border-bloom-yellow text-bloom-yellow",
       onClick: () => router.push("/meeting-room"),
     },
     {
-      label: "Total Bookings",
+      label: "Total bookings",
       value: data?.total_bookings ?? 0,
       icon: SiGooglecalendar,
       colorClass: "border-bloom-blue text-bloom-blue",
+      onClick: () => router.push("/bookings"),
     },
     {
-      label: "Weekly Bookings",
+      label: "Weekly bookings",
       value: data?.weekly_bookings ?? 0,
       icon: BiCalendarEdit,
       colorClass: "border-bloom-red text-bloom-red",
     },
     {
-      label: "Total Users",
+      label: "Total users",
       value: data?.total_users ?? 0,
       icon: BsPersonCheck,
       colorClass: "border-bloom-orbit text-bloom-orbit",

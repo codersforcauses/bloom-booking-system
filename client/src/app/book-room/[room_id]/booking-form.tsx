@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/contexts/auth-context";
 import { useCreateBooking } from "@/hooks/booking";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +80,7 @@ export default function BookRoomForm({
   isCalendar = true,
 }: BookRoomFormProps) {
   const router = useRouter();
+  const { isLoggedIn } = useAuth();
 
   if (room_id === undefined || isNaN(room_id)) {
     return <NotFound />;
@@ -363,7 +365,7 @@ export default function BookRoomForm({
         <Button type="submit" disabled={!verified || createBooking.isPending}>
           {!createBooking.isPending ? "Submit" : <Spinner className="w-6" />}
         </Button>
-        {isCalendar && (
+        {isCalendar && isLoggedIn && (
           <Button
             type="button"
             variant="outline"

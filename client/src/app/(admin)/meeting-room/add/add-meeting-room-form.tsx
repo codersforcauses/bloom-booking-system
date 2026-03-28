@@ -117,7 +117,7 @@ export default function AddMeetingRoomForm() {
 
   return (
     <>
-      <div className="min-h-screen p-6">
+      <div className="p-6">
         <div className="mx-auto max-w-6xl">
           <h2 className="subtitle mb-6">Add a meeting room</h2>
 
