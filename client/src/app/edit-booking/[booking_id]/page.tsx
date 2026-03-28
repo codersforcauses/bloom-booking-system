@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/contexts/auth-context";
 import { useFetchBooking, useUpdateBooking } from "@/hooks/booking";
 import RoomAPI from "@/hooks/room";
 import { BookingResponse } from "@/lib/api-types";
@@ -91,6 +92,7 @@ function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
       : "00:00",
   );
   const [endTimeOptions, setEndTimeOptions] = useState<string[]>(TIME_OPTIONS);
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     function changeEndTimeOptions() {
@@ -315,10 +317,12 @@ function EditBookingForm({ booking }: { booking: EditBookingFormProps }) {
         />
       </div>
 
-      <RecurrenceRuleField
-        onChange={setRecurrenceRule}
-        defaultRRule={recurrenceRule}
-      />
+      {isLoggedIn && (
+        <RecurrenceRuleField
+          onChange={setRecurrenceRule}
+          defaultRRule={recurrenceRule}
+        />
+      )}
       <ReCAPTCHAV2 setVerified={setVerified} />
       <Button
         type="submit"

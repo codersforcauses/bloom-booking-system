@@ -358,7 +358,9 @@ export default function BookRoomForm({
           )}
         />
       </div>
-      {!isCalendar && <RecurrenceRuleField onChange={setRecurrenceRule} />}
+      {!isCalendar && isLoggedIn && (
+        <RecurrenceRuleField onChange={setRecurrenceRule} />
+      )}
 
       <ReCAPTCHAV2 setVerified={setVerified} />
       <div className="flex gap-4">
