@@ -292,6 +292,7 @@ export default function BookRoomForm({
                   label=""
                   value={field.value}
                   onChange={field.onChange}
+                  disabledDates={(date) => date < new Date()}
                 />
               </FormControl>
               <FormMessage />
