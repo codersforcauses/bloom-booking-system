@@ -28,11 +28,18 @@ const nextConfig = {
         port: "8000",
         pathname: "/**",
       },
-      {
-        protocol: "https",
-        hostname: BACKEND_URL.replace(/^https?:\/\//, "").replace(/\/$/, ""),
-        pathname: "/media/**",
-      },
+      ...(BACKEND_URL
+        ? [
+            {
+              protocol: "https",
+              hostname: BACKEND_URL.replace(/^https?:\/\//, "").replace(
+                /\/$/,
+                "",
+              ),
+              pathname: "/media/**",
+            },
+          ]
+        : []),
     ],
   },
 };
