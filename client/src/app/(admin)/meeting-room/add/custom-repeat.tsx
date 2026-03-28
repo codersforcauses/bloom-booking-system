@@ -178,6 +178,7 @@ export default function CustomRepeatModal({
                     name="endDate"
                     label=""
                     value={endDate}
+                    disabledDates={(date) => date < new Date()}
                     onChange={setEndDate}
                     className="mb-0"
                   />
