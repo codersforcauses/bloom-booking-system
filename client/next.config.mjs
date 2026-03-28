@@ -18,7 +18,7 @@ const nextConfig = {
         return config;
       }
     : undefined,
-  // allow images from s3 to render
+  // allow images from the local backend (e.g., localhost:8000) to render
   images: {
     remotePatterns: [
       {
