@@ -16,8 +16,6 @@ services:
     container_name: bloom-booking-system-prod-server
     restart: unless-stopped
     env_file: ./.env.prod
-    ports:
-      - 8081:8081
     entrypoint: /entrypoint.sh
     volumes:
       - ./opt/accesslogs/:/var/log/accesslogs/

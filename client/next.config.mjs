@@ -1,9 +1,10 @@
 import os from "node:os";
-
 import isInsideContainer from "is-inside-container";
 
 const isWindowsDevContainer = () =>
   os.release().toLowerCase().includes("microsoft") && isInsideContainer();
+
+export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -27,11 +28,18 @@ const nextConfig = {
         port: "8000",
         pathname: "/**",
       },
-      //    {
-      //   protocol: "https",
-      //   hostname: "your-droplet-domain.com",
-      //   pathname: "/media/**",
-      // },
+      ...(BACKEND_URL
+        ? [
+            {
+              protocol: "https",
+              hostname: BACKEND_URL.replace(/^https?:\/\//, "").replace(
+                /\/$/,
+                "",
+              ),
+              pathname: "/media/**",
+            },
+          ]
+        : []),
     ],
   },
 };
