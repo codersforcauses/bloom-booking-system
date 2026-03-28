@@ -42,7 +42,7 @@ export default function Combobox({
           <ComboboxChip key={item}>{item}</ComboboxChip>
         ))}
         <ComboboxChipsInput
-          className="placeholder:text-muted-foreground"
+          className="placeholder:text-gray-500"
           placeholder={values.length === 0 ? `Select ${name}` : ""}
         />
       </ComboboxChips>
