@@ -35,6 +35,13 @@ export default function AddMeetingRoomForm() {
 
   const [addAmenityOpen, setAddAmenityOpen] = useState(false);
 
+  const [alert, setAlert] = useState<{
+    open: boolean;
+    title?: string;
+    description?: string;
+    variant?: "success" | "error";
+  }>({ open: false });
+
   const {
     handleSubmit,
     setValue,
@@ -93,7 +100,12 @@ export default function AddMeetingRoomForm() {
       setShowSuccessDialog(true);
     } catch (error) {
       console.error("Failed to add room:", error);
-      alert("Failed to add room. Please try again.");
+      setAlert({
+        open: true,
+        title: "Error",
+        description: `Failed to add room. ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "error",
+      });
     }
   });
 
@@ -207,7 +219,7 @@ export default function AddMeetingRoomForm() {
                     <input
                       id="image"
                       type="file"
-                      accept="image/*"
+                      accept=".png, .jpg, .jpeg, .gif"
                       className="hidden"
                       ref={imageInputRef}
                       onChange={(e) => {
@@ -270,6 +282,15 @@ export default function AddMeetingRoomForm() {
           handleCancel();
           setShowSuccessDialog(false);
           router.push("/meeting-room");
+        }}
+      />
+      <AlertDialog
+        open={alert.open}
+        variant={alert.variant}
+        title={alert.title}
+        description={alert.description}
+        onConfirm={() => {
+          setAlert((prev) => ({ ...prev, open: false }));
         }}
       />
     </>
