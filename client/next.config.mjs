@@ -6,6 +6,20 @@ const isWindowsDevContainer = () =>
 
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+function isValidUrl(url) {
+  if (url == null) {
+    return false;
+  }
+
+  try {
+    return (
+      typeof url === "string" && url.trim() !== "" && Boolean(new URL(url))
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -28,15 +42,12 @@ const nextConfig = {
         port: "8000",
         pathname: "/**",
       },
-      ...(BACKEND_URL
+      ...(isValidUrl(BACKEND_URL)
         ? [
             {
-              protocol: "https",
-              hostname: BACKEND_URL.replace(/^https?:\/\//, "").replace(
-                /\/$/,
-                "",
-              ),
-              pathname: "/media/**",
+              protocol: new URL(BACKEND_URL).protocol.replace(":", ""),
+              hostname: new URL(BACKEND_URL).hostname,
+              pathname: "/**",
             },
           ]
         : []),

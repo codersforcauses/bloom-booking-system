@@ -83,7 +83,11 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    FRONTEND_URL
+    FRONTEND_URL,
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://bloom-booking-system.*\.vercel\.app$",
 ]
 
 ROOT_URLCONF = "api.urls"
