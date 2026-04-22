@@ -26,6 +26,8 @@ django-filter = "^25.2"
 drf-nested-routers = "^0.95.0"
 rrule-humanize = "^0.1.0"
 django-ratelimit = "^4.1.0"
+django-anymail = {extras = ["resend"], version = "^11.0"}
+
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"

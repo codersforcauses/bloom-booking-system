@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 from datetime import datetime, timezone
 from rrule_humanize import humanize
 from smtplib import SMTPAuthenticationError, SMTPResponseException, SMTPException
+from anymail.exceptions import AnymailError
 
 import logging
 
@@ -76,9 +77,10 @@ def get_bloom_logo_url() -> str:
 
 def requires_email_exists(func):
     def wrapper(*args, **kwargs):
-        if not settings.EMAIL_HOST_USER:
+        resend_key = getattr(settings, "ANYMAIL", {}).get("RESEND_API_KEY")
+        if not resend_key:
             logger.warning(
-                "EMAIL_HOST_USER is not set. Emails will not be sent.")
+                "RESEND_API_KEY is not set. Emails will not be sent.")
             return 0
         return func(*args, **kwargs)
     return wrapper
@@ -95,7 +97,7 @@ def send_simple_email(
     fail_silently: bool = False,
 ) -> int:
     """
-    Wrapper for Django's send_mail using EMAIL_HOST_USER.
+    Wrapper for Django's send_mail using DEFAULT_FROM_EMAIL.
 
     - If `html_template` is provided, it renders that template with `context`
       and sends it as HTML email.
@@ -103,7 +105,7 @@ def send_simple_email(
       and `recipients` without `html_template`.
     """
     if from_email is None:
-        from_email = settings.EMAIL_HOST_USER
+        from_email = settings.DEFAULT_FROM_EMAIL
 
     html_message = None
 
@@ -111,7 +113,7 @@ def send_simple_email(
         context = context or {}
         html_message = render_to_string(html_template, context)
 
-    # Attempts to send email. If authentication fails with bad credentials, log an error but keep the app running.
+    # Attempts to send email. If sending fails, log an error but keep the app running.
     try:
         return send_mail(
             subject=subject,
@@ -121,6 +123,9 @@ def send_simple_email(
             fail_silently=fail_silently,
             html_message=html_message,
         )
+    except AnymailError as e:
+        logger.error("Failed to send email via Resend: %s", e)
+        return 0
     except SMTPAuthenticationError:
         logger.error(
             "Failed to send email: SMTP authentication error. from_email=%r",
@@ -146,7 +151,7 @@ def send_email_with_attachments(
     fail_silently: bool = False,
 ) -> int:
     if from_email is None:
-        from_email = settings.EMAIL_HOST_USER
+        from_email = settings.DEFAULT_FROM_EMAIL
 
     html_message = None
 
@@ -171,6 +176,11 @@ def send_email_with_attachments(
 
     try:
         return email.send(fail_silently=fail_silently)
+    except AnymailError as e:
+        logger.error("Failed to send email via Resend: %s", e)
+        if fail_silently:
+            return 0
+        raise
     except SMTPAuthenticationError:
         logger.error(
             "Failed to send email: SMTP authentication error. from_email=%r",

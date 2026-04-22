@@ -105,11 +105,11 @@ class BookingViewSet(viewsets.ModelViewSet):
     # custom create logic to integrate Google calendar api
     @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
     def create(self, request, *args, **kwargs):
+        """Create booking with Google Calendar integration and transaction rollback."""
         header_error = self._check_custom_header(request)
         if header_error:
             return header_error
 
-        """Create booking with Google Calendar integration and transaction rollback."""
         try:
             # Step 1: Validate booking data
             serializer = self.get_serializer(data=request.data)
@@ -141,33 +141,33 @@ class BookingViewSet(viewsets.ModelViewSet):
                         "detail": "Failed to create Google Calendar event. Please try again later."
                     })
 
+                # Queue confirmation email to send after transaction commits.
+                # Defined inside atomic block so it is only queued on success —
+                # if the transaction rolls back, the email will not be sent.
+                def send_confirmation_email():
+                    try:
+                        send_booking_confirmed_email(
+                            subject=f"Booking confirmation #{booking.id}",
+                            recipients=[booking.visitor_email],
+                            context={
+                                "booking_id": booking.id,
+                                "room_name": booking.room.name,
+                                "start_datetime": booking.start_datetime,
+                                "end_datetime": booking.end_datetime,
+                                "recurrence_rule": booking.recurrence_rule,
+                                "visitor_name": booking.visitor_name,
+                                "location_name": booking.room.location.name,
+                                "manage_url": frontend_url + "/find-my-booking"
+                            }
+                        )
+                    except Exception as email_error:
+                        logger.error(
+                            f"Booking {booking.id} created, but failed to send confirmation email: {email_error}")
+
+                transaction.on_commit(send_confirmation_email)
+
             # If we get here, both Google Calendar and DB creation succeeded
             response_serializer = self.get_serializer(booking)
-
-            # Send booking confirmation email after successful creation
-            # A non-critical feature - booking creation should not fail if email sending fails
-            # Use on_commit to ensure email is sent only after transaction commits
-            def send_confirmation_email():
-                try:
-                    send_booking_confirmed_email(
-                        subject=f"Booking confirmation #{booking.id}",
-                        recipients=[booking.visitor_email],
-                        context={
-                            "booking_id": booking.id,
-                            "room_name": booking.room.name,
-                            "start_datetime": booking.start_datetime,
-                            "end_datetime": booking.end_datetime,
-                            "recurrence_rule": booking.recurrence_rule,
-                            "visitor_name": booking.visitor_name,
-                            "location_name": booking.room.location.name,
-                            "manage_url": frontend_url + "/find-my-booking"
-                        }
-                    )
-                except Exception as email_error:
-                    logger.error(
-                        f"Booking {booking.id} created, but failed to send confirmation email: {email_error}")
-
-            transaction.on_commit(send_confirmation_email)
 
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 

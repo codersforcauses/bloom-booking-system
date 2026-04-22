@@ -22,7 +22,7 @@ class TestBookingConfirmedEmail(TestCase):
             'location_name': 'Floor 3',
         }
 
-    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', EMAIL_HOST_USER='test@example.com')
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": "test-key"})
     def test_send_email_success_with_ics(self):
         """Verifies email is sent with correctly formatted ICS attachment."""
         recipients = ["test@example.com"]
@@ -58,7 +58,7 @@ class TestBookingConfirmedEmail(TestCase):
         assert "RRULE:FREQ=WEEKLY;COUNT=2" in content
         assert "END:VCALENDAR" in content
 
-    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', EMAIL_HOST_USER='test@example.com')
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": "test-key"})
     def test_send_email_without_recurrence(self):
         """Verifies RRULE is omitted from ICS when recurrence_rule is absent."""
         context = {**self.context, 'recurrence_rule': None}
@@ -72,9 +72,9 @@ class TestBookingConfirmedEmail(TestCase):
         _, content, _ = mail.outbox[0].attachments[0]
         assert "RRULE" not in content
 
-    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', EMAIL_HOST_USER='')
-    def test_send_email_no_host_user_returns_zero(self):
-        """Verifies that no email is sent when EMAIL_HOST_USER is not configured."""
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": ""})
+    def test_send_email_no_api_key_returns_zero(self):
+        """Verifies that no email is sent when RESEND_API_KEY is not configured."""
         result = send_booking_confirmed_email(
             recipients=["test@example.com"],
             context=self.context,
@@ -99,7 +99,7 @@ class TestBookingCancelledEmail(TestCase):
             'recurrence_rule': 'FREQ=DAILY;COUNT=3',
         }
 
-    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', EMAIL_HOST_USER='test@example.com')
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": "test-key"})
     def test_send_cancelled_email_success(self):
         """Verifies cancelled email is sent without an ICS attachment."""
         recipients = ["attendee@example.com"]
@@ -115,9 +115,9 @@ class TestBookingCancelledEmail(TestCase):
         assert email.to == recipients
         assert email.attachments == []
 
-    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', EMAIL_HOST_USER='')
-    def test_send_cancelled_email_no_host_user_returns_zero(self):
-        """Verifies that no email is sent when EMAIL_HOST_USER is not configured."""
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": ""})
+    def test_send_cancelled_email_no_api_key_returns_zero(self):
+        """Verifies that no email is sent when RESEND_API_KEY is not configured."""
         result = send_booking_cancelled_email(
             recipients=["attendee@example.com"],
             context=self.context,
