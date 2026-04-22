@@ -22,7 +22,8 @@ class TestBookingConfirmedEmail(TestCase):
             'location_name': 'Floor 3',
         }
 
-    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": "test-key"})
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": "test-key"},
+                       DEFAULT_FROM_EMAIL='test@example.com')
     def test_send_email_success_with_ics(self):
         """Verifies email is sent with correctly formatted ICS attachment."""
         recipients = ["test@example.com"]
@@ -47,8 +48,10 @@ class TestBookingConfirmedEmail(TestCase):
         assert mimetype == "text/calendar"
 
         # Check ICS Content logic
-        expected_start = self.context['start_datetime'].astimezone(dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-        expected_end = self.context['end_datetime'].astimezone(dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        expected_start = self.context['start_datetime'].astimezone(
+            dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        expected_end = self.context['end_datetime'].astimezone(
+            dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 
         assert "BEGIN:VCALENDAR" in content
         assert "SUMMARY:Bloom room booking - Meeting Room 1" in content
@@ -58,7 +61,8 @@ class TestBookingConfirmedEmail(TestCase):
         assert "RRULE:FREQ=WEEKLY;COUNT=2" in content
         assert "END:VCALENDAR" in content
 
-    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": "test-key"})
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": "test-key"},
+                       DEFAULT_FROM_EMAIL='test@example.com')
     def test_send_email_without_recurrence(self):
         """Verifies RRULE is omitted from ICS when recurrence_rule is absent."""
         context = {**self.context, 'recurrence_rule': None}
@@ -99,7 +103,8 @@ class TestBookingCancelledEmail(TestCase):
             'recurrence_rule': 'FREQ=DAILY;COUNT=3',
         }
 
-    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": "test-key"})
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', ANYMAIL={"RESEND_API_KEY": "test-key"},
+                       DEFAULT_FROM_EMAIL='test@example.com')
     def test_send_cancelled_email_success(self):
         """Verifies cancelled email is sent without an ICS attachment."""
         recipients = ["attendee@example.com"]
