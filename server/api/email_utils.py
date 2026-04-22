@@ -78,9 +78,10 @@ def get_bloom_logo_url() -> str:
 def requires_email_exists(func):
     def wrapper(*args, **kwargs):
         resend_key = getattr(settings, "ANYMAIL", {}).get("RESEND_API_KEY")
-        if not resend_key:
+        default_from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "")
+        if not resend_key or not default_from_email:
             logger.warning(
-                "RESEND_API_KEY is not set. Emails will not be sent.")
+                "RESEND_API_KEY or DEFAULT_FROM_EMAIL is not set. Emails will not be sent.")
             return 0
         return func(*args, **kwargs)
     return wrapper
